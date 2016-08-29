@@ -6,3 +6,4 @@ except:
     __version__ = 'unknown'
 
 from ecmwf_models.interface import ERAInterimImg
+from ecmwf_models.interface import ERAInterimDs

@@ -26,13 +26,15 @@ Tests for reading the data.
 '''
 
 import os
+from datetime import datetime
 import numpy.testing as nptest
 from ecmwf_models import ERAInterimImg
+from ecmwf_models import ERAInterimDs
 
 
 def test_ERAInterim_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "test_data", "era_interim",
+                         "test_data", "ei_2000",
                          "39.128_EI_OPER_0001_AN_N128_20000101_0000_0.grb")
 
     dset = ERAInterimImg(fname)
@@ -46,7 +48,7 @@ def test_ERAInterim_image():
 
 def test_ERAInterim_image_no_expand():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "test_data", "era_interim",
+                         "test_data", "ei_2000",
                          "39.128_EI_OPER_0001_AN_N128_20000101_0000_0.grb")
 
     dset = ERAInterimImg(fname, expand_grid=False)
@@ -55,3 +57,59 @@ def test_ERAInterim_image_no_expand():
     assert data.lon.shape == (88838,)
     assert data.lat.shape == (88838,)
     nptest.assert_allclose(data.lon[0], 89.46282157)
+
+
+def test_ERAInterim_dataset_one_var():
+    root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "test_data")
+    ds = ERAInterimDs('39', root_path)
+    data = ds.read(datetime(2000, 1, 1, 0))
+    assert data.data['39'].shape == (256, 512)
+    assert data.lon.shape == (256, 512)
+    assert data.lat.shape == (256, 512)
+    nptest.assert_allclose(data.data['39'][34, 23], 0.30950284004211426)
+    nptest.assert_allclose(data.lon[0, 0], 89.46282157)
+
+
+def test_ERAInterim_dataset_one_var_no_expand():
+    root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "test_data")
+    ds = ERAInterimDs('39', root_path, expand_grid=False)
+    data = ds.read(datetime(2000, 1, 1, 0))
+    assert data.data['39'].shape == (88838,)
+    assert data.lon.shape == (88838,)
+    assert data.lat.shape == (88838,)
+    nptest.assert_allclose(data.lon[0], 89.46282157)
+
+
+def test_ERAInterim_dataset_two_var():
+    root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "test_data")
+    ds = ERAInterimDs(['39', '40'], root_path)
+    data = ds.read(datetime(2000, 1, 1, 0))
+    assert data.data['39'].shape == (256, 512)
+    assert data.data['40'].shape == (256, 512)
+    assert data.lon.shape == (256, 512)
+    assert data.lat.shape == (256, 512)
+    assert data.timestamp == datetime(2000, 1, 1, 0, 0)
+    nptest.assert_allclose(data.data['39'][34, 23], 0.30950284004211426)
+    nptest.assert_allclose(data.data['40'][34, 23], 0.3094451427459717)
+    nptest.assert_allclose(data.lon[0, 0], 89.46282157)
+
+
+def test_ERAInterim_iter_dataset_two_var():
+    root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "test_data")
+    tstamps_should = [datetime(2000, 1, 1),
+                      datetime(2000, 1, 1, 6),
+                      datetime(2000, 1, 1, 12),
+                      datetime(2000, 1, 1, 18)]
+    with ERAInterimDs(['39', '40'], root_path) as ds:
+        for data, tstamp_should in zip(ds.iter_images(datetime(2000, 1, 1), datetime(2000, 1, 1)),
+                                       tstamps_should):
+            assert data.data['39'].shape == (256, 512)
+            assert data.data['40'].shape == (256, 512)
+            assert data.lon.shape == (256, 512)
+            assert data.lat.shape == (256, 512)
+            assert data.timestamp == tstamp_should
+            nptest.assert_allclose(data.lon[0, 0], 89.46282157)
