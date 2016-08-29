@@ -42,3 +42,16 @@ def test_ERAInterim_image():
     assert data.lat.shape == (256, 512)
     nptest.assert_allclose(data.data[34, 23], 0.30950284004211426)
     nptest.assert_allclose(data.lon[0, 0], 89.46282157)
+
+
+def test_ERAInterim_image_no_expand():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "test_data", "era_interim",
+                         "39.128_EI_OPER_0001_AN_N128_20000101_0000_0.grb")
+
+    dset = ERAInterimImg(fname, expand_grid=False)
+    data = dset.read()
+    assert data.data.shape == (88838,)
+    assert data.lon.shape == (88838,)
+    assert data.lat.shape == (88838,)
+    nptest.assert_allclose(data.lon[0], 89.46282157)
