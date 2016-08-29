@@ -42,4 +42,38 @@ guide for this is provided by `ECMWF
 <https://software.ecmwf.int/wiki/display/WEBAPI/Access+ECMWF+Public+Datasets>`_.
 
 After that you can use the command line program ``ecmwf_download`` to download
-data.
+data. For example ``ecmwf_download /path/to/storage 39 40 -s 2000-01-01 -e
+2000-02-01`` would download the parameters 39 and 40 into the folder
+``/path/to/storage`` between the first of January 2000 and the first of February
+2000 The data will be stored in yearly subfolders of the format ``ei_YYYY``.
+After the download the data can be read with the ``ecmwf_models.ERAInterimDs``
+class.
+
+Reading data
+============
+
+The dataset can be read by datetime using the ``ecmwf_models.ERAInterimDs``.
+
+.. code-block:: python
+
+    from ecmwf_models import ERAInterimDs
+    root_path = "/path/to/storage"
+    ds = ERAInterimDs('39', root_path)
+    data = ds.read(datetime(2000, 1, 1, 0))
+    assert data.data['39'].shape == (256, 512)
+    assert data.lon.shape == (256, 512)
+    assert data.lat.shape == (256, 512)
+
+Multiple parameters can be read by providing a list to ``ERAInterimDs``:
+
+.. code-block:: python
+
+    from ecmwf_models import ERAInterimDs
+    root_path = "/path/to/storage"
+    ds = ERAInterimDs(['39', '40'], root_path)
+    data = ds.read(datetime(2000, 1, 1, 0))
+    assert data.data['39'].shape == (256, 512)
+    assert data.data['40'].shape == (256, 512)
+
+All images between two given dates can be read using the
+``ERAInterimDs.iter_images`` method.
