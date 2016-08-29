@@ -182,6 +182,12 @@ def parse_args(args):
         description="Download ERA Interim data.")
     parser.add_argument("localroot",
                         help='Root of local filesystem where the data is stored.')
+    parser.add_argument("parameters", metavar="parameters", type=int,
+                        nargs="+",
+                        help=("Parameters to download in numerical format. e.g."
+                              "39 40 41 42 for Volumetric soil water layers 1 to 4."
+                              "A list of possible parameters is available at http://apps.ecmwf.int/codes/grib/param-db "
+                              "or by using the 'View MARS request' option in the web based ordering system."))
     parser.add_argument("-s", "--start", type=mkdate,
                         help=("Startdate. Either in format YYYY-MM-DD or YYYY-MM-DDTHH:MM."
                               "If no data is found there then the first available date of the product is used."))
@@ -205,10 +211,8 @@ def parse_args(args):
 def main(args):
     args = parse_args(args)
 
-    parameters = [39, 40, 41, 42, 139, 170,
-                  183, 236, 235, 141, 167]
     download_and_move(
-        parameters, args.start, args.end, args.localroot)
+        args.parameters, args.start, args.end, args.localroot)
 
 def run():
     main(sys.argv[1:])
