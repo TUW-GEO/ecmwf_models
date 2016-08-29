@@ -34,6 +34,7 @@ except ImportError:
 from pygeobase.io_base import ImageBase
 from pygeobase.object_base import Image
 
+
 class ERAInterimImg(ImageBase):
     """
     Reader for a single ERA Interim grib file.
@@ -56,7 +57,6 @@ class ERAInterimImg(ImageBase):
 
         grbs = pygrib.open(self.filename)
         if grbs.messages != 1:
-            print 'Wrong Number of messages for file %s' % self.filename
             grbs.close()
             raise IOError("Wrong number of messages in file")
 
@@ -76,4 +76,3 @@ class ERAInterimImg(ImageBase):
 
     def close(self):
         pass
-
