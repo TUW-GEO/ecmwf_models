@@ -1,0 +1,53 @@
+language: python
+sudo: false
+addons:
+  apt:
+    packages:
+      - gcc
+      - libgrib-api-dev
+notifications:
+  email: false
+python:
+  # We don't actually use the Travis Python, but this keeps it organized.
+  - "2.7"
+  - "3.4"
+  - "3.5"
+env:
+  - PYGRIB="1.9.9"
+  - PYGRIB="2.0.1"
+install:
+  # You may want to periodically update this, although the conda update
+  # conda line below will keep everything up-to-date.  We do this
+  # conditionally because it saves us some downloading if the version is
+  # the same.
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  - conda create -q -n test-environment -c conda-forge python=$TRAVIS_PYTHON_VERSION pytest pip pyproj 
+  - source activate test-environment
+  - if [[ "$PYGRIB" == "1.9.9" ]]; then
+      pip install pygrib==1.9.9;
+    else
+      conda install -c conda-forge pygrib;
+    fi
+  - pip install pygeobase
+  - pip install .
+  - pip list
+  - which pip
+  - which python
+
+script:
+  - python setup.py test
+after_success:
+  # report coverage results to coveralls.io
+  - pip install coveralls
+  - coveralls
