@@ -25,6 +25,14 @@ Description
 A small package for downloading ECMWF reanalysis data and converting it into a
 time series format supported by `pytesmo <https://github.com/TUW-GEO/pytesmo>`_.
 
+Documentation
+=============
+
+|Documentation Status|
+
+.. |Documentation Status| image:: https://readthedocs.org/projects/ecmwf_models/badge/?version=latest
+   :target: http://ecmwf_models.readthedocs.org/
+
 Supported Products
 ==================
 
