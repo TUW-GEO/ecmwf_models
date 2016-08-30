@@ -1,4 +1,4 @@
-name: ecmwf-models-docs
+name: ecmwf-models
 channels:
   - conda-forge
 dependencies:
