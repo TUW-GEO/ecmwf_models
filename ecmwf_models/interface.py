@@ -73,7 +73,9 @@ class ERAInterimImg(ImageBase):
             metadata['depth'] = message['levels'] + ' cm'
 
         grbs.close()
-        return Image(lons - 180, lats, image, metadata, timestamp)
+        lons_gt_180 = np.where(lons > 180.0)
+        lons[lons_gt_180] = lons[lons_gt_180] - 360
+        return Image(lons, lats, image, metadata, timestamp)
 
     def write(self, data):
         raise NotImplementedError()
