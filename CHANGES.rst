@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.2
+===========
+
+- Add reading of basic metadata fields name, depth and units.
+
 Version 0.1
 ===========
 

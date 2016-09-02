@@ -42,6 +42,9 @@ def test_ERAInterim_image():
     assert data.data.shape == (256, 512)
     assert data.lon.shape == (256, 512)
     assert data.lat.shape == (256, 512)
+    metadata_should = {'long_name': u'Volumetric soil water layer 1',
+                       'units': u'm**3 m**-3', 'depth': u'0-7 cm'}
+    assert data.metadata == metadata_should
     nptest.assert_allclose(data.data[34, 23], 0.30950284004211426)
     nptest.assert_allclose(data.lon[0, 0], 89.46282157)
 
@@ -56,6 +59,9 @@ def test_ERAInterim_image_no_expand():
     assert data.data.shape == (88838,)
     assert data.lon.shape == (88838,)
     assert data.lat.shape == (88838,)
+    metadata_should = {'long_name': u'Volumetric soil water layer 1',
+                       'units': u'm**3 m**-3', 'depth': u'0-7 cm'}
+    assert data.metadata == metadata_should
     nptest.assert_allclose(data.lon[0], 89.46282157)
 
 
@@ -67,6 +73,9 @@ def test_ERAInterim_dataset_one_var():
     assert data.data['39'].shape == (256, 512)
     assert data.lon.shape == (256, 512)
     assert data.lat.shape == (256, 512)
+    metadata_should = {'long_name': u'Volumetric soil water layer 1',
+                       'units': u'm**3 m**-3', 'depth': u'0-7 cm'}
+    assert data.metadata['39'] == metadata_should
     nptest.assert_allclose(data.data['39'][34, 23], 0.30950284004211426)
     nptest.assert_allclose(data.lon[0, 0], 89.46282157)
 
@@ -79,6 +88,9 @@ def test_ERAInterim_dataset_one_var_no_expand():
     assert data.data['39'].shape == (88838,)
     assert data.lon.shape == (88838,)
     assert data.lat.shape == (88838,)
+    metadata_should = {'long_name': u'Volumetric soil water layer 1',
+                       'units': u'm**3 m**-3', 'depth': u'0-7 cm'}
+    assert data.metadata['39'] == metadata_should
     nptest.assert_allclose(data.lon[0], 89.46282157)
 
 
@@ -92,6 +104,13 @@ def test_ERAInterim_dataset_two_var():
     assert data.lon.shape == (256, 512)
     assert data.lat.shape == (256, 512)
     assert data.timestamp == datetime(2000, 1, 1, 0, 0)
+    metadata_should = {'39': {'long_name': u'Volumetric soil water layer 1',
+                              'units': u'm**3 m**-3',
+                              'depth': u'0-7 cm'},
+                       '40': {'long_name': u'Volumetric soil water layer 2',
+                              'units': u'm**3 m**-3',
+                              'depth': u'7-28 cm'}, }
+    assert data.metadata == metadata_should
     nptest.assert_allclose(data.data['39'][34, 23], 0.30950284004211426)
     nptest.assert_allclose(data.data['40'][34, 23], 0.3094451427459717)
     nptest.assert_allclose(data.lon[0, 0], 89.46282157)
@@ -112,4 +131,11 @@ def test_ERAInterim_iter_dataset_two_var():
             assert data.lon.shape == (256, 512)
             assert data.lat.shape == (256, 512)
             assert data.timestamp == tstamp_should
+            metadata_should = {'39': {'long_name': u'Volumetric soil water layer 1',
+                                      'units': u'm**3 m**-3',
+                                      'depth': u'0-7 cm'},
+                               '40': {'long_name': u'Volumetric soil water layer 2',
+                                      'units': u'm**3 m**-3',
+                                      'depth': u'7-28 cm'}, }
+            assert data.metadata == metadata_should
             nptest.assert_allclose(data.lon[0, 0], 89.46282157)

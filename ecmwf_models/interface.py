@@ -63,13 +63,17 @@ class ERAInterimImg(ImageBase):
             grbs.close()
             raise IOError("Wrong number of messages in file")
 
+        metadata = {}
         for message in grbs:
             message.expand_grid(self.expand_grid)
             image = message.values
             lons, lats = message.latlons()
+            metadata['units'] = message['units']
+            metadata['long_name'] = message['parameterName']
+            metadata['depth'] = message['levels'] + ' cm'
 
         grbs.close()
-        return Image(lons, lats, image, {}, timestamp)
+        return Image(lons, lats, image, metadata, timestamp)
 
     def write(self, data):
         raise NotImplementedError()
@@ -110,6 +114,7 @@ class ERAInterimDs(MultiTemporalImageBase):
     def _assemble_img(self, timestamp, **kwargs):
 
         return_img = {}
+        metadata_img = {}
         for parameter in self.parameters:
 
             custom_templ = self.filename_template % (
@@ -125,8 +130,9 @@ class ERAInterimDs(MultiTemporalImageBase):
                                         **kwargs)
 
             return_img[parameter] = data
+            metadata_img[parameter] = metadata
 
-        return Image(lon, lat, return_img, None, timestamp)
+        return Image(lon, lat, return_img, metadata_img, timestamp)
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
