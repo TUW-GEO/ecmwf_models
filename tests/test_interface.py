@@ -46,7 +46,8 @@ def test_ERAInterim_image():
                        'units': u'm**3 m**-3', 'depth': u'0-7 cm'}
     assert data.metadata == metadata_should
     nptest.assert_allclose(data.data[34, 23], 0.30950284004211426)
-    nptest.assert_allclose(data.lon[0, 0], 89.46282157)
+    nptest.assert_allclose(data.lat[0, 0], 89.46282157)
+    nptest.assert_allclose(data.lon[0, 0], -180.0)
 
 
 def test_ERAInterim_image_no_expand():
@@ -62,7 +63,8 @@ def test_ERAInterim_image_no_expand():
     metadata_should = {'long_name': u'Volumetric soil water layer 1',
                        'units': u'm**3 m**-3', 'depth': u'0-7 cm'}
     assert data.metadata == metadata_should
-    nptest.assert_allclose(data.lon[0], 89.46282157)
+    nptest.assert_allclose(data.lat[0], 89.46282157)
+    nptest.assert_allclose(data.lon[0], -180.0)
 
 
 def test_ERAInterim_dataset_one_var():
@@ -77,7 +79,8 @@ def test_ERAInterim_dataset_one_var():
                        'units': u'm**3 m**-3', 'depth': u'0-7 cm'}
     assert data.metadata['39'] == metadata_should
     nptest.assert_allclose(data.data['39'][34, 23], 0.30950284004211426)
-    nptest.assert_allclose(data.lon[0, 0], 89.46282157)
+    nptest.assert_allclose(data.lat[0, 0], 89.46282157)
+    nptest.assert_allclose(data.lon[0, 0], -180.0)
 
 
 def test_ERAInterim_dataset_one_var_no_expand():
@@ -91,7 +94,8 @@ def test_ERAInterim_dataset_one_var_no_expand():
     metadata_should = {'long_name': u'Volumetric soil water layer 1',
                        'units': u'm**3 m**-3', 'depth': u'0-7 cm'}
     assert data.metadata['39'] == metadata_should
-    nptest.assert_allclose(data.lon[0], 89.46282157)
+    nptest.assert_allclose(data.lat[0], 89.46282157)
+    nptest.assert_allclose(data.lon[0], -180.0)
 
 
 def test_ERAInterim_dataset_two_var():
@@ -113,7 +117,7 @@ def test_ERAInterim_dataset_two_var():
     assert data.metadata == metadata_should
     nptest.assert_allclose(data.data['39'][34, 23], 0.30950284004211426)
     nptest.assert_allclose(data.data['40'][34, 23], 0.3094451427459717)
-    nptest.assert_allclose(data.lon[0, 0], 89.46282157)
+    nptest.assert_allclose(data.lat[0, 0], 89.46282157)
 
 
 def test_ERAInterim_iter_dataset_two_var():
@@ -138,4 +142,4 @@ def test_ERAInterim_iter_dataset_two_var():
                                       'units': u'm**3 m**-3',
                                       'depth': u'7-28 cm'}, }
             assert data.metadata == metadata_should
-            nptest.assert_allclose(data.lon[0, 0], 89.46282157)
+            nptest.assert_allclose(data.lat[0, 0], 89.46282157)

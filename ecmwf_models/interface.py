@@ -67,13 +67,13 @@ class ERAInterimImg(ImageBase):
         for message in grbs:
             message.expand_grid(self.expand_grid)
             image = message.values
-            lons, lats = message.latlons()
+            lats, lons = message.latlons()
             metadata['units'] = message['units']
             metadata['long_name'] = message['parameterName']
             metadata['depth'] = message['levels'] + ' cm'
 
         grbs.close()
-        return Image(lons, lats, image, metadata, timestamp)
+        return Image(lons - 180, lats, image, metadata, timestamp)
 
     def write(self, data):
         raise NotImplementedError()
