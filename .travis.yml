@@ -37,7 +37,7 @@ install:
   - if [[ "$PYGRIB" == "1.9.9" ]]; then
       pip install pygrib==1.9.9;
     else
-      conda install -c conda-forge pygrib;
+      conda install -c conda-forge pygrib netcdf4=1.2.2;
     fi
   - pip install pygeobase
   - pip install repurpose
