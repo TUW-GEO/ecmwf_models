@@ -101,7 +101,6 @@ def save_gribs_from_grib(input_grib, output_path,
 
     grib_in.seek(0)
     for grb in grib_in:
-        print grb
         param_id = grb['marsParam']
         N = grb['N']
         filedate = datetime(grb['year'], grb['month'], grb['day'],
