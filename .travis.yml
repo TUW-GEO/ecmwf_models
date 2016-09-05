@@ -32,7 +32,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -n test-environment -c conda-forge python=$TRAVIS_PYTHON_VERSION pytest pip pyproj 
+  - conda create -q -n test-environment -c conda-forge python=$TRAVIS_PYTHON_VERSION pytest pip pyproj netcdf4=1.2.2 scipy pandas matplotlib pyresample
   - source activate test-environment
   - if [[ "$PYGRIB" == "1.9.9" ]]; then
       pip install pygrib==1.9.9;
@@ -40,6 +40,7 @@ install:
       conda install -c conda-forge pygrib;
     fi
   - pip install pygeobase
+  - pip install repurpose
   - pip install -r requirements.txt
   - pip install .
   - pip list
