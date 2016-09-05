@@ -15,7 +15,7 @@ import sys
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # sys.path.insert(0, os.path.abspath('.'))
 
-# -- Hack for ReadTheDocs ------------------------------------------------------
+# -- Hack for ReadTheDocs ------------------------------------------------
 # This hack is necessary since RTD does not issue `sphinx-apidoc` before running
 # `sphinx-build -b html . _build/html`. See Issue:
 # https://github.com/rtfd/readthedocs.org/issues/1139
@@ -33,10 +33,11 @@ if on_rtd:
     output_dir = os.path.join(__location__, "../docs/api")
     module_dir = os.path.join(__location__, "../ecmwf_models")
     cmd_line_template = "sphinx-apidoc -f -o {outputdir} {moduledir}"
-    cmd_line = cmd_line_template.format(outputdir=output_dir, moduledir=module_dir)
+    cmd_line = cmd_line_template.format(
+        outputdir=output_dir, moduledir=module_dir)
     apidoc.main(cmd_line.split(" "))
 
-# -- General configuration -----------------------------------------------------
+# -- General configuration -----------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = '1.0'
@@ -111,11 +112,11 @@ pygments_style = 'sphinx'
 # keep_warnings = False
 
 
-# -- Options for HTML output ---------------------------------------------------
+# -- Options for HTML output ---------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -196,24 +197,24 @@ html_static_path = ['_static']
 htmlhelp_basename = 'ecmwf_models-doc'
 
 
-# -- Options for LaTeX output --------------------------------------------------
+# -- Options for LaTeX output --------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-# 'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    # 'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-# 'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    # 'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-# 'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    # 'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'user_guide.tex', u'ecmwf_models Documentation',
-   u'Christoph Paulik', 'manual'),
+    ('index', 'user_guide.tex', u'ecmwf_models Documentation',
+     u'Christoph Paulik', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -236,7 +237,7 @@ latex_documents = [
 # If false, no module index is generated.
 # latex_domain_indices = True
 
-# -- External mapping ------------------------------------------------------------
+# -- External mapping ----------------------------------------------------
 python_version = '.'.join(map(str, sys.version_info[0:2]))
 intersphinx_mapping = {
     'sphinx': ('http://sphinx.pocoo.org', None),
