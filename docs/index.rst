@@ -65,6 +65,7 @@ methods. We have chosen to do it in the following way:
   area into memory and iterate over the time series quickly.
 
   .. image:: 5x5_cell_partitioning.png
+     :target: _images/5x5_cell_partitioning.png
 
 This conversion can be performed using the ``ecmwf_repurpose`` command line
 program. An example would be:
