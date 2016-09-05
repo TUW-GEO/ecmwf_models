@@ -37,12 +37,9 @@ from pygeobase.io_base import MultiTemporalImageBase
 from pygeobase.object_base import Image
 import numpy as np
 from datetime import timedelta
-try:
-    from pynetcf.time_series import GriddedNcOrthoMultiTs
-    import pygeogrids
-except ImportError:
-    warnings.warn(
-        "For reading converted time series the pynetcf package is necessary.")
+import pygeogrids
+
+from pynetcf.time_series import GriddedNcOrthoMultiTs
 
 
 class ERAInterimImg(ImageBase):
