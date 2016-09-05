@@ -143,3 +143,18 @@ Conversion to time series is performed by the `repurpose package
 or other options see the `repurpose documentation
 <http://repurpose.readthedocs.io/en/latest/>`_ and the code in
 ``ecmwf_models.reshuffle``.
+
+Reading converted time series data
+----------------------------------
+
+For reading the data the ``ecmwf_repurpose`` command produces the class
+``ERAInterimTs`` can be used:
+
+.. code-block:: python
+
+    from ecmwf_models.interface import ERAinterimTs
+    ds = ERAinterimTs(ts_path)
+    # read_ts takes either lon, lat coordinates or a grid point indices.
+    # and returns a pandas.DataFrame
+    ts = ds.read_ts(45, 15)
+

@@ -32,8 +32,7 @@ import numpy as np
 import numpy.testing as nptest
 
 from ecmwf_models.reshuffle import main
-import pygeogrids
-from pynetcf.time_series import GriddedNcOrthoMultiTs
+from ecmwf_models.interface import ERAinterimTs
 
 
 def test_reshuffle():
@@ -48,8 +47,7 @@ def test_reshuffle():
     args = [inpath, ts_path, startdate, enddate] + parameters
     main(args)
     assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 2589
-    grid = pygeogrids.netcdf.load_grid(os.path.join(ts_path, 'grid.nc'))
-    ds = GriddedNcOrthoMultiTs(ts_path, grid)
+    ds = ERAinterimTs(ts_path)
     ts = ds.read_ts(45, 15)
     ts_39_values_should = np.array([0.17183685,  0.17189026,  0.17173004,
                                     0.17175293,  0.17183685, 0.17189026,

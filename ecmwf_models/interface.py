@@ -26,6 +26,7 @@
 Interface to reading ecmwf reanalysis data.
 '''
 import warnings
+import os
 
 try:
     import pygrib
@@ -36,6 +37,12 @@ from pygeobase.io_base import MultiTemporalImageBase
 from pygeobase.object_base import Image
 import numpy as np
 from datetime import timedelta
+try:
+    from pynetcf.time_series import GriddedNcOrthoMultiTs
+    import pygeogrids
+except ImportError:
+    warnings.warn(
+        "For reading converted time series the pynetcf package is necessary.")
 
 
 class ERAInterimImg(ImageBase):
@@ -160,3 +167,14 @@ class ERAInterimDs(MultiTemporalImageBase):
             timestamps.extend(daily_dates.tolist())
 
         return timestamps
+
+
+class ERAinterimTs(GriddedNcOrthoMultiTs):
+
+    def __init__(self, ts_path, grid_path=None):
+
+        if grid_path is None:
+            grid_path = os.path.join(ts_path, "grid.nc")
+
+        grid = pygeogrids.netcdf.load_grid(grid_path)
+        super(ERAinterimTs, self).__init__(ts_path, grid)
