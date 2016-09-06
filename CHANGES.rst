@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3
+===========
+
+- Fix help text in ecmwf_repurpose command line program.
+
 Version 0.2
 ===========
 

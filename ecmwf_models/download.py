@@ -164,11 +164,13 @@ def download_and_move(parameters, startdate, enddate,
 
         current_start = current_end + timedelta(days=1)
 
+
 def mkdate(datestring):
     if len(datestring) == 10:
         return datetime.strptime(datestring, '%Y-%m-%d')
     if len(datestring) == 16:
         return datetime.strptime(datestring, '%Y-%m-%dT%H:%M')
+
 
 def parse_args(args):
     """
@@ -178,12 +180,12 @@ def parse_args(args):
     :return: command line parameters as :obj:`argparse.Namespace`
     """
     parser = argparse.ArgumentParser(
-        description="Download ERA Interim data.")
+        description="Convert ERA Interim data into time series format.")
     parser.add_argument("localroot",
                         help='Root of local filesystem where the data is stored.')
     parser.add_argument("parameters", metavar="parameters", type=int,
                         nargs="+",
-                        help=("Parameters to download in numerical format. e.g."
+                        help=("Parameters to convert in numerical format. e.g."
                               "39 40 41 42 for Volumetric soil water layers 1 to 4."
                               "A list of possible parameters is available at http://apps.ecmwf.int/codes/grib/param-db "
                               "or by using the 'View MARS request' option in the web based ordering system."))
@@ -198,7 +200,7 @@ def parse_args(args):
 
     if args.start is None or args.end is None:
         if args.start is None:
-            args.start = datetime(1979,1,1)
+            args.start = datetime(1979, 1, 1)
         if args.end is None:
             args.end = datetime.now()
 
@@ -207,16 +209,16 @@ def parse_args(args):
                                                                   args.localroot))
     return args
 
+
 def main(args):
     args = parse_args(args)
 
     download_and_move(
         args.parameters, args.start, args.end, args.localroot)
 
+
 def run():
     main(sys.argv[1:])
 
 if __name__ == '__main__':
     run()
-
-
