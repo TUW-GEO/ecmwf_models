@@ -37,7 +37,7 @@ from pygeobase.io_base import MultiTemporalImageBase
 from pygeobase.object_base import Image
 import numpy as np
 from datetime import timedelta
-import pygeogrids
+from pygeogrids.netcdf import load_grid
 
 from pynetcf.time_series import GriddedNcOrthoMultiTs
 
@@ -178,5 +178,5 @@ class ERAinterimTs(GriddedNcOrthoMultiTs):
         if grid_path is None:
             grid_path = os.path.join(ts_path, "grid.nc")
 
-        grid = pygeogrids.netcdf.load_grid(grid_path)
+        grid = load_grid(grid_path)
         super(ERAinterimTs, self).__init__(ts_path, grid)
