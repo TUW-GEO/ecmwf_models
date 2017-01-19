@@ -74,7 +74,12 @@ class ERAInterimImg(ImageBase):
             lats, lons = message.latlons()
             metadata['units'] = message['units']
             metadata['long_name'] = message['parameterName']
-            metadata['depth'] = message['levels'] + ' cm'
+
+            if 'levels' in message.keys():
+                metadata['depth'] = '{:} cm'.format(message['levels'])
+
+            if 'level' in message.keys():
+                metadata['depth'] = '{:} cm'.format(message['level'])
 
         grbs.close()
         lons_gt_180 = np.where(lons > 180.0)
