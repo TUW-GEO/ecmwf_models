@@ -8,6 +8,7 @@ Version 0.3
 
 - Fix help text in ecmwf_repurpose command line program.
 - Fix reading of metadata for variables that do not have 'levels'
+- Fix wrong import when trying to read the reformatted time series data.
 
 Version 0.2
 ===========
