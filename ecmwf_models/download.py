@@ -27,10 +27,104 @@ Module for Downloading ECMWF ERA Interim data.
 from ecmwfapi import ECMWFDataServer
 import argparse
 import sys
-
 import pygrib
 import os
 from datetime import datetime, timedelta
+import xarray as xr
+import pandas as pd
+from datedown.fname_creator import create_dt_fpath
+from functools import partial
+
+
+
+def download_era_5(start, end, parameters, target, timesteps=[0, 6, 12, 18]):
+    """
+    Download era 5 data
+
+    Parameters
+    ----------
+    start : date
+        start date
+    end : date
+        end date
+    parameters : list
+        parameter ids, see wiki
+    target : string
+        path at which to save the downloaded grib file
+    timesteps: list
+        list of times for which data is downloaded
+    area: list
+        list of threshold values for downloaded area
+         lat_max, lat_min, lon_max, lon_min)
+    """
+    server = ECMWFDataServer()
+    param_strings = []
+    for parameter in parameters:
+
+        param_strings.append("%d.128" % parameter)
+
+    timestep_strings = []
+    for timestep in timesteps:
+        timestep_strings.append("%02d" % timestep)
+
+    param_string = '/'.join(param_strings)
+    timestep_string = '/'.join(timestep_strings)
+    date_string = "%s/to/%s" % (start.strftime("%Y-%m-%d"),
+                                end.strftime("%Y-%m-%d"))
+    server.retrieve({
+        "class": "ea",
+        "dataset": "era5",
+        "expver": "1",
+        "stream": "oper",
+        "type": "an",
+        "levtype": "sfc",
+        "param": param_string, # "165.128/166.128/167.128"
+        "date": date_string, # "2016-01-01/to/2016-01-02"
+        "time": timestep_string, #"00:00:00"
+        "step": "0", # download netcdf for other steps might fail
+                     # https://software.ecmwf.int/wiki/display/CKB/What+to+do+with+ECCODES+ERROR+%3A+Try+using+the+-T+option
+        "grid": "0.25/0.25",
+        "area" : "GLOBE",
+        "format": "netcdf",
+        "target": target
+    })
+
+def save_ncs_from_nc(input_nc, output_path,
+                     filename_templ='ERA5_025_%Y%m%d.%H%M.nc'):
+    """
+    takes one grib file with several parameters and saves
+    each message as a separate grib file
+
+    Parameters
+    ----------
+    input_grib : string
+        filepath of the input grib file
+    output_path : string
+        where to save the resulting grib files
+    subpaths_year : boolean, optional
+        if true the files are saved in subpaths by year
+        Default False
+    subpaths_template : string, optional
+        template of the folder name for each year
+
+    """
+    nc_in = xr.open_dataset(input_nc)
+    localsubdirs = ['%Y', '%j']
+
+    for time in nc_in.time.values:
+        subset = nc_in.sel(time=time)
+
+        timestamp = pd.Timestamp(time).to_pydatetime()
+        subset_path = create_dt_fpath(timestamp,
+                                      root=output_path,
+                                      fname=filename_templ,
+                                      subdirs=localsubdirs)
+        if not os.path.exists(os.path.dirname(subset_path)):
+            os.makedirs(os.path.dirname(subset_path))
+
+        subset.to_netcdf(subset_path)
+    nc_in.close()
+
 
 
 def download_era_interim(start, end, parameters, target, timesteps=[0, 6, 12, 18]):
@@ -78,6 +172,7 @@ def download_era_interim(start, end, parameters, target, timesteps=[0, 6, 12, 18
     })
 
 
+
 def save_gribs_from_grib(input_grib, output_path,
                          subpaths_year=False, subpaths_template="ei_%Y"):
     """
@@ -123,7 +218,7 @@ def save_gribs_from_grib(input_grib, output_path,
     grib_in.close()
 
 
-def download_and_move(parameters, startdate, enddate,
+def download_and_move(parameters, startdate, enddate, product,
                       target_path, timesteps=[0, 6, 12, 18]):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
@@ -153,14 +248,24 @@ def download_and_move(parameters, startdate, enddate,
         current_end = current_start + td
         if current_end >= enddate:
             current_end = enddate
-
-        fname = current_start.strftime("%Y%m%d_")
-        fname = current_end.strftime(fname + "%Y%m%d.grb")
-        downloaded_grib = os.path.join(target_path, fname)
-        download_era_interim(current_start, current_end, parameters,
-                             downloaded_grib, timesteps=timesteps)
-        save_gribs_from_grib(downloaded_grib, target_path, subpaths_year=True)
-        os.remove(downloaded_grib)
+        if product == 'ERA5':
+            fname = current_start.strftime("%Y%m%d_")
+            fname = current_end.strftime(fname + "%Y%m%d.nc")
+            downloaded_data = os.path.join(target_path, fname)
+            download_era_5(current_start, current_end, parameters,
+                           downloaded_data, timesteps=timesteps)
+            save_ncs_from_nc(downloaded_data, target_path)
+            os.remove(downloaded_data)
+        elif product == 'ERA-Interim':
+            fname = current_start.strftime("%Y%m%d_")
+            fname = current_end.strftime(fname + "%Y%m%d.grb")
+            downloaded_data = os.path.join(target_path, fname)
+            download_era_interim(current_start, current_end, parameters,
+                                 downloaded_data, timesteps=timesteps)
+            save_gribs_from_grib(downloaded_data, target_path, subpaths_year=True)
+            os.remove(downloaded_data)
+        else:
+            raise Exception('Unknown ECMWF product. Use "ecmwf_download -h" too show supported data sets')
 
         current_start = current_end + timedelta(days=1)
 
@@ -180,7 +285,7 @@ def parse_args(args):
     :return: command line parameters as :obj:`argparse.Namespace`
     """
     parser = argparse.ArgumentParser(
-        description="Convert ERA Interim data into time series format.")
+        description="Download ECMWF reanalysis model data")
     parser.add_argument("localroot",
                         help='Root of local filesystem where the data is stored.')
     parser.add_argument("parameters", metavar="parameters", type=int,
@@ -195,6 +300,8 @@ def parse_args(args):
     parser.add_argument("-e", "--end", type=mkdate,
                         help=("Enddate. Either in format YYYY-MM-DD or YYYY-MM-DDTHH:MM."
                               "If not given then the current date is used."))
+    parser.add_argument("-p", "--product", type=str,
+                        help=("ECMWF product (ERA-Interim or ERA5)"))
     args = parser.parse_args(args)
     # set defaults that can not be handled by argparse
 
@@ -203,8 +310,11 @@ def parse_args(args):
             args.start = datetime(1979, 1, 1)
         if args.end is None:
             args.end = datetime.now()
+    if args.product is None:
+        args.product = 'ERA-Interim'
 
-    print("Downloading data from {} to {} into folder {}.".format(args.start.isoformat(),
+    print("Downloading {} data from {} to {} into folder {}.".format( args.product,
+                                                                  args.start.isoformat(),
                                                                   args.end.isoformat(),
                                                                   args.localroot))
     return args
@@ -221,4 +331,9 @@ def run():
     main(sys.argv[1:])
 
 if __name__ == '__main__':
-    run()
+    #run()
+    parameters=[165, 166, 167]
+    start = datetime(2010,1,1)
+    end = datetime(2010,3,1)
+    path = '/home/wpreimes/Downloads/ERA5data/'
+    download_and_move(parameters,start, end, 'ERA5', path)
