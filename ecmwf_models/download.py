@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2016, TU Wien
+# Copyright (c) 2018, TU Wien
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 '''
-Module for Downloading ECMWF ERA Interim data.
+Module for Downloading ECMWF ERA Interim and ERA5 data in grib and netcdf format.
 '''
 
 from ecmwfapi import ECMWFDataServer
@@ -34,9 +34,10 @@ import xarray as xr
 import pandas as pd
 from datedown.fname_creator import create_dt_fpath
 import shutil
+import numpy as np
 
 
-def download_era(start, end, parameters, target, product='ERA-Interim', format='netcdf',
+def download_era(start, end, parameters, target, product='ERA-Interim', format='grib',
                  grid_size = None, timesteps=[0, 6, 12, 18], landmask = True):
     """
     Download era 5 data
@@ -51,12 +52,13 @@ def download_era(start, end, parameters, target, product='ERA-Interim', format='
         parameter ids, see wiki
     target : str
         path at which to save the downloaded grib file
-    product : str
-        Name of the model (eg. "ERA-interim" or "ERA5"
-    format: str
-        format of the downloaded data (netcdf or grib)
-    grid_size: (float,float)
-        size of the grid in form (lon, lat), which the data is resampled to (only for netcdf)
+    product : str, optional
+        Name of the model, "ERA-interim" (default) or "ERA5"
+    format: str, optional
+        format of the downloaded data, netcdf or grib (default)
+    grid_size: (float,float), optional
+        size of the grid in form (lon, lat), which the data is resampled to
+        If None is passed the minimum grid for the accoring product is chosen
     timesteps: list
         list of times for which data is downloaded
     landmask: bool
@@ -67,8 +69,10 @@ def download_era(start, end, parameters, target, product='ERA-Interim', format='
 
     if product == 'ERA-Interim':
         dataset = 'interim'
+        dataclass = 'ei'
     elif product == 'ERA5':
         dataset = 'era5'
+        dataclass = 'ea'
     else:
         raise ValueError('Unknown ECMWF product. Use "ecmwf_download -h" too show supported data sets')
 
@@ -91,7 +95,7 @@ def download_era(start, end, parameters, target, product='ERA-Interim', format='
 
     # ATTENTION: When downloading netcdf files steps and times must not overlap!!
     # see: https://software.ecmwf.int/wiki/display/CKB/What+to+do+with+ECCODES+ERROR+%3A+Try+using+the+-T+option
-    dl_params = {"class": "ea", "dataset": dataset, "expver": "1", "stream": "oper", "type": "an", "levtype": "sfc",
+    dl_params = {"class": dataclass, "dataset": dataset, "expver": "1", "stream": "oper", "type": "an", "levtype": "sfc",
                  "param": param_string, "date": date_string, "time": timestep_string, "step": "0", "grid": grid_size,
                  "format": format, "target": target}
 
@@ -100,7 +104,8 @@ def download_era(start, end, parameters, target, product='ERA-Interim', format='
             if product == 'ERA5':
                 grid_size = "%f/%f" % (0.3,0.3)
             else:
-                grid_size = "%f/%f" % (0.75, 0.75)
+                grid_size = "%f/%f" % (0.75,0.75)
+            dl_params['grid'] = grid_size
         else:
             del dl_params['grid']
     else:
@@ -115,9 +120,8 @@ def download_era(start, end, parameters, target, product='ERA-Interim', format='
 def save_ncs_from_nc(input_nc, output_path, product_name, localsubdirs = ['%Y', '%j'],
                      filename_templ='{product}_{gridsize}_%Y%m%d_%H%M.nc'):
     """
-    takes downloaded (monthly) netcdf files and saves each time
-    step as a separate netcdf file inside year/day_of_year
-    inside the passed output_path.
+    takes monthly netcdf files as downloaded by the function above and saves each time step
+    in a separate file
 
     Parameters
     ----------
@@ -127,16 +131,18 @@ def save_ncs_from_nc(input_nc, output_path, product_name, localsubdirs = ['%Y', 
         where to save the resulting netcdf files
     product_name : string
         name of the ECMWF model (for filename generation)
-    local_subdirs : list
+    local_subdirs : list, optional
         List of subfolders for organizing downloaded data
     filename_templ : string, optional
         template for naming each separated nc file
-
     """
     nc_in = xr.open_dataset(input_nc)
+    latdiff = np.abs(np.round(np.ediff1d(nc_in.latitude.values),3))[0]
+    londiff = np.abs(np.round(np.ediff1d(nc_in.longitude.values),3))[0]
+    gridsize = '%s_%s' % (str(latdiff), str(londiff))
 
-    filename_templ =filename_templ.format(product=product_name,
-                                          gridsize='030')
+    filename_templ = filename_templ.format(product=product_name,
+                                           gridsize=gridsize)
     for time in nc_in.time.values:
         subset = nc_in.sel(time=time)
 
@@ -155,22 +161,23 @@ def save_ncs_from_nc(input_nc, output_path, product_name, localsubdirs = ['%Y', 
 def save_gribs_from_grib(input_grib, output_path, product_name, localsubdirs=['%Y', '%j'],
                          filename_templ="{product}_OPER_0001_AN_N{N}_%Y%m%d_%H%M.grb"):
     """
-    takes one grib file with several parameters and saves
-    each message as a separate grib file
+    takes monthly grib files as downloaded by the function above and saves each time step
+    in a separate file
 
     Parameters
     ----------
-    input_grib : string
-        filepath of the input grib file
+    input_nc : string
+        filepath of the downloaded .grb file
     output_path : string
         where to save the resulting grib files
-    subpaths_year : boolean, optional
-        if true the files are saved in subpaths by year
-        Default False
-    subpaths_template : string, optional
-        template of the folder name for each year
-
+    product_name : string
+        name of the ECMWF model (for filename generation)
+    local_subdirs : list, optional
+        List of subfolders for organizing downloaded data
+    filename_templ : string, optional
+        template for naming each separated nc file
     """
+
     grib_in = pygrib.open(input_grib)
 
     grib_in.seek(0)
@@ -259,6 +266,13 @@ def download_and_move(parameters, startdate, enddate, product, format,
 
 
 def mkdate(datestring):
+    '''
+    Turns a datetime string into a datetime object
+    :param datestring: str
+        input datetime string
+    :return:
+        datetime
+    '''
     if len(datestring) == 10:
         return datetime.strptime(datestring, '%Y-%m-%d')
     if len(datestring) == 16:
@@ -282,10 +296,10 @@ def parse_args(args):
                               "39 40 41 42 for Volumetric soil water layers 1 to 4."
                               "A list of possible parameters is available at http://apps.ecmwf.int/codes/grib/param-db "
                               "or by using the 'View MARS request' option in the web based ordering system."))
-    parser.add_argument("-s", "--start", type=mkdate, default=datetime(1979,1,1),
+    parser.add_argument("-s", "--start", type=mkdate,
                         help=("Startdate. Either in format YYYY-MM-DD or YYYY-MM-DDTHH:MM."
                               "If no data is found there then the first available date of the product is used."))
-    parser.add_argument("-e", "--end", type=mkdate, default=datetime.now(),
+    parser.add_argument("-e", "--end", type=mkdate,
                         help=("Enddate. Either in format YYYY-MM-DD or YYYY-MM-DDTHH:MM."
                               "If not given then the current date is used."))
     parser.add_argument("-p", "--product", type=str, default='ERA-Interim',
@@ -298,17 +312,14 @@ def parse_args(args):
                               "Should be at least (0.75,0.75) for ERA-Interim and (0.3,0.3) for ERA5"))
 
     args = parser.parse_args(args)
-    # set defaults that can not be handled by argparse
 
-    '''
-    if args.start is None or args.end is None:
-        if args.start is None:
-            args.start = datetime(1979, 1, 1)
-        if args.end is None:
-            args.end = datetime.now()
-    if args.product is None:
-        args.product = 'ERA-Interim'
-    '''
+    # set defaults that can not be handled by argparse
+    if args.start is None:
+        args.start = datetime(1979, 1, 1)
+    if args.end is None:
+        args.end = datetime.now()
+
+
     print("Downloading {} data from {} to {} into folder {}.".format( args.product,
                                                                   args.start.isoformat(),
                                                                   args.end.isoformat(),
@@ -320,7 +331,7 @@ def main(args):
     args = parse_args(args)
 
     download_and_move(
-        args.parameters, args.start, args.end, args.localroot)
+        args.parameters, args.start, args.end, args.product, args.format, args.localroot)
 
 
 def run():
@@ -329,13 +340,9 @@ def run():
 if __name__ == '__main__':
     #run()
     parameters=[39,40,41,42,139,170,183,236]
-    start = datetime(2000,1,1,6)
-    end = datetime(2000,1,31,3)
-    path = '/data-read/USERS/wpreimes/ERAint_img'
-
-    download_and_move(parameters, datetime(2000,1,1), datetime(2000,1,31), 'ERA-Interim', 'grib', path)
-
-    save_gribs_from_grib('/home/data-read/USERS/wpreimes/ERAint_img/temp_downloaded/20000101_20000131.grb',
-                         '/home/data-read/USERS/wpreimes/ERAint_img/grb_from_grb/', 'ERA-Interim')
+    path = '/data-read/USERS/wpreimes/ERA_test_download/ERA5_nc'
+    save_ncs_from_nc('/home/data-read/USERS/wpreimes/ERA_test_download/ERA5_nc/temp_downloaded/20100101_20100131.nc',
+                     '/home/data-read/USERS/wpreimes/ERA_test_download/ERA5_nc', 'ERA5')
+    # download_and_move(parameters, datetime(2010,1,1), datetime(2010,1,31), 'ERA5', 'netcdf', path, keep_original=True)
 
 
