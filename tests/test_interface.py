@@ -178,7 +178,7 @@ def test_ERA5_image_no_expand():
                        'units': u'm**3 m**-3'}
     assert data.metadata['swvl1']['long_name'] == metadata_should['long_name']
     assert data.metadata['swvl1']['units'] == metadata_should['units']
-    nptest.assert_allclose(data.data['swvl1'][139, 45], 0.411516, rtol=1e-6)
+    nptest.assert_allclose(data.data['swvl1'][55 * 1200 + 347], 0.3263698, rtol=1e-6)
     nptest.assert_allclose(data.lat[0], 90)
     nptest.assert_allclose(data.lat[-1], -90)
     nptest.assert_allclose(data.lon[0], 0)
