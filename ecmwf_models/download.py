@@ -38,7 +38,7 @@ import numpy as np
 
 
 def download_era(start, end, parameters, target, product='ERA-Interim', format='grib',
-                 grid_size = None, timesteps=[0, 6, 12, 18], landmask = True):
+                 grid_size=None, timesteps=[0, 6, 12, 18], landmask = True):
     """
     Download era 5 data
 
@@ -56,7 +56,7 @@ def download_era(start, end, parameters, target, product='ERA-Interim', format='
         Name of the model, "ERA-interim" (default) or "ERA5"
     format: str, optional
         format of the downloaded data, netcdf or grib (default)
-    grid_size: (float,float), optional
+    grid_size: [float,float], optional
         size of the grid in form (lon, lat), which the data is resampled to
         If None is passed the minimum grid for the accoring product is chosen
     timesteps: list
@@ -110,14 +110,14 @@ def download_era(start, end, parameters, target, product='ERA-Interim', format='
             del dl_params['grid']
     else:
         if (any(size < 0.75 for size in grid_size) and product == 'ERA-Interim') or \
-           (any(size < 0.3 for size in grid_size) and product == 'ERA-Interim'):
+           (any(size < 0.3 for size in grid_size) and product == 'ERA5'):
             raise Warning('Custom grid smaller than original ERA data. See https://software.ecmwf.int/wiki/display/CKB/Does+downloading+data+at+higher+resolution+improve+the+output')
 
     server.retrieve(dl_params)
 
 
 
-def save_ncs_from_nc(input_nc, output_path, product_name, localsubdirs = ['%Y', '%j'],
+def save_ncs_from_nc(input_nc, output_path, product_name,
                      filename_templ='{product}_{gridsize}_%Y%m%d_%H%M.nc'):
     """
     takes monthly netcdf files as downloaded by the function above and saves each time step
@@ -136,7 +136,9 @@ def save_ncs_from_nc(input_nc, output_path, product_name, localsubdirs = ['%Y', 
     filename_templ : string, optional
         template for naming each separated nc file
     """
-    nc_in = xr.open_dataset(input_nc)
+    localsubdirs = ['%Y', '%j']
+
+    nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
     latdiff = np.abs(np.round(np.ediff1d(nc_in.latitude.values),3))[0]
     londiff = np.abs(np.round(np.ediff1d(nc_in.longitude.values),3))[0]
     gridsize = '%s_%s' % (str(latdiff), str(londiff))
@@ -158,7 +160,7 @@ def save_ncs_from_nc(input_nc, output_path, product_name, localsubdirs = ['%Y', 
     nc_in.close()
 
 
-def save_gribs_from_grib(input_grib, output_path, product_name, localsubdirs=['%Y', '%j'],
+def save_gribs_from_grib(input_grib, output_path, product_name,
                          filename_templ="{product}_OPER_0001_AN_N{N}_%Y%m%d_%H%M.grb"):
     """
     takes monthly grib files as downloaded by the function above and saves each time step
@@ -177,7 +179,7 @@ def save_gribs_from_grib(input_grib, output_path, product_name, localsubdirs=['%
     filename_templ : string, optional
         template for naming each separated nc file
     """
-
+    localsubdirs = ['%Y', '%j']
     grib_in = pygrib.open(input_grib)
 
     grib_in.seek(0)
@@ -200,17 +202,14 @@ def save_gribs_from_grib(input_grib, output_path, product_name, localsubdirs=['%
             os.makedirs(os.path.dirname(filepath))
 
         grb_out = open(filepath, 'a')
-        #if os.path.isfile(filepath):
 
-        #else:
-         #   grb_out = open(filepath, 'wb')
         grb_out.write(grb.tostring())
         grb_out.close()
     grib_in.close()
 
 
 def download_and_move(parameters, startdate, enddate, product, format,
-                      target_path, keep_original=False, timesteps=[0, 6, 12, 18]):
+                      target_path, keep_original=False, grid_size=None, timesteps=[0, 6, 12, 18]):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 day increments between start and end date to be efficient with the MARS system.
@@ -254,7 +253,7 @@ def download_and_move(parameters, startdate, enddate, product, format,
         downloaded_data = os.path.join(downloaded_data_path, fname)
 
         download_era(current_start, current_end, parameters, downloaded_data,
-                     product, format, timesteps=timesteps)
+                     product, format, grid_size, timesteps=timesteps)
 
         if format == 'netcdf':
             save_ncs_from_nc(downloaded_data, target_path, product)
@@ -306,10 +305,11 @@ def parse_args(args):
                         help=("ECMWF product, ERA-Interim (default) or ERA5"))
     parser.add_argument("-f", "--format", type=str, default='grib',
                         help=("Downloaded data format, grib (default) or netcdf"))
-    parser.add_argument("--grid_size", type=tuple, default=None,
-                        help=("(lon,lat) Size of the grid that the data is stored to. "
+    parser.add_argument("--grid_size", type=float, default=None, nargs='+',
+                        help=("lon lat, Size of the grid that the data is stored to. "
                               "Must be set when downloading as 'netcdf'. "
-                              "Should be at least (0.75,0.75) for ERA-Interim and (0.3,0.3) for ERA5"))
+                              "Should be at least (and is by default) (0.75,0.75) for ERA-Interim "
+                              "and (0.3,0.3) for ERA5"))
 
     args = parser.parse_args(args)
 
@@ -320,29 +320,22 @@ def parse_args(args):
         args.end = datetime.now()
 
 
-    print("Downloading {} data from {} to {} into folder {}.".format( args.product,
-                                                                  args.start.isoformat(),
-                                                                  args.end.isoformat(),
-                                                                  args.localroot))
+    print("Downloading {} data from {} to {} into folder {}".format(args.product,
+                                                                    args.start.isoformat(),
+                                                                    args.end.isoformat(),
+                                                                    args.localroot))
     return args
 
 
 def main(args):
     args = parse_args(args)
 
-    download_and_move(
-        args.parameters, args.start, args.end, args.product, args.format, args.localroot)
+    download_and_move(args.parameters, args.start, args.end, args.product,
+                      args.format, args.localroot, grid_size=args.grid_size)
 
 
 def run():
     main(sys.argv[1:])
 
 if __name__ == '__main__':
-    #run()
-    parameters=[39,40,41,42,139,170,183,236]
-    path = '/data-read/USERS/wpreimes/ERA_test_download/ERA5_nc'
-    save_ncs_from_nc('/home/data-read/USERS/wpreimes/ERA_test_download/ERA5_nc/temp_downloaded/20100101_20100131.nc',
-                     '/home/data-read/USERS/wpreimes/ERA_test_download/ERA5_nc', 'ERA5')
-    # download_and_move(parameters, datetime(2010,1,1), datetime(2010,1,31), 'ERA5', 'netcdf', path, keep_original=True)
-
-
+    run()
