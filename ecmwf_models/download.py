@@ -161,7 +161,7 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
 
 
 def save_gribs_from_grib(input_grib, output_path, product_name,
-                         filename_templ="{product}_OPER_0001_AN_N{N}_%Y%m%d_%H%M.grb"):
+                         filename_templ="{product}_OPER_0001_AN_%Y%m%d_%H%M.grb"):
     """
     takes monthly grib files as downloaded by the function above and saves each time step
     in a separate file
@@ -186,13 +186,13 @@ def save_gribs_from_grib(input_grib, output_path, product_name,
     for grb in grib_in:
         template = filename_templ
         param_id = grb['marsParam']
-        N = grb['N']
+        #N = grb['N']
         step = grb['startStep']
         filedate = datetime(grb['year'], grb['month'], grb['day'], grb['hour'])
 
-        template = template.format(product=product_name,
+        template = template.format(product=product_name)
                                    #param_id=param_id,
-                                   N=N)
+                                   #N=N)
 
         filepath = create_dt_fpath(filedate,
                                    root=output_path,
@@ -227,8 +227,16 @@ def download_and_move(parameters, startdate, enddate, product, format,
         first date to download
     enddate: datetime
         last date to download
+    product: str
+        Name of the dataset to download (eg. ERA5, ERA-Interim)
+    format: str
+        format of the dataset to download (eg netcdf, grib)
     target_path: string
         path to which to copy the extracted parameter grib files
+    keep_original: bool
+        keep the original downloaded data
+    grid_size: list
+        [lon, lat] extent of the grid (regular for netcdf, at lat=0 for grib)
     timesteps: list, optional
         list of timesteps to download
     """

@@ -34,7 +34,7 @@ from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs, ERATs
 def test_ERAInterim_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "test_data", "ERA-Interim", "grib", "2000", "001",
-                         "ERA-Interim_OPER_0001_AN_N128_20000101_0000.grb")
+                         "ERA-Interim_OPER_0001_AN_20000101_0000.grb")
 
     dset = ERAGrbImg(fname, 'swvl1')
     data = dset.read()
@@ -53,7 +53,7 @@ def test_ERAInterim_image():
 def test_ERAInterim_image_no_expand():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "test_data", "ERA-Interim", "grib", "2000", "001",
-                         "ERA-Interim_OPER_0001_AN_N128_20000101_0000.grb")
+                         "ERA-Interim_OPER_0001_AN_20000101_0000.grb")
 
     dset = ERAGrbImg(fname, 'swvl1', expand_grid=False)
     data = dset.read()
