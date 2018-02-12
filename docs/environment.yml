@@ -16,3 +16,4 @@ dependencies:
     - pynetcf
     - repurpose
     - pytesmo
+    - sphinx_rtd_theme

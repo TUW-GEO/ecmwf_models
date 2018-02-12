@@ -46,8 +46,8 @@ def get_filetype(inpath):
 
     Parameters
     ----------
-    input_root: str
-        Input path where ERA data was downloaded
+    inpath: str
+        Input path where ERA data was downloaded to
 
     Returns
     -------
@@ -68,7 +68,7 @@ def get_filetype(inpath):
     elif '.grb' in filelist and '.nc' not in filelist:
         return 'grib'
     else:
-        # if file type cannot be detected, guess netCDF
+        # if file type cannot be detected, guess grib
         return 'grib'
 
 def reshuffle(input_root, outputpath,
@@ -100,6 +100,8 @@ def reshuffle(input_root, outputpath,
         input_dataset = ERAGrbDs(input_root, parameters, expand_grid=False)
     elif filetype == 'netcdf':
         input_dataset = ERANcDs(input_root, parameters, subgrid=False, array_1D=True)
+    else:
+        raise Exception('Unknown file format')
 
     if not os.path.exists(outputpath):
         os.makedirs(outputpath)
@@ -128,7 +130,7 @@ def parse_args(args):
     :return: command line parameters as :obj:`argparse.Namespace`
     """
     parser = argparse.ArgumentParser(
-        description="Convert ERA Interim data into time series format.")
+        description="Convert ERA data into time series format.")
     parser.add_argument("dataset_root",
                         help='Root of local filesystem where the data is stored.')
     parser.add_argument("timeseries_root",
@@ -139,16 +141,15 @@ def parse_args(args):
                         help=("Enddate. Either in format YYYY-MM-DD or YYYY-MM-DDTHH:MM."))
     parser.add_argument("parameters", metavar="parameters",
                         nargs="+",
-                        help=("Parameters to download in numerical format. e.g."
-                              "39 40 41 42 for Volumetric soil water layers 1 to 4."
-                              "A list of possible parameters is available at http://apps.ecmwf.int/codes/grib/param-db "
+                        help=("Short name of paramteres to reshuffle. e.g."
+                              "swvl1 swvl2 swvl3 swvl4, for Volumetric soil water layers 1 to 4."
+                              "A list of possible parameters is available at http://apps.ecmwf.int/codes/grib/param-db"
                               "or by using the 'View MARS request' option in the web based ordering system."))
 
     parser.add_argument("--imgbuffer", type=int, default=50,
                         help=("How many images to read at once. Bigger numbers make the "
                               "conversion faster but consume more memory."))
     args = parser.parse_args(args)
-    # set defaults that can not be handled by argparse
 
     print("Converting data from {} to {} into folder {}.".format(args.start.isoformat(),
                                                                  args.end.isoformat(),
