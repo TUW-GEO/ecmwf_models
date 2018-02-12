@@ -33,7 +33,7 @@ The dataset can be read by datetime using the ``ecmwf_models.ERAGrbDs`` and
 
     from ecmwf_models.interface import ERANcDs
     root_path = "/path/to/storage"
-    ds = ERAGrbDs(root_path, ['swvl1', 'swvl2'])
+    ds = ERANcDs(root_path, ['swvl1', 'swvl2'])
     data = ds.read(datetime(2000, 1, 1, 0))
 Multiple parameters can be read by providing a list to ``ERAGrbDs`` and ``ERANcDs``:
 
