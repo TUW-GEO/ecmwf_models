@@ -28,7 +28,7 @@ Tests for grid generation
 from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
 import numpy as np
 
-def test_regular_grid():
+def test_ERA_regular_grid():
     reg_grid = ERA_RegularImgGrid(0.3, 0.3)
     assert np.unique(reg_grid.activearrlat).size == 601
     assert np.unique(reg_grid.activearrlon).size == 1200

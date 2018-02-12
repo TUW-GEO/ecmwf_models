@@ -32,7 +32,7 @@ import tempfile
 import shutil
 import glob
 
-def test_ncs_from_nc():
+def test_ERA_ncs_from_nc():
     ncs_path = tempfile.mkdtemp()
     input_nc = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           "test_data", "ERA5", "example_downloaded_raw.nc")
@@ -44,7 +44,7 @@ def test_ncs_from_nc():
         assert f == 'ERA5_5.0_5.0_20100101_%s00.nc' % t
     shutil.rmtree(ncs_path)
 
-def test_gribs_from_grib():
+def test_ERA_gribs_from_grib():
     grbs_path = tempfile.mkdtemp()
     input_grb = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           "test_data", "ERA-Interim", "example_downloaded_raw.grb")
@@ -55,6 +55,3 @@ def test_gribs_from_grib():
     for f,t in zip(files, ['00', '06', '12', '18']):
         assert f == 'ERA-Interim_OPER_0001_AN_20000101_%s00.grb' % t
     shutil.rmtree(grbs_path)
-
-if __name__ == '__main__':
-    test_gribs_from_grib()

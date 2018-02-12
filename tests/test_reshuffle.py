@@ -35,7 +35,7 @@ from ecmwf_models.reshuffle import main
 from ecmwf_models.interface import ERATs
 import shutil
 
-def test_reshuffle_grb():
+def test_ERAInterim_reshuffle_grb():
 
     inpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           "test_data", "ERA-Interim", "grib")
@@ -59,7 +59,7 @@ def test_reshuffle_grb():
     shutil.rmtree(ts_path)
 
 
-def test_reshuffle_nc():
+def test_ERA5_reshuffle_nc():
 
     inpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           "test_data", "ERA5", "netcdf")
