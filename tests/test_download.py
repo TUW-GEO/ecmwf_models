@@ -39,7 +39,7 @@ def test_ERA_ncs_from_nc():
     save_ncs_from_nc(input_nc, ncs_path, 'ERA5')
 
     assert len(glob.glob(os.path.join(ncs_path, "2010", "001", "*.nc"))) == 4
-    files = os.listdir(os.path.join(ncs_path, "2010", "001"))
+    files = sorted(os.listdir(os.path.join(ncs_path, "2010", "001")))
     for f,t in zip(files, ['00', '06', '12', '18']):
         assert f == 'ERA5_5.0_5.0_20100101_%s00.nc' % t
     shutil.rmtree(ncs_path)
@@ -51,7 +51,7 @@ def test_ERA_gribs_from_grib():
     save_gribs_from_grib(input_grb, grbs_path, 'ERA-Interim')
 
     assert len(glob.glob(os.path.join(grbs_path, "2000", "001", "*.grb"))) == 4
-    files = os.listdir(os.path.join(grbs_path, "2000", "001"))
+    files = sorted(os.listdir(os.path.join(grbs_path, "2000", "001")))
     for f,t in zip(files, ['00', '06', '12', '18']):
         assert f == 'ERA-Interim_OPER_0001_AN_20000101_%s00.grb' % t
     shutil.rmtree(grbs_path)
