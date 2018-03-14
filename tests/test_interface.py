@@ -232,7 +232,7 @@ def test_ERA5_dataset_two_var_no_expand():
     nptest.assert_allclose(data.data['swvl2'][55 * 1200 + 347], 0.3269657, rtol = 1e-6)
     nptest.assert_allclose(data.lat[0], 90)
     nptest.assert_allclose(data.lon[0], 0)
-    nptest.assert_allclose(data.lon[data.lon.size/2], -180, rtol=1e-5)
+    nptest.assert_allclose(data.lon[int(data.lon.size/2)], -180, rtol=1e-5)
 
 
 
@@ -259,6 +259,4 @@ def test_ERA5_iter_dataset_two_var():
                 assert data.metadata[var]['long_name'] == metadata_should[var]['long_name']
                 assert data.metadata[var]['units'] == metadata_should[var]['units']
             nptest.assert_allclose(data.lat[0, 0], 90)
-
-
 

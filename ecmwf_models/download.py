@@ -201,7 +201,7 @@ def save_gribs_from_grib(input_grib, output_path, product_name,
         if not os.path.exists(os.path.dirname(filepath)):
             os.makedirs(os.path.dirname(filepath))
 
-        grb_out = open(filepath, 'a')
+        grb_out = open(filepath, 'ab')
 
         grb_out.write(grb.tostring())
         grb_out.close()
