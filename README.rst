@@ -11,35 +11,28 @@ ecmwf_models
 .. image:: https://badge.fury.io/py/ecmwf_models.svg
     :target: http://badge.fury.io/py/ecmwf_models
 
-.. image:: https://zenodo.org/badge/12761/TUW-GEO/ecmwf_models.svg
-   :target: https://zenodo.org/badge/latestdoi/12761/TUW-GEO/ecmwf_models
+.. image:: https://readthedocs.org/projects/ecmwf_models/badge/?version=latest
+   :target: http://ecmwf_models.readthedocs.org/
 
 Readers and converters for data from the `ECMWF reanalysis models
 <http://apps.ecmwf.int/datasets/>`_. Written in Python.
 
 Works great in combination with `pytesmo <https://github.com/TUW-GEO/pytesmo>`_.
 
-Description
-===========
+Citation
+========
 
-A small package for downloading ECMWF reanalysis data and converting it into a
-time series format supported by `pytesmo <https://github.com/TUW-GEO/pytesmo>`_.
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.593533.svg
+   :target: https://doi.org/10.5281/zenodo.593533
 
-Documentation
-=============
+If you use the software in a publication then please cite it using the Zenodo DOI.
+Be aware that this badge links to the latest package version.
 
-|Documentation Status|
+Please select your specific version at https://doi.org/10.5281/zenodo.593533 to get the DOI of that version.
+You should normally always use the DOI for the specific version of your record in citations.
+This is to ensure that other researchers can access the exact research artefact you used for reproducibility.
 
-.. |Documentation Status| image:: https://readthedocs.org/projects/ecmwf_models/badge/?version=latest
-   :target: http://ecmwf_models.readthedocs.org/
-
-Supported Products
-==================
-
-This version supports the following products:
-
-- ERA-Interim
-- ERA5
+You can find additional information regarding DOI versioning at http://help.zenodo.org/#versioning
 
 Installation
 ============
@@ -54,7 +47,7 @@ The following script will download and install all the needed packages.
 .. code::
 
     conda env create -f environment.yml
-    source activate ecmwf_models
+    source activate ecmwf-models
     pip install ecmwf_models
 
 This script should work on Linux or OSX and uses the ``environment.yml`` file
@@ -62,4 +55,35 @@ included in this repository. On Windows the reading of grib files is not
 available at the moment. On Windows a solution would be to download the ECMWF
 data in netCDF format instead.
 
+Supported Products
+==================
 
+This version supports the following products:
+
+- ERA-Interim
+- ERA5
+
+Contribute
+==========
+
+We are happy if you want to contribute. Please raise an issue explaining what
+is missing or if you find a bug. We will also gladly accept pull requests
+against our master branch for new features or bug fixes.
+
+Development setup
+-----------------
+
+For Development we also recommend the ``conda`` environment from the
+installation part.
+
+Guidelines
+----------
+
+If you want to contribute please follow these steps:
+
+- Fork the ecmwf_models repository to your account
+- make a new feature branch from the ecmwf_models master branch
+- Add your feature
+- please include tests for your contributions in one of the test directories
+  We use py.test so a simple function called test_my_feature is enough
+- submit a pull request to our master branch
