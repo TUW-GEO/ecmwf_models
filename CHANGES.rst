@@ -2,6 +2,16 @@
 Changelog
 =========
 
+Version 0.4
+===========
+
+- Add ERA5 support (download, reading, TS conversion)
+- Add netcdf support for ERA5 and ERA-Interim download (regular grid)
+- Add new grid defintions: netcdf download in regular grid, grib in gaussian grid
+- Add Download with spatial resampling (grib and nc) 
+- Update GRIB message storing (per day instead of per message)
+- Add tests for splitting downloaded files, ERA5 reading, ERA5 reshuffling, generated grids
+- Add new test data
 
 Version 0.3
 ===========
