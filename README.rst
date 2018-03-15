@@ -39,6 +39,7 @@ Supported Products
 This version supports the following products:
 
 - ERA-Interim
+- ERA5
 
 Installation
 ============
@@ -59,7 +60,6 @@ The following script will download and install all the needed packages.
 This script should work on Linux or OSX and uses the ``environment.yml`` file
 included in this repository. On Windows the reading of grib files is not
 available at the moment. On Windows a solution would be to download the ECMWF
-data in netCDF format instead. We do not yet support that format but would love
-pull requests for adding support.
+data in netCDF format instead.
 
 

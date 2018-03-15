@@ -2,7 +2,7 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2016,TU Wien
+# Copyright (c) 2018,TU Wien
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,17 +32,20 @@ try:
     import pygrib
 except ImportError:
     warnings.warn("pygrib has not been imported")
-from pygeobase.io_base import ImageBase
-from pygeobase.io_base import MultiTemporalImageBase
+from pygeobase.io_base import ImageBase, MultiTemporalImageBase
 from pygeobase.object_base import Image
 import numpy as np
 from datetime import timedelta
 from pygeogrids.netcdf import load_grid
 
 from pynetcf.time_series import GriddedNcOrthoMultiTs
+from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
+from netCDF4 import Dataset
+from datetime import datetime
 
 
-class ERAInterimImg(ImageBase):
+
+class ERAGrbImg(ImageBase):
     """
     Reader for a single ERA Interim grib file.
 
@@ -56,35 +59,42 @@ class ERAInterimImg(ImageBase):
         If the reduced gaußian grid should be expanded to a full gaußian grid.
     """
 
-    def __init__(self, filename, mode='r', expand_grid=True):
-        super(ERAInterimImg, self).__init__(filename, mode=mode)
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r', expand_grid=True):
+        super(ERAGrbImg, self).__init__(filename, mode=mode)
+
+        if type(parameter) == str:
+            parameter = [parameter]
+        self.parameter = parameter
         self.expand_grid = expand_grid
 
     def read(self, timestamp=None):
-
+        #TODO: Replace ERA5 missing data (!=0)
         grbs = pygrib.open(self.filename)
-        if grbs.messages != 1:
-            grbs.close()
-            raise IOError("Wrong number of messages in file")
 
+        img = {}
         metadata = {}
         for message in grbs:
+            param_name = message.short_name
+            if param_name not in self.parameter: continue
+            metadata[param_name] = {}
             message.expand_grid(self.expand_grid)
-            image = message.values
+            img[param_name] = message.values
             lats, lons = message.latlons()
-            metadata['units'] = message['units']
-            metadata['long_name'] = message['parameterName']
+            metadata[param_name]['units'] = message['units']
+            metadata[param_name]['long_name'] = message['parameterName']
 
             if 'levels' in message.keys():
-                metadata['depth'] = '{:} cm'.format(message['levels'])
+                metadata[param_name]['depth'] = '{:} cm'.format(message['levels'])
 
             if 'level' in message.keys():
-                metadata['depth'] = '{:} cm'.format(message['level'])
+                metadata[param_name]['depth'] = '{:} cm'.format(message['level'])
 
         grbs.close()
         lons_gt_180 = np.where(lons > 180.0)
         lons[lons_gt_180] = lons[lons_gt_180] - 360
-        return Image(lons, lats, image, metadata, timestamp)
+
+
+        return Image(lons, lats, img, metadata, timestamp)
 
     def write(self, data):
         raise NotImplementedError()
@@ -96,15 +106,109 @@ class ERAInterimImg(ImageBase):
         pass
 
 
-class ERAInterimDs(MultiTemporalImageBase):
+class ERANcImg(ImageBase):
     """
+    Reader for a single ERA netcdf file.
 
     Parameters
     ----------
-    parameter: string or list
-        parameter or list of parameters to read
+    filename: string
+        filename
+    mode: string, optional
+        mode in which to open the file
+    expand_grid: boolean, optional
+        If the reduced gaußian grid should be expanded to a full gaußian grid.
+    """
+
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r', subgrid=None, array_1D=False):
+
+        super(ERANcImg, self).__init__(filename, mode=mode)
+
+        if type(parameter) == str:
+            parameter = [parameter]
+        self.parameter = parameter
+        self.array_1D = array_1D
+        self.subgrid = subgrid
+
+    def read(self, timestamp=None):
+        #TODO: Replace ERA5 missing data (!=0)
+        return_img = {}
+        return_metadata = {}
+
+        try:
+            dataset = Dataset(self.filename)
+        except IOError as e:
+            print(e)
+            print(" ".join([self.filename, "can not be opened"]))
+            raise e
+
+        res_lat, res_lon = get_grid_resolution(dataset.variables['latitude'][:],
+                                               dataset.variables['longitude'][:])
+
+        self.grid = ERA_RegularImgGrid(res_lat, res_lon) if not self.subgrid else self.subgrid
+
+        for parameter, variable in dataset.variables.items():
+            if parameter in self.parameter:
+                param_metadata = {}
+                param_data = {}
+                for attrname in variable.ncattrs():
+                    param_metadata.update(
+                        {str(attrname): getattr(variable, attrname)})
+
+                param_data = variable[:]
+
+                param_data = param_data.flatten()
+
+                return_img.update(
+                    {str(parameter): param_data[self.grid.activegpis]})
+
+                return_metadata.update({str(parameter): param_metadata})
+
+                try:
+                    return_img[parameter]
+                except KeyError:
+                    path, thefile = os.path.split(self.filename)
+                    print ('%s in %s is corrupt - filling'
+                           'image with NaN values' % (parameter, thefile))
+                    return_img[parameter] = np.empty(
+                        self.grid.n_gpi).fill(np.nan)
+
+                    return_metadata['corrupt_parameters'].append()
+
+        dataset.close()
+
+        if self.array_1D:
+            return Image(self.grid.activearrlon, self.grid.activearrlat,
+                         return_img, return_metadata, timestamp)
+        else:
+            for key in return_img:
+                nlat = np.unique(self.grid.activearrlat).size
+                nlon = np.unique(self.grid.activearrlon).size
+                return_img[key] = return_img[key].reshape((nlat, nlon))
+            return Image(self.grid.activearrlon.reshape(nlat, nlon),
+                         self.grid.activearrlat.reshape(nlat, nlon),
+                         return_img,
+                         return_metadata,
+                         timestamp)
+
+    def write(self, data):
+        raise NotImplementedError()
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+
+class ERAGrbDs(MultiTemporalImageBase):
+    """
+    Parameters
+    ----------
     root_path: string
         root path where the data is stored
+    parameter: list or str
+        parameter or list of parameters to read
     subpath_templ: list, optional
         list of strings that specifies a subpath depending on date. If the
         data is e.g. in year folders
@@ -112,38 +216,23 @@ class ERAInterimDs(MultiTemporalImageBase):
         If the reduced gaußian grid should be expanded to a full gaußian grid.
     """
 
-    def __init__(self, parameter, root_path,
-                 subpath_templ=["ei_%Y"], expand_grid=True):
-        super(ERAInterimDs, self).__init__(root_path, ERAInterimImg,
-                                           subpath_templ=subpath_templ,
-                                           ioclass_kws={'expand_grid': expand_grid})
+    def __init__(self, root_path, parameter=['swvl1', 'swvl2'], expand_grid=True):
+
+        subpath_templ = ["%Y", "%j"]
+
         if type(parameter) == str:
             parameter = [parameter]
-        self.parameters = parameter
-        self.filename_template = "%s.128_EI_OPER_0001_AN_N128_%s_0.grb"
 
-    def _assemble_img(self, timestamp, **kwargs):
+        ioclass_kws = {'parameter': parameter,
+                       'expand_grid': expand_grid}
 
-        return_img = {}
-        metadata_img = {}
-        for parameter in self.parameters:
+        super(ERAGrbDs, self).__init__(root_path, ERAGrbImg,
+                                       fname_templ='*_{datetime}.grb',
+                                       datetime_format="%Y%m%d_%H%M",
+                                       subpath_templ=subpath_templ,
+                                       exact_templ=False,
+                                       ioclass_kws=ioclass_kws)
 
-            custom_templ = self.filename_template % (
-                parameter,
-                timestamp.strftime('%Y%m%d_%H%M'))
-            grb_file = self._build_filename(
-                timestamp, custom_templ=custom_templ)
-
-            self._open(grb_file)
-            (data, metadata,
-             timestamp, lon,
-             lat, time) = self.fid.read(timestamp=timestamp,
-                                        **kwargs)
-
-            return_img[parameter] = data
-            metadata_img[parameter] = metadata
-
-        return Image(lon, lat, return_img, metadata_img, timestamp)
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
@@ -171,7 +260,69 @@ class ERAInterimDs(MultiTemporalImageBase):
         return timestamps
 
 
-class ERAinterimTs(GriddedNcOrthoMultiTs):
+class ERANcDs(MultiTemporalImageBase):
+    """
+    Class for reading ERA 5 images in nc format.
+
+    Parameters
+    ----------
+    root_path: string
+        root path where the data is stored
+    parameter: list or str
+        parameter or list of parameters to read
+    subpath_templ: list, optional
+        list of strings that specifies a subpath depending on date. If the
+        data is e.g. in year folders
+    expand_grid: boolean, optional
+        If the reduced gaußian grid should be expanded to a full gaußian grid.
+    """
+
+    def __init__(self, root_path, parameter=['swvl1', 'swvl2'],
+                 subgrid=False, array_1D=False):
+
+        subpath_templ = ["%Y", "%j"]
+
+        if type(parameter) == str:
+            parameter = [parameter]
+
+        ioclass_kws = {'parameter': parameter,
+                       'subgrid': subgrid,
+                       'array_1D': array_1D}
+
+        super(ERANcDs, self).__init__(root_path, ERANcImg,
+                                      fname_templ='*_{datetime}.nc',
+                                      datetime_format="%Y%m%d_%H%M",
+                                      subpath_templ=subpath_templ,
+                                      exact_templ=False,
+                                      ioclass_kws=ioclass_kws)
+
+    def tstamps_for_daterange(self, start_date, end_date):
+        """
+        return timestamps for daterange
+
+        Parameters
+        ----------
+        start_date: datetime
+            start datetime
+        end_date: datetime
+            end datetime
+
+        """
+        img_offsets = np.array([timedelta(hours=0),
+                                timedelta(hours=6),
+                                timedelta(hours=12),
+                                timedelta(hours=18)])
+
+        timestamps = []
+        diff = end_date - start_date
+        for i in range(diff.days + 1):
+            daily_dates = start_date + timedelta(days=i) + img_offsets
+            timestamps.extend(daily_dates.tolist())
+
+        return timestamps
+
+
+class ERATs(GriddedNcOrthoMultiTs):
 
     def __init__(self, ts_path, grid_path=None):
 
@@ -179,4 +330,5 @@ class ERAinterimTs(GriddedNcOrthoMultiTs):
             grid_path = os.path.join(ts_path, "grid.nc")
 
         grid = load_grid(grid_path)
-        super(ERAinterimTs, self).__init__(ts_path, grid)
+        super(ERATs, self).__init__(ts_path, grid)
+

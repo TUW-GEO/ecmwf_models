@@ -34,13 +34,46 @@ import numpy as np
 from pygeogrids import BasicGrid
 
 from repurpose.img2ts import Img2Ts
-from ecmwf_models.interface import ERAInterimDs
+from ecmwf_models.interface import ERAGrbDs, ERANcDs
 from ecmwf_models.download import mkdate
 
 
+def get_filetype(inpath):
+    """
+    Tries to find out the file type by searching for
+    grib or nc files two subdirectories into the passed input path.
+    If function fails, grib is assumed.
+
+    Parameters
+    ----------
+    inpath: str
+        Input path where ERA data was downloaded to
+
+    Returns
+    -------
+    filetype : str
+        File type string.
+    """
+    onedown = os.path.join(inpath, os.listdir(inpath)[0])
+    twodown = os.path.join(onedown, os.listdir(onedown)[0])
+
+    filelist = []
+    for path, subdirs, files in os.walk(twodown):
+        for name in files:
+            filename, extension = os.path.splitext(name)
+            filelist.append(extension)
+
+    if '.nc' in filelist and '.grb' not in filelist:
+        return 'netcdf'
+    elif '.grb' in filelist and '.nc' not in filelist:
+        return 'grib'
+    else:
+        # if file type cannot be detected, guess grib
+        return 'grib'
+
 def reshuffle(input_root, outputpath,
               startdate, enddate,
-              parameters,
+              parameters, land_points=False,
               imgbuffer=50):
     """
     Reshuffle method applied to ERA-Interim data.
@@ -57,29 +90,35 @@ def reshuffle(input_root, outputpath,
         End date.
     parameters: list
         parameters to read and convert
+    landpoints: bool
+        reshuffle land points only (not implemented yet)
     imgbuffer: int, optional
         How many images to read at once before writing time series.
     """
-
-    input_dataset = ERAInterimDs(parameters, input_root,
-                                 expand_grid=False)
+    filetype = get_filetype(input_root)
+    if filetype == 'grib':
+        input_dataset = ERAGrbDs(input_root, parameters, expand_grid=False)
+    elif filetype == 'netcdf':
+        input_dataset = ERANcDs(input_root, parameters, subgrid=False, array_1D=True)
+    else:
+        raise Exception('Unknown file format')
 
     if not os.path.exists(outputpath):
         os.makedirs(outputpath)
 
-    global_attr = {'product': 'ERA Interim'}
+    global_attr = {'product': 'ECMWF Reanalysis from {}'.format(filetype)}
 
     # get time series attributes from first day of data.
     data = input_dataset.read(startdate)
     ts_attributes = data.metadata
+
     grid = BasicGrid(data.lon, data.lat)
 
     reshuffler = Img2Ts(input_dataset=input_dataset, outputpath=outputpath,
-                        startdate=startdate, enddate=enddate,
-                        input_grid=grid,
+                        startdate=startdate, enddate=enddate, input_grid=grid,
                         imgbuffer=imgbuffer, cellsize_lat=5.0, cellsize_lon=5.0,
                         ts_dtypes=np.dtype('float32'), global_attr=global_attr,
-                        ts_attributes=ts_attributes)
+                        zlib=True, unlim_chunksize=1000, ts_attributes=ts_attributes)
     reshuffler.calc()
 
 
@@ -91,7 +130,7 @@ def parse_args(args):
     :return: command line parameters as :obj:`argparse.Namespace`
     """
     parser = argparse.ArgumentParser(
-        description="Download ERA Interim data.")
+        description="Convert ERA data into time series format.")
     parser.add_argument("dataset_root",
                         help='Root of local filesystem where the data is stored.')
     parser.add_argument("timeseries_root",
@@ -102,16 +141,15 @@ def parse_args(args):
                         help=("Enddate. Either in format YYYY-MM-DD or YYYY-MM-DDTHH:MM."))
     parser.add_argument("parameters", metavar="parameters",
                         nargs="+",
-                        help=("Parameters to download in numerical format. e.g."
-                              "39 40 41 42 for Volumetric soil water layers 1 to 4."
-                              "A list of possible parameters is available at http://apps.ecmwf.int/codes/grib/param-db "
+                        help=("Short name of paramteres to reshuffle. e.g."
+                              "swvl1 swvl2 swvl3 swvl4, for Volumetric soil water layers 1 to 4."
+                              "A list of possible parameters is available at http://apps.ecmwf.int/codes/grib/param-db"
                               "or by using the 'View MARS request' option in the web based ordering system."))
 
     parser.add_argument("--imgbuffer", type=int, default=50,
                         help=("How many images to read at once. Bigger numbers make the "
                               "conversion faster but consume more memory."))
     args = parser.parse_args(args)
-    # set defaults that can not be handled by argparse
 
     print("Converting data from {} to {} into folder {}.".format(args.start.isoformat(),
                                                                  args.end.isoformat(),
@@ -135,3 +173,5 @@ def run():
 
 if __name__ == '__main__':
     run()
+
+
