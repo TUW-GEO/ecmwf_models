@@ -11,7 +11,7 @@ guide for this is provided by `ECMWF
 
 After that you can use the command line program ``ecmwf_download`` to download
 data. For example ``ecmwf_download /path/to/storage 39 40 -s 2000-01-01 -e
-2000-02-01 -p ERA-Interim`` would download the parameters 39 and 40 of ERA-Interim in grib format on the
+2000-02-01 -p ERA-Interim`` would download the parameters 39 and 40 of ERA-Interim in grib1 format on the
 default gaussian grid for ERA-Interim into the folder ``/path/to/storage`` between the first of January 2000
 and the first of February 2000. The data will be stored in subfolders of the format ``YYYY/jjj``, where YYYY describes the
 year and jjj the day of the year for the downloaded files. After the download the data can be

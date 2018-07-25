@@ -37,7 +37,7 @@ import shutil
 import numpy as np
 
 
-def download_era(start, end, parameters, target, product='ERA-Interim', format='grib',
+def download_era(start, end, parameters, target, product='ERA-Interim', format='grib1',
                  grid_size=None, timesteps=[0, 6, 12, 18], landmask = True):
     """
     Download era 5 data
@@ -55,7 +55,7 @@ def download_era(start, end, parameters, target, product='ERA-Interim', format='
     product : str, optional
         Name of the model, "ERA-interim" (default) or "ERA5"
     format: str, optional
-        format of the downloaded data, netcdf or grib (default)
+        format of the downloaded data, netcdf or grib1 (default)
     grid_size: [float,float], optional
         size of the grid in form (lon, lat), which the data is resampled to
         If None is passed the minimum grid for the accoring product is chosen
@@ -243,9 +243,9 @@ def download_and_move(parameters, startdate, enddate, product, format,
     td = timedelta(days=30)
     current_start = startdate
 
-    if format not in ['netcdf', 'grib']:
-        raise ValueError("Choose 'grib' or 'netcdf' as format")
-    fextension = '.grb' if format == 'grib' else '.nc'
+    if format not in ['netcdf', 'grib1']:
+        raise ValueError("Choose 'grib1' or 'netcdf' as format")
+    fextension = '.grb' if format == 'grib1' else '.nc'
 
 
     while current_start <= enddate:
@@ -312,7 +312,8 @@ def parse_args(args):
     parser.add_argument("-p", "--product", type=str, default='ERA-Interim',
                         help=("ECMWF product, ERA-Interim (default) or ERA5"))
     parser.add_argument("-f", "--format", type=str, default='grib',
-                        help=("Downloaded data format, grib (default) or netcdf"))
+                        help=("Downloaded data format, grib1 (default) or netcdf. "
+                              "Info on GRIB: https://software.ecmwf.int/wiki/display/CKB/What+are+GRIB+files"))
     parser.add_argument("--grid_size", type=float, default=None, nargs='+',
                         help=("lon lat, Size of the grid that the data is stored to. "
                               "Must be set when downloading as 'netcdf'. "
