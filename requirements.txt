@@ -6,4 +6,6 @@ pygrib
 pygeogrids
 xarray
 datedown
-
+configobj
+pygeobase
+repurpose

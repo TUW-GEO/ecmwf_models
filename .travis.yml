@@ -39,8 +39,6 @@ install:
     else
       conda install -c conda-forge pygrib netcdf4=1.2.2;
     fi
-  - pip install pygeobase
-  - pip install repurpose
   - pip install -r requirements.txt
   - pip install .
   - pip list

@@ -6,6 +6,7 @@ dependencies:
 - matplotlib
 - netcdf4=1.2.2
 - pandas
+- configobj
 - basemap
 - pygrib
 - scipy
