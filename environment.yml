@@ -13,7 +13,7 @@ dependencies:
 - scipy
 - pyresample
 - xarray
-- pytest=3.8.2
+- pytest=3.1.2
 - pip:
     - pygeogrids
     - pygeobase
@@ -23,3 +23,5 @@ dependencies:
     - repurpose
     - pytesmo
     - datedown>=0.3
+    - coverage==4.1
+    - pytest-cov==2.2.1

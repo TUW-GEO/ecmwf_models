@@ -3,16 +3,19 @@
 # scipy>=0.9
 numpy
 pandas
+scipy
 configobj
 pygrib>=2.0.1
-scipy
+netcdf4==1.2.2
 pyresample
 xarray
 ecmwf-api-client
-netcdf4==1.2.2
 datedown>=0.3
 pygeogrids
 pygeobase
 repurpose
+pytesmo
+pynetcf
+configobj
 
 
