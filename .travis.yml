@@ -30,13 +30,10 @@ install:
   - conda info -a
 
   - conda create -n ecmwf-models python=${TRAVIS_PYTHON_VERSION}
-
   - source activate ecmwf-models
   - conda env update -f environment.yml
 
   - python setup.py install
-  - which pip
-  - which python
 
 script:
   - python setup.py test

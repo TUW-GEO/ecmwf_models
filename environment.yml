@@ -18,7 +18,7 @@ dependencies:
     - pygeogrids
     - pygeobase
     - configobj
-    - https://software.ecmwf.int/wiki/download/attachments/56664858/ecmwf-api-client-python.tgz#egg=ecmwf_api_client
+    - ecmwf-api-client
     - pynetcf
     - repurpose
     - pytesmo
