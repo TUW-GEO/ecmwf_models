@@ -12,9 +12,6 @@ python:
   - "2.7"
   - "3.4"
   - "3.5"
-env:
-  - PYGRIB="1.9.9"
-  - PYGRIB="2.0.1"
 install:
   # You may want to periodically update this, although the conda update
   # conda line below will keep everything up-to-date.  We do this
@@ -32,16 +29,12 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -n test-environment -c conda-forge python=$TRAVIS_PYTHON_VERSION pytest pip pyproj netcdf4=1.2.2 scipy pandas matplotlib pyresample
-  - source activate test-environment
-  - if [[ "$PYGRIB" == "1.9.9" ]]; then
-      pip install pygrib==1.9.9;
-    else
-      conda install -c conda-forge pygrib netcdf4=1.2.2;
-    fi
-  - pip install -r requirements.txt
-  - pip install .
-  - pip list
+  - conda create -n ecmwf-models python=${TRAVIS_PYTHON_VERSION}
+
+  - source activate ecmwf-models
+  - conda env update -f environment.yml
+
+  - python setup.py install
   - which pip
   - which python
 

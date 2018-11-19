@@ -2,10 +2,13 @@
 # numpy
 # scipy>=0.9
 https://software.ecmwf.int/wiki/download/attachments/56664858/ecmwf-api-client-python.tgz#egg=ecmwf_api_client
-pygrib
+pygrib>=2.0.1
+netcdf4==1.2.2
+datedown>=0.3
+pyresample
 pygeogrids
-xarray
-datedown
-configobj
 pygeobase
+xarray
 repurpose
+configobj
+
