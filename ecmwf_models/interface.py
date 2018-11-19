@@ -86,8 +86,8 @@ class ERAGrbImg(ImageBase):
             if 'levels' in message.keys():
                 metadata[param_name]['depth'] = '{:} cm'.format(message['levels'])
 
-            if 'level' in message.keys():
-                metadata[param_name]['depth'] = '{:} cm'.format(message['level'])
+            #if 'level' in message.keys():
+            #    metadata[param_name]['depth'] = '{:} cm'.format(message['level'])
 
         grbs.close()
         lons_gt_180 = np.where(lons > 180.0)
