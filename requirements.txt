@@ -1,7 +1,7 @@
 # Add your requirements here like:
 # numpy
 # scipy>=0.9
-numpy
+numpy>=1.15.4
 pandas
 scipy
 configobj
@@ -17,5 +17,3 @@ repurpose
 pytesmo
 pynetcf
 configobj
-
-

@@ -1,7 +1,6 @@
-#this file is not used at the moment
 name: ecmwf-models
 channels:
-  - conda-forge
+- conda-forge
 dependencies:
 - numpy
 - matplotlib

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
 # Copyright (c) 2018, TU Wien
@@ -27,7 +28,12 @@ Module for Downloading ECMWF ERA Interim and ERA5 data in grib and netcdf format
 from ecmwfapi import ECMWFDataServer
 import argparse
 import sys
-import pygrib
+import warnings
+try:
+    import pygrib
+except ImportError:
+    warnings.warn("pygrib has not been imported")
+
 import os
 from datetime import datetime, timedelta
 import xarray as xr
