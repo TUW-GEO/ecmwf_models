@@ -37,24 +37,27 @@ You can find additional information regarding DOI versioning at http://help.zeno
 Installation
 ============
 
-The following command will download and install all the needed packages.
-
-.. code::
-    pip install ecmwf_models
-
-To process grib images, the according package has to be installed via the conda
-command. For installation we recommend `Miniconda
-<http://conda.pydata.org/miniconda.html>`_. So please install it according to
-the official installation instructions. As soon as you have the ``conda``
+Install required C-libraries via conda. For installation we recommend
+`Miniconda<http://conda.pydata.org/miniconda.html>`_. So please install it according
+to the official installation instructions. As soon as you have the ``conda``
 command in your shell you can continue.
 
 .. code::
-    conda install -c conda-forge pygrib
 
-To create a full development environment with conda, the environment.yml file in this
-repository can be used.
+    conda install -c conda-forge pygrib netcdf4=1.2.2
+
+The following command will download and install all the needed pip packages as well
+as the ecmwf-model package itself.
 
 .. code::
+
+    pip install ecmwf_models
+
+To create a full development environment with conda, the environment.yml file
+in this repository can be used.
+
+.. code::
+
     git clone git@github.com:TUW-GEO/ecmwf_models.git ecmwf_models
     cd ecmwf_models
     conda create -n ecmwf-models python=2.7 # or any other supported version
