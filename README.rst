@@ -8,8 +8,8 @@ ecmwf_models
 .. image:: https://coveralls.io/repos/github/TUW-GEO/ecmwf_models/badge.svg?branch=master
    :target: https://coveralls.io/github/TUW-GEO/ecmwf_models?branch=master
 
-.. image:: https://badge.fury.io/py/ecmwf_models.svg
-    :target: http://badge.fury.io/py/ecmwf_models
+.. image:: https://badge.fury.io/py/ecmwf-models.svg
+    :target: https://badge.fury.io/py/ecmwf-models
 
 .. image:: https://readthedocs.org/projects/ecmwf_models/badge/?version=latest
    :target: http://ecmwf_models.readthedocs.org/
