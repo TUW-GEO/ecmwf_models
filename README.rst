@@ -38,7 +38,7 @@ Installation
 ============
 
 Install required C-libraries via conda. For installation we recommend
-`Miniconda<http://conda.pydata.org/miniconda.html>`_. So please install it according
+`Miniconda <http://conda.pydata.org/miniconda.html>`_. So please install it according
 to the official installation instructions. As soon as you have the ``conda``
 command in your shell you can continue.
 
