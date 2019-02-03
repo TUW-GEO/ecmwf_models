@@ -5,6 +5,10 @@ Changelog
 Version 0.X
 ===========
 
+- Update documentation
+- Fix bugs, update command line interfaces, update dependencies
+- Separate download programs for ERA5 and ERA Interim
+- Change the ERA5 download api to use cdsapi instead of ecmwf api
 - Update readme
 
 Version 0.4

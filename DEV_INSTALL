@@ -1,0 +1,9 @@
+# Add commands to create a full environment setup here
+
+conda config --set always_yes yes
+source deactivate
+conda remove -n ecmwf-models --all
+conda create -n ecmwf-models python=2.7
+source activate ecmwf-models
+conda env update -f environment.yml
+conda config --set always_yes no

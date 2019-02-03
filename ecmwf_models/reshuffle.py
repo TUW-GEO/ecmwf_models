@@ -126,9 +126,17 @@ def parse_args(args):
     """
     Parse command line parameters for conversion from image to timeseries
 
-    :param args: command line parameters as list of strings
-    :return: command line parameters as :obj:`argparse.Namespace`
+    Parameters
+    ----------
+    args: list
+        command line parameters as list of strings
+
+    Returns
+    ----------
+    args : argparse.Namespace
+        Parsed command line parameters
     """
+
     parser = argparse.ArgumentParser(
         description="Convert ERA data into time series format.")
     parser.add_argument("dataset_root",
