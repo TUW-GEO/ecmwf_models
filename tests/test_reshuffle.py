@@ -66,19 +66,19 @@ def test_ERA5_reshuffle_nc():
     ts_path = tempfile.mkdtemp()
     startdate = '2010-01-01T00:00'
     enddate = '2010-01-01T18:00'
-    parameters = ["swvl1", "swvl2"]
+    parameters = ["swvl1"]
 
     args = [inpath, ts_path, startdate, enddate] + parameters
     main(args)
     assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 2593
-    ds = ERATs(ts_path)
-    ts = ds.read_ts(15, 45)
+    ds = ERATs(ts_path, ioclass_kws={'read_bulk':True})
+    ts = ds.read(15, 45)
     ts_39_values_should = np.array([0.433002,  0.428259,  0.423589,
                                     0.437551], dtype=np.float32)
     nptest.assert_allclose(ts['swvl1'].values, ts_39_values_should, rtol=1e-5)
-    ts_40_values_should = np.array([0.435801,  0.434743,  0.428730,
-                                    0.434220], dtype=np.float32)
-    nptest.assert_allclose(ts['swvl2'].values, ts_40_values_should, rtol=1e-5)
+    #ts_40_values_should = np.array([0.435801,  0.434743,  0.428730,
+    #                                0.434220], dtype=np.float32)
+    #nptest.assert_allclose(ts['swvl2'].values, ts_40_values_should, rtol=1e-5)
 
     shutil.rmtree(ts_path)
 
