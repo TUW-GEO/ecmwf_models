@@ -53,9 +53,21 @@ def get_grid_resolution(lats, lons):
 
 def ERA_RegularImgGrid(res_lat=0.3, res_lon=0.3):
     '''
-    ECMWF 0.25deg cell grid.
-    :return: global QDEG-CellGrid
+    Create ECMWF regular cell grid
+
+    Parameters
+    ----------
+    res_lat : float, optional (default: 0.3)
+        Resolution in Y direction
+    res_lon : float, optional (default: 0.3)
+        Resolution in X direction
+
+    Returns
+    ----------
+    CellGrid : pygeogrids.CellGrid
+        Regular, global CellGrid with 5DEG*5DEG cells
     '''
+
     lon = np.arange(0, 360 - res_lon / 2, res_lon)
     lat = np.arange(90, -1 * 90 - res_lat / 2, -1 * res_lat)
     lons_gt_180 = np.where(lon > 180.0)
@@ -67,6 +79,7 @@ def ERA_RegularImgGrid(res_lat=0.3, res_lon=0.3):
 
 
 def ECMWF025LandGrid():
-    #TODO: add function to generate TS from land points only, use land mask (param: 172) to detect land points
+    #TODO: add function to generate TS from land points only,
+    # use land mask (param: 172) to detect land points
     raise NotImplementedError
 

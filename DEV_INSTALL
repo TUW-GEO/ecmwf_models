@@ -1,4 +1,5 @@
 # Add commands to create a full environment setup here
+# Run this in the cloned repository directory to setup the development environment.
 
 conda config --set always_yes yes
 source deactivate

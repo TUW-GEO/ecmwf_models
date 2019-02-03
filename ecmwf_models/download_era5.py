@@ -26,7 +26,6 @@ Module to download ERA5 from terminal.
 '''
 
 from download import save_gribs_from_grib, save_ncs_from_nc, mkdate
-from ecmwfapi import ECMWFDataServer
 import argparse
 import sys
 import warnings
@@ -37,11 +36,7 @@ except ImportError:
 
 import os
 from datetime import datetime, timedelta, time
-import xarray as xr
-import pandas as pd
-from datedown.fname_creator import create_dt_fpath
 import shutil
-import numpy as np
 import cdsapi
 import calendar
 
@@ -127,8 +122,6 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         Add the variable for a land sea mask to the parameters
     keep_original: bool
         keep the original downloaded data
-    grid_size: list
-        [lon, lat] extent of the grid (regular for netcdf, at lat=0 for grib)
     h_steps: list
         List of full hours to download data at the selected dates e.g [0, 12]
     netcdf: bool, optional (default: False)
@@ -197,16 +190,16 @@ def parse_args(args):
 
     parser = argparse.ArgumentParser(
         description="Download ERA 5 reanalysis data (6H) between two dates. "
-                    "Before this program can be used, you have to register at CDS "
+                    "Before this program can be used, you have to register at the CDS "
                     "and setup your .cdsapirc file as described here: "
                     "https://cds.climate.copernicus.eu/api-how-to")
     parser.add_argument("localroot",
-                        help='Root of local filesystem where the data will be stored.')
+                        help='Root of local filesystem where the downloaded data will be stored.')
     parser.add_argument("-s", "--start", type=mkdate, default=datetime(1979, 1, 1),
-                        help=("Startdate. In format YYYY-MM-DD"
+                        help=("Startdate in format YYYY-MM-DD. "
                               "If no data is found there then the first available date of the product is used."))
     parser.add_argument("-e", "--end", type=mkdate, default=datetime.now(),
-                        help=("Enddate. Either in format YYYY-MM-DD"
+                        help=("Enddate in format YYYY-MM-DD. "
                               "If not given then the current date is used."))
     parser.add_argument("-var", "--variables", metavar="variables", type=str, default=None,
                         nargs="+",
@@ -220,7 +213,7 @@ def parse_args(args):
                               "See the ERA5 documentation for more variable names: "
                               "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation"))
     parser.add_argument("-nc", "--netcdf", type=bool, default=False,
-                        help=("Download date in netcdf format, instead of the default grib format (experimental)"))
+                        help=("Download data in netcdf format, instead of the default grib format (experimental)"))
 
     args = parser.parse_args(args)
 

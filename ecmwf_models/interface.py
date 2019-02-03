@@ -51,15 +51,21 @@ class ERAGrbImg(ImageBase):
 
     Parameters
     ----------
-    filename: string
-        filename
-    mode: string, optional
-        mode in which to open the file
-    expand_grid: boolean, optional
-        If the reduced gaußian grid should be expanded to a full gaußian grid.
+    filename: str
+        Path to the image file to read.
+    parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        Name of parameters to read from the image file.
+    mode: str, optional (default: 'r')
+        Mode in which to open the file, changing this can cause data loss.
+    subgrid: pygeogrids.CellGrid, optional (default:None)
+        Read only data for points of this grid and not global values.
+    array_1D: bool, optional (default: False)
+        Read data as list, instead of 2D array, used for reshuffling.
     """
 
-    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r', expand_grid=True):
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
+                 expand_grid=True):
+
         super(ERAGrbImg, self).__init__(filename, mode=mode)
 
         if type(parameter) == str:
@@ -86,9 +92,6 @@ class ERAGrbImg(ImageBase):
             if 'levels' in message.keys():
                 metadata[param_name]['depth'] = '{:} cm'.format(message['levels'])
 
-            #if 'level' in message.keys():
-            #    metadata[param_name]['depth'] = '{:} cm'.format(message['level'])
-
         grbs.close()
         lons_gt_180 = np.where(lons > 180.0)
         lons[lons_gt_180] = lons[lons_gt_180] - 360
@@ -112,15 +115,20 @@ class ERANcImg(ImageBase):
 
     Parameters
     ----------
-    filename: string
-        filename
-    mode: string, optional
-        mode in which to open the file
-    expand_grid: boolean, optional
-        If the reduced gaußian grid should be expanded to a full gaußian grid.
+    filename: str
+        Path to the image file to read.
+    parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        Name of parameters to read from the image file.
+    mode: str, optional (default: 'r')
+        Mode in which to open the file, changing this can cause data loss.
+    subgrid: pygeogrids.CellGrid, optional (default:None)
+        Read only data for points of this grid and not global values.
+    array_1D: bool, optional (default: False)
+        Read data as list, instead of 2D array, used for reshuffling.
     """
 
-    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r', subgrid=None, array_1D=False):
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
+                 subgrid=None, array_1D=False):
 
         super(ERANcImg, self).__init__(filename, mode=mode)
 
@@ -206,17 +214,15 @@ class ERAGrbDs(MultiTemporalImageBase):
     Parameters
     ----------
     root_path: string
-        root path where the data is stored
-    parameter: list or str
-        parameter or list of parameters to read
-    subpath_templ: list, optional
-        list of strings that specifies a subpath depending on date. If the
-        data is e.g. in year folders
-    expand_grid: boolean, optional
+        Root path where the data is stored
+    parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        Parameter or list of parameters to read
+    expand_grid: bool, optional (default: True)
         If the reduced gaußian grid should be expanded to a full gaußian grid.
     """
 
-    def __init__(self, root_path, parameter=['swvl1', 'swvl2'], expand_grid=True):
+    def __init__(self, root_path, parameter=['swvl1', 'swvl2'],
+                 expand_grid=True):
 
         subpath_templ = ["%Y", "%j"]
 
@@ -236,16 +242,16 @@ class ERAGrbDs(MultiTemporalImageBase):
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
-        return timestamps for daterange
+        Get datetimes in 6H resolution between 2 dates
 
         Parameters
         ----------
         start_date: datetime
-            start datetime
+            Start datetime
         end_date: datetime
-            end datetime
-
+            End datetime
         """
+
         img_offsets = np.array([timedelta(hours=0),
                                 timedelta(hours=6),
                                 timedelta(hours=12),
@@ -266,19 +272,21 @@ class ERANcDs(MultiTemporalImageBase):
 
     Parameters
     ----------
-    root_path: string
-        root path where the data is stored
-    parameter: list or str
-        parameter or list of parameters to read
-    subpath_templ: list, optional
-        list of strings that specifies a subpath depending on date. If the
-        data is e.g. in year folders
-    expand_grid: boolean, optional
-        If the reduced gaußian grid should be expanded to a full gaußian grid.
+    root_path: str
+        Root path where image data is stored
+    parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        Parameter or list of parameters to read from image files
+    subpath_templ: list, optional (default: ["%Y", "%j"])
+        List of strings that specifies a sub-path depending on date. If the
+        data is e.g. stored in day-of-year files in yearly folders.
+    subgrid: pygeogrids.CellGrid, optional (default:None)
+        Read only data for points of this grid and not global values.
+    array_1D: bool, optional (default:False)
+        Read data as list, instead of 2D array, used for reshuffling.
     """
 
-    def __init__(self, root_path, parameter=['swvl1', 'swvl2'],
-                 subgrid=False, array_1D=False):
+    def __init__(self, root_path, parameter=['swvl1', 'swvl2'], subgrid=None,
+                 array_1D=False):
 
         subpath_templ = ["%Y", "%j"]
 
@@ -298,16 +306,16 @@ class ERANcDs(MultiTemporalImageBase):
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
-        return timestamps for daterange
+        Get datetimes in 6H resolution between 2 dates
 
         Parameters
         ----------
         start_date: datetime
-            start datetime
+            Start datetime
         end_date: datetime
-            end datetime
-
+            End datetime
         """
+
         img_offsets = np.array([timedelta(hours=0),
                                 timedelta(hours=6),
                                 timedelta(hours=12),
@@ -323,12 +331,45 @@ class ERANcDs(MultiTemporalImageBase):
 
 
 class ERATs(GriddedNcOrthoMultiTs):
+    '''
+     Class for reading ERA time series from reshuffled images.
 
-    def __init__(self, ts_path, grid_path=None):
+     Parameters
+     ----------
+     ts_path : str
+         Directory where the netcdf time series files are stored
+     grid_path : str, optional (default: None)
+         Path to grid file, that is used to organize the location of time
+         series to read. If None is passed, grid.nc is searched for in the
+         ts_path.
+
+     Optional keyword arguments that are passed to the Gridded Base:
+     ------------------------------------------------------------------------
+         parameters : list, optional (default: None)
+             Specific variable names to read, if None are selected, all are read.
+         offsets : dict, optional (default:None)
+             Offsets (values) that are added to the parameters (keys)
+         scale_factors : dict, optional (default:None)
+             Offset (value) that the parameters (key) is multiplied with
+         ioclass_kws: dict, (optional)
+
+             Optional keyword arguments to pass to OrthoMultiTs class:
+             ----------------------------------------------------------------
+                 read_bulk : boolean, optional (default:False)
+                     if set to True the data of all locations is read into memory,
+                     and subsequent calls to read_ts read from the cache and
+                     not from disk this makes reading complete files faster
+                 read_dates : boolean, optional (default:False)
+                     if false dates will not be read automatically but only on
+                     specific request useable for bulk reading because currently
+                     the netCDF num2date routine is very slow for big datasets.
+     '''
+
+    def __init__(self, ts_path, grid_path=None, **kwargs):
 
         if grid_path is None:
             grid_path = os.path.join(ts_path, "grid.nc")
 
         grid = load_grid(grid_path)
-        super(ERATs, self).__init__(ts_path, grid)
+        super(ERATs, self).__init__(ts_path, grid, **kwargs)
 

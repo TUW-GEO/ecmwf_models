@@ -39,26 +39,22 @@ from datedown.fname_creator import create_dt_fpath
 import numpy as np
 
 
-
-
 def save_ncs_from_nc(input_nc, output_path, product_name,
                      filename_templ='{product}_{gridsize}_%Y%m%d_%H%M.nc'):
     """
-    takes monthly netcdf files as downloaded by the function above and saves each time step
-    in a separate file
+    Split the downloaded netcdf file into daily files and add to folder structure
+    necessary for reshuffling.
 
     Parameters
     ----------
-    input_nc : string
-        filepath of the downloaded .nc file
-    output_path : string
-        where to save the resulting netcdf files
-    product_name : string
-        name of the ECMWF model (for filename generation)
-    local_subdirs : list, optional
-        List of subfolders for organizing downloaded data
-    filename_templ : string, optional
-        template for naming each separated nc file
+    input_nc : str
+        Filepath of the downloaded .nc file
+    output_path : str
+        Where to save the resulting netcdf files
+    product_name : str
+        Name of the ECMWF model (only for filename generation)
+    filename_templ : str, optional (default: product_grid_date_time)
+        Template for naming each separated nc file
     """
     localsubdirs = ['%Y', '%j']
 
@@ -87,41 +83,36 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
 def save_gribs_from_grib(input_grib, output_path, product_name,
                          filename_templ="{product}_OPER_0001_AN_%Y%m%d_%H%M.grb"):
     """
-    takes monthly grib files as downloaded by the function above and saves each time step
-    in a separate file
+    Split the downloaded grib file into daily files and add to folder structure
+    necessary for reshuffling.
 
     Parameters
     ----------
-    input_nc : string
-        filepath of the downloaded .grb file
-    output_path : string
-        where to save the resulting grib files
-    product_name : string
-        name of the ECMWF model (for filename generation)
-    local_subdirs : list, optional
-        List of subfolders for organizing downloaded data
-    filename_templ : string, optional
-        template for naming each separated nc file
+    input_grib : str
+        Filepath of the downloaded .grb file
+    output_path : str
+        Where to save the resulting grib files
+    product_name : str
+        Name of the ECMWF model (only for filename generation)
+    filename_templ : str, optional (default: product_OPER_0001_AN_date_time)
+        Template for naming each separated grb file
     """
+
     localsubdirs = ['%Y', '%j']
     grib_in = pygrib.open(input_grib)
 
     grib_in.seek(0)
     for grb in grib_in:
         template = filename_templ
-        param_id = grb['marsParam']
-        #N = grb['N']
-        step = grb['startStep']
         filedate = datetime(grb['year'], grb['month'], grb['day'], grb['hour'])
 
         template = template.format(product=product_name)
-                                   #param_id=param_id,
-                                   #N=N)
 
         filepath = create_dt_fpath(filedate,
                                    root=output_path,
                                    fname=template,
                                    subdirs=localsubdirs)
+
         if not os.path.exists(os.path.dirname(filepath)):
             os.makedirs(os.path.dirname(filepath))
 
@@ -132,20 +123,22 @@ def save_gribs_from_grib(input_grib, output_path, product_name,
     grib_in.close()
 
 
-
-
-
 def mkdate(datestring):
     '''
     Turns a datetime string into a datetime object
-    :param datestring: str
-        input datetime string
-    :return:
-        datetime
+
+    Parameters
+    -----------
+    datestring: str
+        Input datetime string
+
+    Returns
+    -----------
+    datetime : datetime
+        Converted string
     '''
+
     if len(datestring) == 10:
         return datetime.strptime(datestring, '%Y-%m-%d')
     if len(datestring) == 16:
         return datetime.strptime(datestring, '%Y-%m-%dT%H:%M')
-
-

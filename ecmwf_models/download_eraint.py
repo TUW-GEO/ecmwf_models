@@ -211,19 +211,20 @@ def parse_args(args):
     parser.add_argument("localroot",
                         help='Root of local filesystem where the downloaded data is stored.')
     parser.add_argument("-s", "--start", type=mkdate, default=datetime(1979, 1, 1),
-                        help=("Startdate. In format YYYY-MM-DD"
+                        help=("Startdate in format YYYY-MM-DD. "
                               "If no data is found there then the first available date of the product is used."))
     parser.add_argument("-e", "--end", type=mkdate, default=datetime.now(),
-                        help=("Enddate. Either in format YYYY-MM-DD"
+                        help=("Enddate in format YYYY-MM-DD. "
                               "If not given then the current date is used."))
     parser.add_argument("-var", "--variables", metavar="variables", type=int, default=None,
                         nargs="+",
                         help=("Variable IDs to download "
-                              "(default IDs: 39, 40, 41, 42, 172) » "
+                              "(default IDs: 39, 40, 41, 42, 172, corresponding to the top 4 levels of soil moisture "
+                              "and the land-sea mask) » "
                               "A list of possible IDs is available at http://apps.ecmwf.int/codes/grib/param-db "
                               "or by using the 'View MARS request' option in the web based ordering system."))
     parser.add_argument("-nc", "--netcdf", type=bool, default=False,
-                        help=("Download date in netcdf format instead of the default grib format (experimental)"))
+                        help=("Download data in netcdf format instead of the default grib format (experimental)"))
     parser.add_argument("--grid_size", type=float, default=None, nargs='+',
                         help=("lon lat. Size of the grid that the data is stored to. "
                               "Should be at least (and is by default) (0.75, 0.75) for ERA-Interim "))
@@ -231,10 +232,9 @@ def parse_args(args):
     args = parser.parse_args(args)
 
 
-    print("Downloading ERA Interim data from {} to {} into folder {}".format(
-                                                                    args.start.isoformat(),
-                                                                    args.end.isoformat(),
-                                                                    args.localroot))
+    print("Downloading ERA Interim data from {} to {} into {}".
+        format(args.start.isoformat(), args.end.isoformat(), args.localroot))
+
     return args
 
 
