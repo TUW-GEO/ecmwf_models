@@ -71,7 +71,7 @@ def get_filetype(inpath):
         # if file type cannot be detected, guess grib
         return 'grib'
 
-def reshuffle(input_root, outputpath, startdate, enddate, parameters,
+def reshuffle(input_root, outputpath, startdate, enddate, variables,
               land_points=False, imgbuffer=50):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
@@ -87,7 +87,7 @@ def reshuffle(input_root, outputpath, startdate, enddate, parameters,
         Start date, from which images are read and time series are generated.
     enddate : datetime
         End date, from which images are read and time series are generated.
-    parameters: list or str
+    variables: list or str
         Variables to read from the passed images and convert into time series format.
     landpoints: bool, optional (default: False)
         Reshuffle land points only (not implemented yet)
@@ -103,9 +103,9 @@ def reshuffle(input_root, outputpath, startdate, enddate, parameters,
     filetype = get_filetype(input_root)
 
     if filetype == 'grib':
-        input_dataset = ERAGrbDs(input_root, parameters, expand_grid=False)
+        input_dataset = ERAGrbDs(input_root, variables, expand_grid=False)
     elif filetype == 'netcdf':
-        input_dataset = ERANcDs(input_root, parameters, subgrid=None, array_1D=True)
+        input_dataset = ERANcDs(input_root, variables, subgrid=None, array_1D=True)
     else:
         raise Exception('Unknown file format')
 
@@ -177,7 +177,7 @@ def main(args):
               args.timeseries_root,
               args.start,
               args.end,
-              args.parameters,
+              args.variables,
               imgbuffer=args.imgbuffer)
 
 
