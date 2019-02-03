@@ -7,4 +7,5 @@ conda remove -n ecmwf-models --all
 conda create -n ecmwf-models python=2.7
 source activate ecmwf-models
 conda env update -f environment.yml
+python setup.py develop
 conda config --set always_yes no
