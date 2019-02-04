@@ -36,7 +36,7 @@ except ImportError:
 import os
 from datetime import datetime, timedelta
 import shutil
-from download import save_ncs_from_nc, save_gribs_from_grib, mkdate
+from ecmwf_models.download import save_ncs_from_nc, save_gribs_from_grib, mkdate
 
 
 

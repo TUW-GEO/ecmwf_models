@@ -25,20 +25,20 @@
 Module to download ERA5 from terminal.
 '''
 
-from download import save_gribs_from_grib, save_ncs_from_nc, mkdate
+from ecmwf_models.download import save_gribs_from_grib, save_ncs_from_nc, mkdate
 import argparse
 import sys
 import warnings
-try:
-    import pygrib
-except ImportError:
-    warnings.warn("pygrib has not been imported")
-
 import os
 from datetime import datetime, timedelta, time
 import shutil
 import cdsapi
 import calendar
+
+try:
+    import pygrib
+except ImportError:
+    warnings.warn("pygrib has not been imported")
 
 
 def default_variables():
