@@ -13,13 +13,15 @@ commands:
 .. code-block:: shell
 
   # Either install required conda packages manually
-  conda install -c conda-forge numpy netCDF4 pyproj pygrib xarray
+  conda install -c conda-forge pandas pygrib netcdf4 scipy pyresample xarray
   # Or use the provided environment file to install all dependencies
   conda env update -f environment.yml
 
+After installing all conda dependencies, install the ecmwf-models package
+and its pip-dependencies.
+
 .. code-block:: shell
 
-  # Install the ecmwf-models package and pip-dependencies
   pip install ecmwf_models
 
 This will also try to install pygrib for reading the ERA grib files. If this
