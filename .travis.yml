@@ -18,9 +18,11 @@ install:
   # conditionally because it saves us some downloading if the version is
   # the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+      wget http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+      downgrade_netcdf=false;
     else
       wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      downgrade_netcdf=true;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -32,9 +34,22 @@ install:
 
   - conda create -n ecmwf-models python=${TRAVIS_PYTHON_VERSION}
   - source activate ecmwf-models
-  - conda env update -f environment.yml
 
-  - python setup.py install
+  - conda install -c conda-forge pandas pygrib netcdf4 scipy pyresample xarray
+  #- conda env update -f environment.yml
+
+  - pip install .
+  - python setup.py develop
+
+  - if "downgrade_netcdf" ; then
+      conda install -c conda-forge netcdf4==1.2.2 --yes;
+    fi
+
+  - conda list
+  - pip list
+  - which pip
+  - which python
+
 
 script:
   - python setup.py test

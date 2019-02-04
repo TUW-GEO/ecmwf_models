@@ -2,21 +2,18 @@ name: ecmwf-models
 channels:
 - conda-forge
 dependencies:
-- numpy
 - matplotlib
-- netcdf4
 - pandas
-- configobj
 - pygrib>=2.0.1
+- netcdf4
 - scipy
 - pyresample
 - xarray
 - pip:
-    - pygeogrids
     - pygeobase
-    - configobj
+    - pynetcf==0.1.18
+    - repurpose
+    - pygeogrids
     - cdsapi
     - ecmwf-api-client
-    - pynetcf
-    - repurpose
     - datedown>=0.3
