@@ -11,7 +11,7 @@ dependencies:
 - xarray
 - pip:
     - pygeobase
-    - pynetcf==0.1.18
+    - pynetcf
     - repurpose
     - pygeogrids
     - cdsapi

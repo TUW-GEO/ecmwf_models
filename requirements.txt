@@ -14,5 +14,5 @@ datedown>=0.3
 pygeogrids
 pygeobase
 repurpose
-pynetcf==0.1.18
+pynetcf
 configobj
