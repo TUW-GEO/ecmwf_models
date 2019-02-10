@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2016, TU Wien
+# Copyright (c) 2019, TU Wien, Department of Geodesy and Geoinformation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,10 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-'''
+"""
 Module for a command line interface to convert the ERA Interim data into a
 time series format using the repurpose package
-'''
+
+"""
 
 import os
 import sys
@@ -32,8 +32,8 @@ import argparse
 import numpy as np
 
 from pygeogrids import BasicGrid
-
 from repurpose.img2ts import Img2Ts
+
 from ecmwf_models.interface import ERAGrbDs, ERANcDs
 from ecmwf_models.download import mkdate
 
@@ -71,6 +71,7 @@ def get_filetype(inpath):
         # if file type cannot be detected, guess grib
         return 'grib'
 
+
 def reshuffle(input_root, outputpath,
               startdate, enddate,
               parameters, land_points=False,
@@ -99,7 +100,8 @@ def reshuffle(input_root, outputpath,
     if filetype == 'grib':
         input_dataset = ERAGrbDs(input_root, parameters, expand_grid=False)
     elif filetype == 'netcdf':
-        input_dataset = ERANcDs(input_root, parameters, subgrid=False, array_1D=True)
+        input_dataset = ERANcDs(input_root, parameters,
+                                subgrid=False, array_1D=True)
     else:
         raise Exception('Unknown file format')
 
@@ -171,7 +173,6 @@ def main(args):
 def run():
     main(sys.argv[1:])
 
+
 if __name__ == '__main__':
     run()
-
-

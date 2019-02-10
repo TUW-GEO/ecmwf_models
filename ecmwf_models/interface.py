@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-
 # The MIT License (MIT)
 #
-# Copyright (c) 2018,TU Wien
+# Copyright (c) 2019, TU Wien, Department of Geodesy and Geoinformation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,27 +20,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-'''
+"""
 Interface to reading ecmwf reanalysis data.
-'''
-import warnings
+"""
+
 import os
+import warnings
+from datetime import timedelta
 
 try:
     import pygrib
 except ImportError:
     warnings.warn("pygrib has not been imported")
+
+import numpy as np
+from netCDF4 import Dataset
+
 from pygeobase.io_base import ImageBase, MultiTemporalImageBase
 from pygeobase.object_base import Image
-import numpy as np
-from datetime import timedelta
 from pygeogrids.netcdf import load_grid
-
 from pynetcf.time_series import GriddedNcOrthoMultiTs
-from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
-from netCDF4 import Dataset
-from datetime import datetime
 
+from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
 
 
 class ERAGrbImg(ImageBase):
@@ -56,26 +55,33 @@ class ERAGrbImg(ImageBase):
     mode: string, optional
         mode in which to open the file
     expand_grid: boolean, optional
-        If the reduced gaußian grid should be expanded to a full gaußian grid.
+        If the reduced gaussian grid should be expanded to a full gaussian grid.
     """
 
-    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r', expand_grid=True):
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'],
+                 mode='r', expand_grid=True):
+
         super(ERAGrbImg, self).__init__(filename, mode=mode)
 
         if type(parameter) == str:
             parameter = [parameter]
+
         self.parameter = parameter
         self.expand_grid = expand_grid
 
     def read(self, timestamp=None):
-        #TODO: Replace ERA5 missing data (!=0)
+        # TODO: Replace ERA5 missing data (!=0)
         grbs = pygrib.open(self.filename)
 
         img = {}
         metadata = {}
+        lons = []
+        lats = []
+
         for message in grbs:
             param_name = message.short_name
-            if param_name not in self.parameter: continue
+            if param_name not in self.parameter:
+                continue
             metadata[param_name] = {}
             message.expand_grid(self.expand_grid)
             img[param_name] = message.values
@@ -84,15 +90,13 @@ class ERAGrbImg(ImageBase):
             metadata[param_name]['long_name'] = message['parameterName']
 
             if 'levels' in message.keys():
-                metadata[param_name]['depth'] = '{:} cm'.format(message['levels'])
-
-            #if 'level' in message.keys():
-            #    metadata[param_name]['depth'] = '{:} cm'.format(message['level'])
+                metadata[param_name]['depth'] = '{:} cm'.format(
+                    message['levels'])
 
         grbs.close()
+
         lons_gt_180 = np.where(lons > 180.0)
         lons[lons_gt_180] = lons[lons_gt_180] - 360
-
 
         return Image(lons, lats, img, metadata, timestamp)
 
@@ -117,21 +121,23 @@ class ERANcImg(ImageBase):
     mode: string, optional
         mode in which to open the file
     expand_grid: boolean, optional
-        If the reduced gaußian grid should be expanded to a full gaußian grid.
+        If the reduced gaussian grid should be expanded to a full gaussian grid.
     """
 
-    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r', subgrid=None, array_1D=False):
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
+                 subgrid=None, array_1D=False):
 
         super(ERANcImg, self).__init__(filename, mode=mode)
 
         if type(parameter) == str:
             parameter = [parameter]
+
         self.parameter = parameter
         self.array_1D = array_1D
         self.subgrid = subgrid
 
     def read(self, timestamp=None):
-        #TODO: Replace ERA5 missing data (!=0)
+        # TODO: Replace ERA5 missing data (!=0)
         return_img = {}
         return_metadata = {}
 
@@ -145,7 +151,8 @@ class ERANcImg(ImageBase):
         res_lat, res_lon = get_grid_resolution(dataset.variables['latitude'][:],
                                                dataset.variables['longitude'][:])
 
-        self.grid = ERA_RegularImgGrid(res_lat, res_lon) if not self.subgrid else self.subgrid
+        self.grid = ERA_RegularImgGrid(
+            res_lat, res_lon) if not self.subgrid else self.subgrid
 
         for parameter, variable in dataset.variables.items():
             if parameter in self.parameter:
@@ -213,10 +220,11 @@ class ERAGrbDs(MultiTemporalImageBase):
         list of strings that specifies a subpath depending on date. If the
         data is e.g. in year folders
     expand_grid: boolean, optional
-        If the reduced gaußian grid should be expanded to a full gaußian grid.
+        If the reduced gaussian grid should be expanded to a full gaussian grid.
     """
 
-    def __init__(self, root_path, parameter=['swvl1', 'swvl2'], expand_grid=True):
+    def __init__(self, root_path, parameter=['swvl1', 'swvl2'],
+                 expand_grid=True):
 
         subpath_templ = ["%Y", "%j"]
 
@@ -232,7 +240,6 @@ class ERAGrbDs(MultiTemporalImageBase):
                                        subpath_templ=subpath_templ,
                                        exact_templ=False,
                                        ioclass_kws=ioclass_kws)
-
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
@@ -274,7 +281,7 @@ class ERANcDs(MultiTemporalImageBase):
         list of strings that specifies a subpath depending on date. If the
         data is e.g. in year folders
     expand_grid: boolean, optional
-        If the reduced gaußian grid should be expanded to a full gaußian grid.
+        If the reduced gaussian grid should be expanded to a full gaussian grid.
     """
 
     def __init__(self, root_path, parameter=['swvl1', 'swvl2'],
@@ -331,4 +338,3 @@ class ERATs(GriddedNcOrthoMultiTs):
 
         grid = load_grid(grid_path)
         super(ERATs, self).__init__(ts_path, grid)
-
