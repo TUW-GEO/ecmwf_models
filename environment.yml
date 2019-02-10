@@ -3,11 +3,9 @@ channels:
 - conda-forge
 dependencies:
 - numpy
-- matplotlib
-- netcdf4=1.2.2
+- netcdf4
 - pandas
 - configobj
-- basemap
 - pygrib>=2.0.1
 - scipy
 - pyresample
