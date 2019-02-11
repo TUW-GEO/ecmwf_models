@@ -40,11 +40,11 @@ Installation
 Install required C-libraries via conda. For installation we recommend
 `Miniconda <http://conda.pydata.org/miniconda.html>`_. So please install it according
 to the official installation instructions. As soon as you have the ``conda``
-command in your shell you can continue.
+command in your shell you can continue:
 
 .. code::
 
-    conda install -c conda-forge pygrib netcdf4=1.2.2
+    conda install -c conda-forge pandas pygrib netcdf4 scipy pyresample xarray
 
 The following command will download and install all the needed pip packages as well
 as the ecmwf-model package itself.
@@ -61,8 +61,8 @@ in this repository can be used.
     git clone git@github.com:TUW-GEO/ecmwf_models.git ecmwf_models
     cd ecmwf_models
     conda create -n ecmwf-models python=2.7 # or any other supported version
-    conda env update -f environment.yml
     source activate ecmwf-models
+    conda env update -f environment.yml
     python setup.py develop
 
 This script should work on Linux or OSX and uses the ``environment.yml`` file
@@ -73,10 +73,11 @@ data in netCDF format instead.
 Supported Products
 ==================
 
-This version supports the following products:
-
-- ERA-Interim
-- ERA5
+At the moment this package supports **ERA Interim** and **ERA5** reanalysis data in
+**grib** and **netcdf** format (reading, time series creation) with a default spatial
+sampling of 0.75 degrees (ERA Interim) resp. 0.25 degrees (ERA5).
+It should be easy to extend the package to support other ERA products.
+This will be done as need arises.
 
 Contribute
 ==========

@@ -35,11 +35,6 @@ import shutil
 import cdsapi
 import calendar
 
-try:
-    import pygrib
-except ImportError:
-    warnings.warn("pygrib has not been imported")
-
 
 def default_variables():
     'These variables are being downloaded, when None are passed by the user'

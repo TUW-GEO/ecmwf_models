@@ -1,4 +1,4 @@
-Downloading data ERA Interim Data
+Downloading ERA Interim Data
 =================================
 
 ERA-Interim data can be downloaded manually from the ECMWF servers. It can also
@@ -11,13 +11,13 @@ After that you can use the command line program ``eraint_download`` to download
 images with a temporal resoltuion of 6 hours between a passed start and end date.
 ``eraint_download --help`` will show additional information on using the command.
 
-For example, the following command in you terminal would download ERA Interim images
+For example, the following command in your terminal would download ERA Interim images
 for variables 39 and 40 (Volumetric soil water layer 1 and 2, see the
 `Variable DB <https://apps.ecmwf.int/codes/grib/param-db>`_) as well as a
 land-sea mask in grib format on the default gaussian grid for ERA-Interim into
 the folder ``/path/to/storage`` between January 1st and February 1st 2000.
-The data will be stored in subfolders of the format ``YYYY/jjj``, where YYYY describes the
-year and jjj the day of the year for the downloaded files.
+The data will be stored in subfolders of the format ``YYYY/jjj``, where ``YYYY``
+describes the year and ``jjj`` the day of the year for the downloaded files.
 
 .. code-block:: shell
 
@@ -26,10 +26,10 @@ year and jjj the day of the year for the downloaded files.
 Additional optional parameters allow downloading images in netcdf format, and
 in a different spatial resolution (default 0.75°x0.75°).
 
-Downloading data ERA5 Data
+Downloading ERA5 Data
 ==========================
 
-ERA5 data can be downloaded from the `Copernicus Data Store (CDS)
+ERA5 data can be downloaded manually from the `Copernicus Data Store (CDS)
 <https://cds.climate.copernicus.eu/#!/home>`_ or automatically via the CDS api,
 as done in the download module (era5_download). Before you can use this, you
 have to set up an `account at the CDS
@@ -44,8 +44,7 @@ a temporal resolution of 6 hours between a passed start and end date.
 For example, the following command in your terminal would download ERA5 images
 for precipitation, top level soil moisture and a land-sea mask between
 January 1st and February 1st 2000 in grib format into ``/path/to/storage``.
-The data will be stored in subfolders of the format ``YYYY/jjj``, where YYYY describes the
-year and jjj the day of the year for the downloaded files.
+The data will be stored in subfolders of the format ``YYYY/jjj``.
 
 .. code-block:: shell
 

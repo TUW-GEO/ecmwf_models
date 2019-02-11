@@ -14,3 +14,6 @@ can be passed as well:
     # read_ts takes either lon, lat coordinates to perform a nearest neighbour search
     # or a grid point index (from the grid.nc file) and returns a pandas.DataFrame.
     ts = ds.read_ts(45, 15)
+
+Bulk reading speeds up reading multiple points from a cell file by storing the
+file in memory for subsequent calls.
