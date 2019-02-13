@@ -35,7 +35,7 @@ import glob
 def test_ERA_ncs_from_nc():
     ncs_path = tempfile.mkdtemp()
     input_nc = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          "test_data", "ERA5", "example_downloaded_raw.nc")
+                          "ecmwf_models-test-data", "download", "era5_example_downloaded_raw.nc")
     save_ncs_from_nc(input_nc, ncs_path, 'ERA5')
 
     assert len(glob.glob(os.path.join(ncs_path, "2010", "001", "*.nc"))) == 4
@@ -47,7 +47,7 @@ def test_ERA_ncs_from_nc():
 def test_ERA_gribs_from_grib():
     grbs_path = tempfile.mkdtemp()
     input_grb = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          "test_data", "ERA-Interim", "example_downloaded_raw.grb")
+                          "ecmwf_models-test-data", "download", "eraint_example_downloaded_raw.grb")
     save_gribs_from_grib(input_grb, grbs_path, 'ERA-Interim')
 
     assert len(glob.glob(os.path.join(grbs_path, "2000", "001", "*.grb"))) == 4

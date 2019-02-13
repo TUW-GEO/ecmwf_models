@@ -33,7 +33,7 @@ from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs, ERATs
 
 def test_ERAInterim_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "test_data", "ERA-Interim", "grib", "2000", "001",
+                         "ecmwf_models-test-data", "ERA-Interim", "grib", "2000", "001",
                          "ERA-Interim_OPER_0001_AN_20000101_0000.grb")
 
     dset = ERAGrbImg(fname, 'swvl1')
@@ -52,7 +52,7 @@ def test_ERAInterim_image():
 
 def test_ERAInterim_image_no_expand():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "test_data", "ERA-Interim", "grib", "2000", "001",
+                         "ecmwf_models-test-data", "ERA-Interim", "grib", "2000", "001",
                          "ERA-Interim_OPER_0001_AN_20000101_0000.grb")
 
     dset = ERAGrbImg(fname, 'swvl1', expand_grid=False)
@@ -69,7 +69,7 @@ def test_ERAInterim_image_no_expand():
 
 def test_ERAInterim_dataset_one_var():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "test_data", "ERA-Interim", "grib")
+                             "ecmwf_models-test-data", "ERA-Interim", "grib")
     ds = ERAGrbDs(root_path, 'swvl1')
     data = ds.read(datetime(2000, 1, 1, 0))
     assert data.data['swvl1'].shape == (256, 512)
@@ -84,7 +84,7 @@ def test_ERAInterim_dataset_one_var():
 
 def test_ERAInterim_dataset_one_var_no_expand():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "test_data", "ERA-Interim", "grib")
+                             "ecmwf_models-test-data", "ERA-Interim", "grib")
     ds = ERAGrbDs(root_path, 'swvl1', expand_grid=False)
     data = ds.read(datetime(2000, 1, 1, 0))
     assert data.data['swvl1'].shape == (88838,)
@@ -98,7 +98,7 @@ def test_ERAInterim_dataset_one_var_no_expand():
 
 def test_ERAInterim_dataset_two_var():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "test_data", "ERA-Interim", "grib")
+                             "ecmwf_models-test-data", "ERA-Interim", "grib")
     ds = ERAGrbDs(root_path, ['swvl1', 'swvl2'] )
     data = ds.read(datetime(2000, 1, 1, 0))
     assert data.data['swvl1'].shape == (256, 512)
@@ -120,7 +120,7 @@ def test_ERAInterim_dataset_two_var():
 
 def test_ERAInterim_iter_dataset_two_var():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "test_data", "ERA-Interim", "grib")
+                             "ecmwf_models-test-data", "ERA-Interim", "grib")
     tstamps_should = [datetime(2000, 1, 1),
                       datetime(2000, 1, 1, 6),
                       datetime(2000, 1, 1, 12),
@@ -146,7 +146,7 @@ def test_ERAInterim_iter_dataset_two_var():
 
 def test_ERA5_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "test_data", "ERA5", "netcdf", "2010", "001",
+                         "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
                          'ERA5_0.3_0.3_20100101_0000.nc')
 
     dset = ERANcImg(fname, 'swvl1')
@@ -166,7 +166,7 @@ def test_ERA5_image():
 
 def test_ERA5_image_no_expand():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "test_data", "ERA5", "netcdf", "2010", "001",
+                         "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
                          'ERA5_0.3_0.3_20100101_0000.nc')
 
     dset = ERANcImg(fname, 'swvl1', array_1D=True)
@@ -187,7 +187,7 @@ def test_ERA5_image_no_expand():
 
 def test_ERA5_dataset_two_var():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "test_data", "ERA5", "netcdf")
+                             "ecmwf_models-test-data", "ERA5", "netcdf")
     ds = ERANcDs(root_path, ['swvl1', 'swvl2'])
     data = ds.read(datetime(2010, 1, 1, 0))
     assert data.data['swvl1'].shape == (601, 1200)
@@ -212,7 +212,7 @@ def test_ERA5_dataset_two_var():
 
 def test_ERA5_dataset_two_var_no_expand():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "test_data", "ERA5", "netcdf")
+                             "ecmwf_models-test-data", "ERA5", "netcdf")
     ds = ERANcDs(root_path, ['swvl1', 'swvl2'], array_1D=True)
     data = ds.read(datetime(2010, 1, 1, 0))
     assert data.data['swvl1'].shape == (601*1200,)
@@ -238,7 +238,7 @@ def test_ERA5_dataset_two_var_no_expand():
 
 def test_ERA5_iter_dataset_two_var():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "test_data", "ERA5", "netcdf")
+                             "ecmwf_models-test-data", "ERA5", "netcdf")
     tstamps_should = [datetime(2010, 1, 1),
                       datetime(2010, 1, 1, 6),
                       datetime(2010, 1, 1, 12),

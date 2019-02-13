@@ -17,3 +17,4 @@ dependencies:
     - cdsapi
     - ecmwf-api-client
     - datedown>=0.3
+    - more_itertools<=5.0

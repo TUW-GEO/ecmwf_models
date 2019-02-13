@@ -38,7 +38,7 @@ import shutil
 def test_ERAInterim_reshuffle_grb():
 
     inpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          "test_data", "ERA-Interim", "grib")
+                          "ecmwf_models-test-data", "ERA-Interim", "grib")
     ts_path = tempfile.mkdtemp()
     startdate = '2000-01-01T00:00'
     enddate = '2000-01-01T18:00'
@@ -62,7 +62,7 @@ def test_ERAInterim_reshuffle_grb():
 def test_ERA5_reshuffle_nc():
 
     inpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          "test_data", "ERA5", "netcdf")
+                          "ecmwf_models-test-data", "ERA5", "netcdf")
     ts_path = tempfile.mkdtemp()
     startdate = '2010-01-01T00:00'
     enddate = '2010-01-01T18:00'
