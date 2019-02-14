@@ -48,7 +48,7 @@ def default_variables():
 
 
 def download_eraint(target_path, start, end, variables, grid_size=None,
-                    h_steps=[0, 6, 12, 18], netcdf=False):
+                    h_steps=[0, 6, 12, 18], netcdf=False, dry_run=False):
     """
     Download era interim data
 
@@ -71,6 +71,8 @@ def download_eraint(target_path, start, end, variables, grid_size=None,
         List of full hours to download data at the selected dates
     netcdf: bool, optional (default: False)
         Download data as netcdf files instead of grib files
+    dry_run: bool
+        Do not download anything, this is just used for testing the functions
     """
     server = ECMWFDataServer()
     param_strings = []
@@ -112,13 +114,14 @@ def download_eraint(target_path, start, end, variables, grid_size=None,
         if any(size < 0.75 for size in grid_size):
             raise Warning('Custom grid smaller than original ERA Interim resolution. '
                           'See https://software.ecmwf.int/wiki/display/CKB/Does+downloading+data+at+higher+resolution+improve+the+output')
+    if not dry_run:
+        server.retrieve(dl_params)
 
-    server.retrieve(dl_params)
 
 
 def download_and_move(target_path, startdate, enddate, variables=None,
                       land_sea_mask=True, keep_original=False, grid_size=None,
-                      h_steps=[0, 6, 12, 18], netcdf=False):
+                      h_steps=[0, 6, 12, 18], netcdf=False, dry_run=False):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 days increments between start and end date to be efficient
@@ -151,6 +154,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         List of full hours to download data at the selected dates
     netcdf: bool, optional (default: False)
         Download data as netcdf files instead of grib files
+    dry_run: bool
+        Do not download anything, this is just used for testing the functions
     """
     variables = variables if variables is not None else default_variables()
 
@@ -176,7 +181,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         dl_file = os.path.join(downloaded_data_path, fname)
 
         download_eraint(dl_file, current_start, current_end, variables,
-                        grid_size=grid_size, h_steps=h_steps, netcdf=netcdf)
+                                    grid_size=grid_size, h_steps=h_steps,
+                                    netcdf=netcdf, dry_run=dry_run)
 
         if netcdf:
             save_ncs_from_nc(dl_file, target_path, 'ERAINT')
@@ -186,6 +192,7 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         if not keep_original:
             shutil.rmtree(downloaded_data_path)
         current_start = current_end + timedelta(days=1)
+
 
 
 def parse_args(args):

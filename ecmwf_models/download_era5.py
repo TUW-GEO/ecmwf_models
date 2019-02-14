@@ -46,7 +46,8 @@ def default_variables():
 
     return variables
 
-def download_era5(c, years, months, days, h_steps, variables, target, netcdf=False):
+def download_era5(c, years, months, days, h_steps, variables, target, netcdf=False,
+                  dry_run=False):
     '''
     Download era5 reanalysis data for single levels of a defined time span
 
@@ -71,29 +72,28 @@ def download_era5(c, years, months, days, h_steps, variables, target, netcdf=Fal
         File name, where the data is stored.
     netcdf : bool, optional (deault: False)
         (Experimental) retrieval of images in netcdf format.
-
-    Returns
-    -------
-
+    dry_run: bool
+        Do not download anything, this is just used for testing the functions
     '''
 
-    c.retrieve(
-        'reanalysis-era5-single-levels',
-        {
-            'product_type': 'reanalysis',
-            'format': 'netcdf' if netcdf else 'grib',
-            'variable': variables,
-            'year': [str(y) for y in years],
-            'month': [str(m).zfill(2) for m in months],
-            'day': [str(d).zfill(2) for d in days],
-            'time': [time(h,0).strftime('%H:%M') for h in h_steps]
-        },
-        target)
+    if not dry_run:
+        c.retrieve(
+            'reanalysis-era5-single-levels',
+            {
+                'product_type': 'reanalysis',
+                'format': 'netcdf' if netcdf else 'grib',
+                'variable': variables,
+                'year': [str(y) for y in years],
+                'month': [str(m).zfill(2) for m in months],
+                'day': [str(d).zfill(2) for d in days],
+                'time': [time(h,0).strftime('%H:%M') for h in h_steps]
+            },
+            target)
 
 
 def download_and_move(target_path, startdate, enddate, variables=None,
                       land_sea_mask=True, keep_original=False,
-                      h_steps=[0, 6, 12, 18], netcdf=False):
+                      h_steps=[0, 6, 12, 18], netcdf=False, dry_run=False):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 day increments between start and end date to be efficient with the MARS system.
@@ -121,6 +121,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         List of full hours to download data at the selected dates e.g [0, 12]
     netcdf: bool, optional (default: False)
         Download data as netcdf files
+    dry_run: bool
+        Do not download anything, this is just used for testing the functions
     """
 
     variables = variables if variables is not None else default_variables()
@@ -155,7 +157,7 @@ def download_and_move(target_path, startdate, enddate, variables=None,
 
         download_era5(c, years=[sy], months=[sm], days=range(sd, d+1),
                       h_steps=h_steps, variables=variables, netcdf=netcdf,
-                      target=dl_file)
+                      target=dl_file, dry_run=dry_run)
 
         if netcdf:
             save_ncs_from_nc(dl_file, target_path, product_name='ERA5')
