@@ -34,45 +34,12 @@ import numpy as np
 from pygeogrids import BasicGrid
 
 from repurpose.img2ts import Img2Ts
-from ecmwf_models.interface import ERAGrbDs, ERANcDs
-from ecmwf_models.download import mkdate
+from ecmwf_models.erainterim.interface import ERAIntGrbDs, ERAIntNcDs
+from ecmwf_models.utils import mkdate, parse_filetype
 
-
-def get_filetype(inpath):
-    """
-    Tries to find out the file type by searching for
-    grib or nc files two subdirectories into the passed input path.
-    If function fails, grib is assumed.
-
-    Parameters
-    ----------
-    inpath: str
-        Input path where ERA data was downloaded to
-
-    Returns
-    -------
-    filetype : str
-        File type string.
-    """
-    onedown = os.path.join(inpath, os.listdir(inpath)[0])
-    twodown = os.path.join(onedown, os.listdir(onedown)[0])
-
-    filelist = []
-    for path, subdirs, files in os.walk(twodown):
-        for name in files:
-            filename, extension = os.path.splitext(name)
-            filelist.append(extension)
-
-    if '.nc' in filelist and '.grb' not in filelist:
-        return 'netcdf'
-    elif '.grb' in filelist and '.nc' not in filelist:
-        return 'grib'
-    else:
-        # if file type cannot be detected, guess grib
-        return 'grib'
 
 def reshuffle(input_root, outputpath, startdate, enddate, variables,
-              land_points=False, imgbuffer=50):
+              mask_seapoints=False, imgbuffer=50):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
     series format.
@@ -89,23 +56,21 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
         End date, from which images are read and time series are generated.
     variables: list or str
         Variables to read from the passed images and convert into time series format.
-    landpoints: bool, optional (default: False)
-        Reshuffle land points only (not implemented yet)
+    mask_seapoints: bool, optional (default: False)
+        Mask points over sea, replace them with nan.
     imgbuffer: int, optional (default: 50)
         How many images to read at once before writing time series. This number
         affects how many images are stored in memory and should be chosen according
         to the available amount of memory and the size of a single image.
     """
 
-    if land_points:
-        raise NotImplementedError
 
-    filetype = get_filetype(input_root)
+    filetype = parse_filetype(input_root)
 
     if filetype == 'grib':
-        input_dataset = ERAGrbDs(input_root, variables, expand_grid=False)
+        input_dataset = ERAIntGrbDs(input_root, variables, expand_grid=False)
     elif filetype == 'netcdf':
-        input_dataset = ERANcDs(input_root, variables, subgrid=None, array_1D=True)
+        input_dataset = ERAIntNcDs(input_root, variables, subgrid=None, array_1D=True)
     else:
         raise Exception('Unknown file format')
 
@@ -158,6 +123,9 @@ def parse_args(args):
                         help=("Short name of variables as stored in the images, which are reshuffled. "
                               "See documentation on image download for resp. ERA products, "
                               "for more information on variable names of the product. "))
+    parser.add_argument("--mask_seapoints", type=bool, default=False,
+                        help=("Replace points over water with nan. This option needs the"
+                              "lsm variable in the image data."))
     parser.add_argument("--imgbuffer", type=int, default=50,
                         help=("How many images to read at once. Bigger numbers make the "
                               "conversion faster but consume more memory. Choose this according to your "
@@ -178,6 +146,7 @@ def main(args):
               args.start,
               args.end,
               args.variables,
+              args.mask_seapoints,
               imgbuffer=args.imgbuffer)
 
 

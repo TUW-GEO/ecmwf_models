@@ -24,11 +24,8 @@
 '''
 Tests for transferring downloaded data to netcdf or grib files
 '''
-
-
-from ecmwf_models.download import save_ncs_from_nc, save_gribs_from_grib
-from ecmwf_models.download_eraint import download_and_move as download_and_move_ei
-from ecmwf_models.download_era5 import download_and_move as download_and_move_era5
+from ecmwf_models.erainterim.downoad import download_and_move as download_and_move_ei
+from ecmwf_models.era5.download import download_and_move as download_and_move_era5
 
 import os
 import tempfile

@@ -31,8 +31,8 @@ import tempfile
 import numpy as np
 import numpy.testing as nptest
 
-from ecmwf_models.reshuffle import main
-from ecmwf_models.interface import ERATs
+from ecmwf_models.erainterim.reshuffle import main
+from ecmwf_models.erainterim.interface import ERATs
 import shutil
 
 def test_ERAInterim_reshuffle_grb():

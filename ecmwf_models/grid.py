@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
 # Copyright (c) 2018, TU Wien
@@ -21,7 +22,7 @@
 # SOFTWARE.
 
 '''
-This module contains grid definitions for regular gridded ECMWF data products (netcdf format)
+Common grid definitions for ECMWF model reanalysis products (regular gridded)
 '''
 
 import numpy as np
@@ -48,8 +49,6 @@ def get_grid_resolution(lats, lons):
     else:
         lon_res = lons_res[0]
     return lat_res, lon_res
-
-
 
 def ERA_RegularImgGrid(res_lat=0.3, res_lon=0.3):
     '''

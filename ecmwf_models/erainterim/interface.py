@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2018,TU Wien
@@ -36,16 +35,12 @@ from pygeobase.io_base import ImageBase, MultiTemporalImageBase
 from pygeobase.object_base import Image
 import numpy as np
 from datetime import timedelta
-from pygeogrids.netcdf import load_grid
-
-from pynetcf.time_series import GriddedNcOrthoMultiTs
 from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
 from netCDF4 import Dataset
 from datetime import datetime
 
 
-
-class ERAGrbImg(ImageBase):
+class ERAIntGrbImg(ImageBase):
     """
     Reader for a single ERA Interim grib file.
 
@@ -66,7 +61,7 @@ class ERAGrbImg(ImageBase):
     def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
                  expand_grid=True):
 
-        super(ERAGrbImg, self).__init__(filename, mode=mode)
+        super(ERAIntGrbImg, self).__init__(filename, mode=mode)
 
         if type(parameter) == str:
             parameter = [parameter]
@@ -109,7 +104,7 @@ class ERAGrbImg(ImageBase):
         pass
 
 
-class ERANcImg(ImageBase):
+class ERAIntNcImg(ImageBase):
     """
     Reader for a single ERA netcdf file.
 
@@ -130,7 +125,7 @@ class ERANcImg(ImageBase):
     def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
                  subgrid=None, array_1D=False):
 
-        super(ERANcImg, self).__init__(filename, mode=mode)
+        super(ERAIntNcImg, self).__init__(filename, mode=mode)
 
         if type(parameter) == str:
             parameter = [parameter]
@@ -209,7 +204,7 @@ class ERANcImg(ImageBase):
         pass
 
 
-class ERAGrbDs(MultiTemporalImageBase):
+class ERAIntGrbDs(MultiTemporalImageBase):
     """
     Parameters
     ----------
@@ -232,7 +227,7 @@ class ERAGrbDs(MultiTemporalImageBase):
         ioclass_kws = {'parameter': parameter,
                        'expand_grid': expand_grid}
 
-        super(ERAGrbDs, self).__init__(root_path, ERAGrbImg,
+        super(ERAIntGrbDs, self).__init__(root_path, ERAIntGrbImg,
                                        fname_templ='*_{datetime}.grb',
                                        datetime_format="%Y%m%d_%H%M",
                                        subpath_templ=subpath_templ,
@@ -266,7 +261,7 @@ class ERAGrbDs(MultiTemporalImageBase):
         return timestamps
 
 
-class ERANcDs(MultiTemporalImageBase):
+class ERAIntNcDs(MultiTemporalImageBase):
     """
     Class for reading ERA 5 images in nc format.
 
@@ -297,7 +292,7 @@ class ERANcDs(MultiTemporalImageBase):
                        'subgrid': subgrid,
                        'array_1D': array_1D}
 
-        super(ERANcDs, self).__init__(root_path, ERANcImg,
+        super(ERAIntNcDs, self).__init__(root_path, ERAIntNcImg,
                                       fname_templ='*_{datetime}.nc',
                                       datetime_format="%Y%m%d_%H%M",
                                       subpath_templ=subpath_templ,
@@ -328,48 +323,3 @@ class ERANcDs(MultiTemporalImageBase):
             timestamps.extend(daily_dates.tolist())
 
         return timestamps
-
-
-class ERATs(GriddedNcOrthoMultiTs):
-    '''
-     Class for reading ERA time series from reshuffled images.
-
-     Parameters
-     ----------
-     ts_path : str
-         Directory where the netcdf time series files are stored
-     grid_path : str, optional (default: None)
-         Path to grid file, that is used to organize the location of time
-         series to read. If None is passed, grid.nc is searched for in the
-         ts_path.
-
-     Optional keyword arguments that are passed to the Gridded Base:
-     ------------------------------------------------------------------------
-         parameters : list, optional (default: None)
-             Specific variable names to read, if None are selected, all are read.
-         offsets : dict, optional (default:None)
-             Offsets (values) that are added to the parameters (keys)
-         scale_factors : dict, optional (default:None)
-             Offset (value) that the parameters (key) is multiplied with
-         ioclass_kws: dict, (optional)
-
-             Optional keyword arguments to pass to OrthoMultiTs class:
-             ----------------------------------------------------------------
-                 read_bulk : boolean, optional (default:False)
-                     if set to True the data of all locations is read into memory,
-                     and subsequent calls to read_ts read from the cache and
-                     not from disk this makes reading complete files faster
-                 read_dates : boolean, optional (default:False)
-                     if false dates will not be read automatically but only on
-                     specific request useable for bulk reading because currently
-                     the netCDF num2date routine is very slow for big datasets.
-     '''
-
-    def __init__(self, ts_path, grid_path=None, **kwargs):
-
-        if grid_path is None:
-            grid_path = os.path.join(ts_path, "grid.nc")
-
-        grid = load_grid(grid_path)
-        super(ERATs, self).__init__(ts_path, grid, **kwargs)
-

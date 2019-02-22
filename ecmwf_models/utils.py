@@ -22,7 +22,7 @@
 # SOFTWARE.
 
 '''
-General functions to reorganise downloaded ERA file
+Utility functions for all data products in this package.
 '''
 
 import warnings
@@ -78,6 +78,54 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
 
         subset.to_netcdf(filepath)
     nc_in.close()
+
+
+def save_ncs(input, output_path, product_name, filename_templ='{product}_%Y%m%d_%H%M.nc'):
+    """
+    Split the downloaded netcdf OR grib file into daily NETCDF files and add
+    to folder structure necessary for reshuffling.
+
+    Parameters
+    ----------
+    input_nc : str
+        Filepath of the downloaded .nc file
+    output_path : str
+        Where to save the resulting netcdf files
+    product_name : str
+        Name of the ECMWF model (only for filename generation)
+    filename_templ : str, optional (default: product_grid_date_time)
+        Template for naming each separated nc file
+    """
+    filetype = input.split('.')[-1]
+    if filetype in ['grb', 'grib']:
+        filetype ='grb'
+        engine = 'cfgrib'
+        backend_kwargs = {'errors': 'ignore'}
+    else:
+        filetype = 'nc'
+        engine = 'scipy'
+        backend_kwargs = {}
+
+    localsubdirs = ['%Y', '%j']
+
+    # TODO: cfgrib has problems opening files with multiple variables.
+    ds = xr.open_dataset(input, engine=engine, mask_and_scale=True,
+                         backend_kwargs=backend_kwargs)
+
+    filename_templ = filename_templ.format(product=product_name)
+    for time in ds.time.values:
+        subset = ds.sel(time=time)
+
+        timestamp = pd.Timestamp(time).to_pydatetime()
+        filepath = create_dt_fpath(timestamp,
+                                      root=output_path,
+                                      fname=filename_templ,
+                                      subdirs=localsubdirs)
+        if not os.path.exists(os.path.dirname(filepath)):
+            os.makedirs(os.path.dirname(filepath))
+
+        subset.to_netcdf(filepath, engine='scipy')
+    ds.close()
 
 
 def save_gribs_from_grib(input_grib, output_path, product_name,
@@ -142,3 +190,42 @@ def mkdate(datestring):
         return datetime.strptime(datestring, '%Y-%m-%d')
     if len(datestring) == 16:
         return datetime.strptime(datestring, '%Y-%m-%dT%H:%M')
+
+def parse_filetype(inpath):
+    """
+    Tries to find out the file type by searching for
+    grib or nc files two subdirectories into the passed input path.
+    If function fails, grib is assumed.
+
+    Parameters
+    ----------
+    inpath: str
+        Input path where ERA data was downloaded to
+
+    Returns
+    -------
+    filetype : str
+        File type string.
+    """
+    onedown = os.path.join(inpath, os.listdir(inpath)[0])
+    twodown = os.path.join(onedown, os.listdir(onedown)[0])
+
+    filelist = []
+    for path, subdirs, files in os.walk(twodown):
+        for name in files:
+            filename, extension = os.path.splitext(name)
+            filelist.append(extension)
+
+    if '.nc' in filelist and '.grb' not in filelist:
+        return 'netcdf'
+    elif '.grb' in filelist and '.nc' not in filelist:
+        return 'grib'
+    else:
+        # if file type cannot be detected, guess grib
+        return 'grib'
+
+
+if __name__ == '__main__':
+    path = '/home/wpreimes/shares/home/code/ecmwf_models/tests/ecmwf_models-test-data/download/era5_example_downloaded_raw.nc'
+    out = '/data-read/USERS/wpreimes/test/era'
+    save_ncs(path, out, 'ERAINT')

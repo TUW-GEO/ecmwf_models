@@ -25,7 +25,7 @@
 Module to download ERA5 from terminal.
 '''
 
-from ecmwf_models.download import save_gribs_from_grib, save_ncs_from_nc, mkdate
+from ecmwf_models.utils import save_ncs, mkdate
 import argparse
 import sys
 import warnings
@@ -42,7 +42,8 @@ def default_variables():
     'soil_temperature_level_2', 'soil_temperature_level_3', 'soil_temperature_level_4',
     'soil_type', 'total_precipitation', 'volumetric_soil_water_layer_1',
     'volumetric_soil_water_layer_2', 'volumetric_soil_water_layer_3', 'volumetric_soil_water_layer_4',
-    'land_sea_mask']
+    'land_sea_mask', 'convective_snowfall_rate_water_equivalent',
+    'large_scale_snowfall_rate_water_equivalent']
 
     return variables
 
@@ -159,10 +160,7 @@ def download_and_move(target_path, startdate, enddate, variables=None,
                       h_steps=h_steps, variables=variables, netcdf=netcdf,
                       target=dl_file, dry_run=dry_run)
 
-        if netcdf:
-            save_ncs_from_nc(dl_file, target_path, product_name='ERA5')
-        else:
-            save_gribs_from_grib(dl_file, target_path, product_name='ERA5')
+        save_ncs(dl_file, target_path, product_name='ERA5')
 
         if not keep_original:
             shutil.rmtree(downloaded_data_path)
@@ -206,7 +204,8 @@ def parse_args(args):
                               "     soil_temperature_level_2, soil_temperature_level_3, soil_temperature_level_4, "
                               "     soil_type, total_precipitation, volumetric_soil_water_layer_1, "
                               "     volumetric_soil_water_layer_2, volumetric_soil_water_layer_3, "
-                              "     volumetric_soil_water_layer_4, land_sea_mask) » "
+                              "     volumetric_soil_water_layer_4, large_scale_snowfall_rate_water_equivalent,"
+                              "     land_sea_mask) » "
                               "See the ERA5 documentation for more variable names: "
                               "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation"))
     parser.add_argument("-nc", "--netcdf", type=bool, default=False,
@@ -225,15 +224,19 @@ def main(args):
     args = parse_args(args)
 
     download_and_move(args.localroot, args.start, args.end, args.variables,
-                      args.netcdf)
+                      args.netcdf, keep_original=False)
 
 
 def run():
     main(sys.argv[1:])
 
 if __name__ == '__main__':
+    from ecmwf_models.utils import save_gribs_from_grib
+    dl_file = '/data-read/USERS/wpreimes/era5_grib_img/temp_downloaded/20000101_20000131.grb'
+    save_ncs(dl_file, '/data-read/USERS/wpreimes/era5_grib_img/', 'ERA5')
+    '''
     download_and_move(target_path='/home/wolfgang/data-write/era5',
                       variables=None, startdate=datetime(1990,1,30),
                       enddate=datetime(1990,2,1), netcdf=True)
-
+    '''
 

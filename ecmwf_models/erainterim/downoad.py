@@ -36,7 +36,7 @@ except ImportError:
 import os
 from datetime import datetime, timedelta
 import shutil
-from ecmwf_models.download import save_ncs_from_nc, save_gribs_from_grib, mkdate
+from ecmwf_models.utils import save_ncs, mkdate
 
 
 
@@ -184,10 +184,7 @@ def download_and_move(target_path, startdate, enddate, variables=None,
                                     grid_size=grid_size, h_steps=h_steps,
                                     netcdf=netcdf, dry_run=dry_run)
 
-        if netcdf:
-            save_ncs_from_nc(dl_file, target_path, 'ERAINT')
-        else:
-            save_gribs_from_grib(dl_file, target_path, 'ERAINT')
+        save_ncs(dl_file, target_path, 'ERAINT')
 
         if not keep_original:
             shutil.rmtree(downloaded_data_path)
