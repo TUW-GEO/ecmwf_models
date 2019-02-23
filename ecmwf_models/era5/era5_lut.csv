@@ -165,8 +165,8 @@ skin_reservoir_content,Skin reservoir content,src,
 skin_temperature,Skin temperature,skt,
 slope_of_sub_gridscale_orography,Slope of sub-gridscale orography,slor,
 snow_albedo,Snow albedo,asn,
-snow_density,Snow density,rsn,
-snow_depth,Snow depth,sd,
+snow_density,Snow density,rsn,1
+snow_depth,Snow depth,sd,1
 snow_evaporation,Snow evaporation,es,
 snowfall,Snowfall,sf,
 snowmelt,Snowmelt,smlt,
