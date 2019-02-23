@@ -36,7 +36,7 @@ except ImportError:
 import os
 from datetime import datetime, timedelta
 import shutil
-from ecmwf_models.utils import save_ncs, mkdate
+from ecmwf_models.utils import *
 
 
 
@@ -48,7 +48,7 @@ def default_variables():
 
 
 def download_eraint(target_path, start, end, variables, grid_size=None,
-                    h_steps=[0, 6, 12, 18], netcdf=False, dry_run=False):
+                    h_steps=[0, 6, 12, 18], grb=False, dry_run=False):
     """
     Download era interim data
 
@@ -69,8 +69,8 @@ def download_eraint(target_path, start, end, variables, grid_size=None,
         If None is passed the minimum grid for the accoring product is chosen
     h_steps: list, optional (default: [0, 6, 12, 18])
         List of full hours to download data at the selected dates
-    netcdf: bool, optional (default: False)
-        Download data as netcdf files instead of grib files
+    grb: bool, optional (default: False)
+        Download data as grb files instead of nc files
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     """
@@ -101,11 +101,11 @@ def download_eraint(target_path, start, end, variables, grid_size=None,
                  "stream": "oper", "type": "an", "levtype": "sfc",
                  "param": param_string, "date": date_string,
                  "time": timestep_string, "step": "0", "grid": grid_size,
-                 "format": 'netcdf' if netcdf else 'grib1',
+                 "format": 'grib1' if grb else 'netcdf',
                  "target": target_path}
 
     if not grid_size:
-        if netcdf:
+        if not grb:
             grid_size = "%f/%f" % (0.75,0.75)
             dl_params['grid'] = grid_size
         else:
@@ -121,7 +121,7 @@ def download_eraint(target_path, start, end, variables, grid_size=None,
 
 def download_and_move(target_path, startdate, enddate, variables=None,
                       land_sea_mask=True, keep_original=False, grid_size=None,
-                      h_steps=[0, 6, 12, 18], netcdf=False, dry_run=False):
+                      h_steps=[0, 6, 12, 18], grb=False, dry_run=False):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 days increments between start and end date to be efficient
@@ -152,8 +152,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         If None is passed, the default grid size for the data product is used.
     h_steps: list, optional (default: [0, 6, 12, 18])
         List of full hours to download data at the selected dates
-    netcdf: bool, optional (default: False)
-        Download data as netcdf files instead of grib files
+    grb: bool, optional (default: False)
+        Download data as grib files instead of netcdf files
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     """
@@ -172,7 +172,7 @@ def download_and_move(target_path, startdate, enddate, variables=None,
 
         fname = '{start}_{end}.{ext}'.format(start=current_start.strftime("%Y%m%d"),
                                              end=current_end.strftime("%Y%m%d"),
-                                             ext='nc' if netcdf else 'grb')
+                                             ext='grb' if grb else 'nc')
 
         downloaded_data_path = os.path.join(target_path, 'temp_downloaded')
         if not os.path.exists(downloaded_data_path):
@@ -182,9 +182,12 @@ def download_and_move(target_path, startdate, enddate, variables=None,
 
         download_eraint(dl_file, current_start, current_end, variables,
                                     grid_size=grid_size, h_steps=h_steps,
-                                    netcdf=netcdf, dry_run=dry_run)
+                                    grb=grb, dry_run=dry_run)
 
-        save_ncs(dl_file, target_path, 'ERAINT')
+        if grb:
+            save_gribs_from_grib(dl_file, target_path, 'ERAINT')
+        else:
+            save_ncs_from_nc(dl_file, target_path, 'ERAINT')
 
         if not keep_original:
             shutil.rmtree(downloaded_data_path)
@@ -227,8 +230,8 @@ def parse_args(args):
                               "and the land-sea mask) » "
                               "A list of possible IDs is available at http://apps.ecmwf.int/codes/grib/param-db "
                               "or by using the 'View MARS request' option in the web based ordering system."))
-    parser.add_argument("-nc", "--netcdf", type=bool, default=False,
-                        help=("Download data in netcdf format instead of the default grib format (experimental)"))
+    parser.add_argument("-grb", "--as_grib", type=bool, default=False,
+                        help=("Download data in grib1 format instead of the default netcdf format"))
     parser.add_argument("--grid_size", type=float, default=None, nargs='+',
                         help=("lon lat. Size of the grid that the data is stored to. "
                               "Should be at least (and is by default) (0.75, 0.75) for ERA-Interim "))
@@ -254,6 +257,6 @@ def run():
     main(sys.argv[1:])
 
 if __name__ == '__main__':
-    download_and_move(target_path='/home/wolfgang/data-write/eraINT',
+    download_and_move(target_path='/home/wolfgang/data-write/eraint',
                       variables=[39,40], startdate=datetime(1990,1,30),
-                      enddate=datetime(1990,2,1), netcdf=True)
+                      enddate=datetime(1990,2,1), grb=True, keep_original=True)

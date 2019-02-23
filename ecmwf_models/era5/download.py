@@ -25,29 +25,22 @@
 Module to download ERA5 from terminal.
 '''
 
-from ecmwf_models.utils import save_ncs, mkdate
+from ecmwf_models.utils import *
 import argparse
 import sys
-import warnings
 import os
 from datetime import datetime, timedelta, time
 import shutil
 import cdsapi
 import calendar
 
-
 def default_variables():
     'These variables are being downloaded, when None are passed by the user'
-    variables = ['evaporation', 'potential_evaporation', 'soil_temperature_level_1',
-    'soil_temperature_level_2', 'soil_temperature_level_3', 'soil_temperature_level_4',
-    'soil_type', 'total_precipitation', 'volumetric_soil_water_layer_1',
-    'volumetric_soil_water_layer_2', 'volumetric_soil_water_layer_3', 'volumetric_soil_water_layer_4',
-    'land_sea_mask', 'convective_snowfall_rate_water_equivalent',
-    'large_scale_snowfall_rate_water_equivalent']
+    lut = load_lut(name='ERA5')
+    defaults = lut.loc[lut['default'] == 1]['dl_name'].values
+    return defaults.tolist()
 
-    return variables
-
-def download_era5(c, years, months, days, h_steps, variables, target, netcdf=False,
+def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
                   dry_run=False):
     '''
     Download era5 reanalysis data for single levels of a defined time span
@@ -59,7 +52,7 @@ def download_era5(c, years, months, days, h_steps, variables, target, netcdf=Fal
     years : list
         Years for which data is downloaded ,e.g. [2017, 2018]
     months : list
-        Months for which data is downloaded, e.g. [1, 4, 8, 12]
+        Months for which data is downloaded, e.g. [4, 8, 12]
     days : list
         Days for which data is downloaded (range(31)=All days) e.g. [10, 20, 31]
     variables : list, optional (default: None)
@@ -71,8 +64,8 @@ def download_era5(c, years, months, days, h_steps, variables, target, netcdf=Fal
         Also download the land sea mask variable.
     target : str
         File name, where the data is stored.
-    netcdf : bool, optional (deault: False)
-        (Experimental) retrieval of images in netcdf format.
+    geb : bool, optional (deault: False)
+        Download data in grib format
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     '''
@@ -82,7 +75,7 @@ def download_era5(c, years, months, days, h_steps, variables, target, netcdf=Fal
             'reanalysis-era5-single-levels',
             {
                 'product_type': 'reanalysis',
-                'format': 'netcdf' if netcdf else 'grib',
+                'format': 'grib' if grb else 'netcdf',
                 'variable': variables,
                 'year': [str(y) for y in years],
                 'month': [str(m).zfill(2) for m in months],
@@ -93,8 +86,8 @@ def download_era5(c, years, months, days, h_steps, variables, target, netcdf=Fal
 
 
 def download_and_move(target_path, startdate, enddate, variables=None,
-                      land_sea_mask=True, keep_original=False,
-                      h_steps=[0, 6, 12, 18], netcdf=False, dry_run=False):
+                      keep_original=False, h_steps=[0, 6, 12, 18], grb=False,
+                      dry_run=False):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 day increments between start and end date to be efficient with the MARS system.
@@ -114,22 +107,20 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         last date to download
     variables : list, optional (default: None)
         Name of variables to download
-    land_sea_mask : bool, optional (default: True)
-        Add the variable for a land sea mask to the parameters
     keep_original: bool
         keep the original downloaded data
     h_steps: list
         List of full hours to download data at the selected dates e.g [0, 12]
-    netcdf: bool, optional (default: False)
-        Download data as netcdf files
+    grb: bool, optional (default: False)
+        Download data as grib files
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     """
 
-    variables = variables if variables is not None else default_variables()
-
-    if land_sea_mask and ('land_sea_mask' not in variables):
-        variables.append('land_sea_mask')
+    if variables is None:
+        variables = default_variables()
+    else:
+        variables = lookup(name='ERA5', variables=variables) # find the dl_names
 
     curr_start = startdate
 
@@ -149,7 +140,7 @@ def download_and_move(target_path, startdate, enddate, variables=None,
 
         fname = '{start}_{end}.{ext}'.format(start=curr_start.strftime("%Y%m%d"),
                                              end=curr_end.strftime("%Y%m%d"),
-                                             ext='nc' if netcdf else 'grb')
+                                             ext='grb' if grb else 'nc')
 
         downloaded_data_path = os.path.join(target_path, 'temp_downloaded')
         if not os.path.exists(downloaded_data_path):
@@ -157,10 +148,13 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         dl_file = os.path.join(downloaded_data_path, fname)
 
         download_era5(c, years=[sy], months=[sm], days=range(sd, d+1),
-                      h_steps=h_steps, variables=variables, netcdf=netcdf,
+                      h_steps=h_steps, variables=variables, grb=grb,
                       target=dl_file, dry_run=dry_run)
 
-        save_ncs(dl_file, target_path, product_name='ERA5')
+        if grb:
+            save_gribs_from_grib(dl_file, target_path, product_name='ERA5')
+        else:
+            save_ncs_from_nc(dl_file, target_path, product_name='ERA5')
 
         if not keep_original:
             shutil.rmtree(downloaded_data_path)
@@ -208,8 +202,10 @@ def parse_args(args):
                               "     land_sea_mask) » "
                               "See the ERA5 documentation for more variable names: "
                               "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation"))
-    parser.add_argument("-nc", "--netcdf", type=bool, default=False,
-                        help=("Download data in netcdf format, instead of the default grib format (experimental)"))
+    parser.add_argument("-keep", "--keep_original", type=bool, default=False,
+                        help=("Keep the originally downloaded file as it is"))
+    parser.add_argument("-grb", "--as_grib", type=bool, default=True,
+                        help=("Download data in grib format, instead of the default netcdf format"))
 
     args = parser.parse_args(args)
 
@@ -224,7 +220,7 @@ def main(args):
     args = parse_args(args)
 
     download_and_move(args.localroot, args.start, args.end, args.variables,
-                      args.netcdf, keep_original=False)
+                      grb=args.as_grib, keep_original=args.keep_original)
 
 
 def run():
@@ -232,11 +228,7 @@ def run():
 
 if __name__ == '__main__':
     from ecmwf_models.utils import save_gribs_from_grib
-    dl_file = '/data-read/USERS/wpreimes/era5_grib_img/temp_downloaded/20000101_20000131.grb'
-    save_ncs(dl_file, '/data-read/USERS/wpreimes/era5_grib_img/', 'ERA5')
-    '''
     download_and_move(target_path='/home/wolfgang/data-write/era5',
-                      variables=None, startdate=datetime(1990,1,30),
-                      enddate=datetime(1990,2,1), netcdf=True)
-    '''
+                      variables=['swvl1', 'lsm'], startdate=datetime(2000,1,1),
+                      enddate=datetime(2000,1,2), grb=True, keep_original=True)
 

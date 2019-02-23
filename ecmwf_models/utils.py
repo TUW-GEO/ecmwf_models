@@ -36,11 +36,10 @@ from datetime import datetime
 import xarray as xr
 import pandas as pd
 from datedown.fname_creator import create_dt_fpath
-import numpy as np
 
 
 def save_ncs_from_nc(input_nc, output_path, product_name,
-                     filename_templ='{product}_{gridsize}_%Y%m%d_%H%M.nc'):
+                     filename_templ='{product}_AN_%Y%m%d_%H%M.nc'):
     """
     Split the downloaded netcdf file into daily files and add to folder structure
     necessary for reshuffling.
@@ -59,12 +58,9 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
     localsubdirs = ['%Y', '%j']
 
     nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
-    latdiff = np.abs(np.round(np.ediff1d(nc_in.latitude.values),3))[0]
-    londiff = np.abs(np.round(np.ediff1d(nc_in.longitude.values),3))[0]
-    gridsize = '%s_%s' % (str(latdiff), str(londiff))
 
-    filename_templ = filename_templ.format(product=product_name,
-                                           gridsize=gridsize)
+    filename_templ = filename_templ.format(product=product_name)
+
     for time in nc_in.time.values:
         subset = nc_in.sel(time=time)
 
@@ -80,56 +76,8 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
     nc_in.close()
 
 
-def save_ncs(input, output_path, product_name, filename_templ='{product}_%Y%m%d_%H%M.nc'):
-    """
-    Split the downloaded netcdf OR grib file into daily NETCDF files and add
-    to folder structure necessary for reshuffling.
-
-    Parameters
-    ----------
-    input_nc : str
-        Filepath of the downloaded .nc file
-    output_path : str
-        Where to save the resulting netcdf files
-    product_name : str
-        Name of the ECMWF model (only for filename generation)
-    filename_templ : str, optional (default: product_grid_date_time)
-        Template for naming each separated nc file
-    """
-    filetype = input.split('.')[-1]
-    if filetype in ['grb', 'grib']:
-        filetype ='grb'
-        engine = 'cfgrib'
-        backend_kwargs = {'errors': 'ignore'}
-    else:
-        filetype = 'nc'
-        engine = 'scipy'
-        backend_kwargs = {}
-
-    localsubdirs = ['%Y', '%j']
-
-    # TODO: cfgrib has problems opening files with multiple variables.
-    ds = xr.open_dataset(input, engine=engine, mask_and_scale=True,
-                         backend_kwargs=backend_kwargs)
-
-    filename_templ = filename_templ.format(product=product_name)
-    for time in ds.time.values:
-        subset = ds.sel(time=time)
-
-        timestamp = pd.Timestamp(time).to_pydatetime()
-        filepath = create_dt_fpath(timestamp,
-                                      root=output_path,
-                                      fname=filename_templ,
-                                      subdirs=localsubdirs)
-        if not os.path.exists(os.path.dirname(filepath)):
-            os.makedirs(os.path.dirname(filepath))
-
-        subset.to_netcdf(filepath, engine='scipy')
-    ds.close()
-
-
 def save_gribs_from_grib(input_grib, output_path, product_name,
-                         filename_templ="{product}_OPER_0001_AN_%Y%m%d_%H%M.grb"):
+                         filename_templ="{product}_AN_%Y%m%d_%H%M.grb"):
     """
     Split the downloaded grib file into daily files and add to folder structure
     necessary for reshuffling.
@@ -225,7 +173,38 @@ def parse_filetype(inpath):
         return 'grib'
 
 
-if __name__ == '__main__':
-    path = '/home/wpreimes/shares/home/code/ecmwf_models/tests/ecmwf_models-test-data/download/era5_example_downloaded_raw.nc'
-    out = '/data-read/USERS/wpreimes/test/era'
-    save_ncs(path, out, 'ERAINT')
+def load_lut(name='ERA5'):
+    '''
+    Load the lookup table for supported variables to download.
+    '''
+    if name == 'ERA5':
+        era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                    'era5', 'era5_lut.csv')
+    else:
+        raise NotImplementedError
+
+    lut = pd.read_csv(era_vars_csv)
+    return lut
+
+
+def lookup(name, variables):
+    '''
+    Search the passed elements in the lookup table, if one does not exists,
+    raise a Warning
+    '''
+    lut = load_lut(name=name)
+
+    selected = []
+    for var in variables:
+        found = False
+        for row in lut.itertuples():
+            if var in row:
+                selected.append(row.Index)
+                found = True
+                break
+        if found:
+            continue
+        else:
+            warnings.warn('Passed variable {} is not in the list of supported variables.'.format(var))
+
+    return lut.loc[selected,:]['dl_name'].values.tolist()

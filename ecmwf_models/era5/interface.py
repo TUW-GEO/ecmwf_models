@@ -16,6 +16,7 @@ from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
 from netCDF4 import Dataset
 from datetime import datetime
 
+
 class ERA5NcImg(ImageBase):
     """
     Reader for a single ERA netcdf file.
