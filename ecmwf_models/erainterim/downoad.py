@@ -250,7 +250,7 @@ def main(args):
 
     download_and_move(args.localroot, args.start, args.end, args.variables,
                       keep_original=False, grid_size=args.grid_size,
-                      h_steps=[0, 6, 12, 18], netcdf=args.netcdf)
+                      h_steps=[0, 6, 12, 18], grb=args.as_grib)
 
 
 def run():

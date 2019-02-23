@@ -204,7 +204,7 @@ def parse_args(args):
                               "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation"))
     parser.add_argument("-keep", "--keep_original", type=bool, default=False,
                         help=("Keep the originally downloaded file as it is"))
-    parser.add_argument("-grb", "--as_grib", type=bool, default=True,
+    parser.add_argument("-grb", "--as_grib", type=bool, default=False,
                         help=("Download data in grib format, instead of the default netcdf format"))
 
     args = parser.parse_args(args)

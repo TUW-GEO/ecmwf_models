@@ -16,3 +16,5 @@ pygeobase
 repurpose
 pynetcf
 configobj
+requests
+more_itertools
