@@ -26,17 +26,17 @@ Utility functions for all data products in this package.
 '''
 
 import warnings
-try:
-    import pygrib
-except ImportError:
-    warnings.warn("pygrib has not been imported")
-
 import os
 from datetime import datetime
 import xarray as xr
 import pandas as pd
 from datedown.fname_creator import create_dt_fpath
 import argparse
+
+try:
+    import pygrib
+except ImportError:
+    warnings.warn("pygrib has not been imported")
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):

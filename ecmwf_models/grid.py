@@ -37,7 +37,7 @@ def get_grid_resolution(lats, lons):
         lats_res.append(np.abs(np.abs(j)-np.abs(i)))
     lats_res = np.round(np.array(lats_res), 3)
     if not all(lats_res == lats_res[0]):
-        raise Exception('Grid not regular')
+        raise ValueError('Grid not regular')
     else:
         lat_res = lats_res[0]
 
@@ -45,20 +45,20 @@ def get_grid_resolution(lats, lons):
         lons_res.append(np.abs(np.abs(j)-np.abs(i)))
     lons_res = np.round(np.array(lons_res), 3)
     if not all(lons_res == lons_res[0]):
-        raise Exception('Grid not regular')
+        raise ValueError('Grid not regular')
     else:
         lon_res = lons_res[0]
     return lat_res, lon_res
 
-def ERA_RegularImgGrid(res_lat=0.3, res_lon=0.3):
+def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
     '''
     Create ECMWF regular cell grid
 
     Parameters
     ----------
-    res_lat : float, optional (default: 0.3)
+    res_lat : float, optional (default: 0.25)
         Resolution in Y direction
-    res_lon : float, optional (default: 0.3)
+    res_lon : float, optional (default: 0.25)
         Resolution in X direction
 
     Returns
@@ -76,8 +76,13 @@ def ERA_RegularImgGrid(res_lat=0.3, res_lon=0.3):
 
     return BasicGrid(lon.flatten(), lat.flatten()).to_cell_grid(cellsize=5.)
 
+def ERA_IrregularImgGrid(lons, lats):
+        lons_gt_180 = np.where(lons > 180.0)
+        lons[lons_gt_180] = lons[lons_gt_180] - 360
+        return BasicGrid(lons.flatten(), lats.flatten()).to_cell_grid(cellsize=5.)
 
-def ECMWF025LandGrid():
+
+def ERA_LandGrid():
     #TODO: add function to generate TS from land points only,
     # use land mask (param: 172) to detect land points
     raise NotImplementedError

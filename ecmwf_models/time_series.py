@@ -31,7 +31,7 @@ from pynetcf.time_series import GriddedNcOrthoMultiTs
 
 class ERATs(GriddedNcOrthoMultiTs):
     '''
-     Time series reader.
+     Time series reader for all ERA reanalysis products in time series format.
 
      Parameters
      ----------
@@ -46,20 +46,20 @@ class ERATs(GriddedNcOrthoMultiTs):
      ------------------------------------------------------------------------
          parameters : list, optional (default: None)
              Specific variable names to read, if None are selected, all are read.
-         offsets : dict, optional (default:None)
+         offsets : dict, optional (default: None)
              Offsets (values) that are added to the parameters (keys)
-         scale_factors : dict, optional (default:None)
+         scale_factors : dict, optional (default: None)
              Offset (value) that the parameters (key) is multiplied with
          ioclass_kws: dict, (optional)
 
              Optional keyword arguments to pass to OrthoMultiTs class:
              ----------------------------------------------------------------
-                 read_bulk : boolean, optional (default:False)
-                     if set to True the data of all locations is read into memory,
-                     and subsequent calls to read_ts read from the cache and
-                     not from disk this makes reading complete files faster
-                 read_dates : boolean, optional (default:False)
-                     if false dates will not be read automatically but only on
+                 read_bulk : boolean, optional (default: False)
+                     If set to True, the data of all locations is read into memory,
+                     and subsequent calls to read_ts then read from cache and
+                     not from disk. This makes reading complete files faster.
+                 read_dates : boolean, optional (default: False)
+                     If false, dates will not be read automatically but only on
                      specific request useable for bulk reading because currently
                      the netCDF num2date routine is very slow for big datasets.
      '''

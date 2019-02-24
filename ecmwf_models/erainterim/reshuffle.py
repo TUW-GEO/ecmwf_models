@@ -34,7 +34,7 @@ import numpy as np
 from pygeogrids import BasicGrid
 
 from repurpose.img2ts import Img2Ts
-from ecmwf_models.erainterim.interface import ERAIntGrbDs, ERAIntNcDs
+from ecmwf_models.erainterim.interface_old import ERAIntGrbDs, ERAIntNcDs
 from ecmwf_models.utils import mkdate, parse_filetype
 
 
