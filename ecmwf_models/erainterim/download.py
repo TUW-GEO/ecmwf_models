@@ -28,8 +28,6 @@ Module to download ERA Interim from terminal.
 from ecmwfapi import ECMWFDataServer
 import argparse
 import sys
-import warnings
-import os
 from datetime import datetime, timedelta
 import shutil
 from ecmwf_models.utils import *
@@ -162,6 +160,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
     else:
         variables = lookup(name='ERAINT', variables=variables) # find the dl_names
 
+    variables = variables['dl_name'].values.tolist()
+
     td = timedelta(days=30)
     current_start = startdate
 
@@ -223,14 +223,14 @@ def parse_args(args):
     parser.add_argument("-e", "--end", type=mkdate, default=datetime.now(),
                         help=("Enddate in format YYYY-MM-DD. "
                               "If not given then the current date is used."))
-    parser.add_argument("-var", "--variables", metavar="variables", type=int, default=None,
+    parser.add_argument("-var", "--variables", metavar="variables", type=str, default=None,
                         nargs="+",
-                        help=("Variable IDs to download "
-                              "(default variables: "
-                              "and the land-sea mask) » "
-                              "A list of possible IDs is available at http://apps.ecmwf.int/codes/grib/param-db "
+                        help=("Name of variables to download. "
+                              "A list of possible IDs is available at https://github.com/TUW-GEO/ecmwf_models/tree/master/ecmwf_models/erainterim/eraint_lut.csv "
                               "or by using the 'View MARS request' option in the web based ordering system."))
-    parser.add_argument("-grb", "--as_grib", type=bool, default=False,
+    parser.add_argument("-keep", "--keep_original", type=str2bool, default='False',
+                        help=("Keep the originally, temporally downloaded file as it is instread of deleting it afterwards"))
+    parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
                         help=("Download data in grib1 format instead of the default netcdf format"))
     parser.add_argument("--grid_size", type=float, default=None, nargs='+',
                         help=("lon lat. Size of the grid that the data is stored to. "
@@ -239,8 +239,11 @@ def parse_args(args):
     args = parser.parse_args(args)
 
 
-    print("Downloading ERA Interim data from {} to {} into {}".
-        format(args.start.isoformat(), args.end.isoformat(), args.localroot))
+    print("Downloading ERA Interim {} data from {} to {} into folder {}"
+        .format('grib' if args.as_grib is True else 'netcdf',
+                args.start.isoformat(),
+                args.end.isoformat(),
+                args.localroot))
 
     return args
 
@@ -249,7 +252,7 @@ def main(args):
     args = parse_args(args)
 
     download_and_move(args.localroot, args.start, args.end, args.variables,
-                      keep_original=False, grid_size=args.grid_size,
+                      keep_original=args.keep_original, grid_size=args.grid_size,
                       h_steps=[0, 6, 12, 18], grb=args.as_grib)
 
 
@@ -257,6 +260,4 @@ def run():
     main(sys.argv[1:])
 
 if __name__ == '__main__':
-    download_and_move(target_path='/home/wolfgang/data-write/eraint',
-                      variables=None, startdate=datetime(1990,1,30),
-                      enddate=datetime(1990,2,1), grb=True, keep_original=True)
+    main(['/home/wolfgang/data-write/era5', '-s', '2000-01-01', '-e', '2000-01-01', '-var', 'swvl1', 'swvl2', 'lsm', '-keep', 'True', '-grb', 'False'])

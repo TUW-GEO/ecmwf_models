@@ -10,6 +10,7 @@ from datetime import timedelta
 from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
 from netCDF4 import Dataset
 from datetime import datetime
+from ecmwf_models.utils import lookup
 try:
     import pygrib
 except ImportError:
@@ -45,6 +46,8 @@ class ERA5NcImg(ImageBase):
         if mask_seapoints:
             parameter.append('lsm')
 
+        parameter = lookup('ERA5', parameter)['short_name'] # look up short names
+
         self.parameter = parameter
         self.mask_seapoints = mask_seapoints
         self.array_1D = array_1D
@@ -74,7 +77,6 @@ class ERA5NcImg(ImageBase):
         for parameter, variable in dataset.variables.items():
             if parameter in self.parameter:
                 param_metadata = {}
-                param_data = {}
                 for attrname in variable.ncattrs():
                     param_metadata.update(
                         {str(attrname): getattr(variable, attrname)})
@@ -99,12 +101,9 @@ class ERA5NcImg(ImageBase):
                     return_img[parameter]
                 except KeyError:
                     path, thefile = os.path.split(self.filename)
-                    print ('%s in %s is corrupt - filling'
-                           'image with NaN values' % (parameter, thefile))
-                    return_img[parameter] = np.empty(
-                        self.grid.n_gpi).fill(np.nan)
-
-                    return_metadata['corrupt_parameters'].append()
+                    warnings.warn('Cannot load variable {var} from file {thefile}. '
+                                  'Filling image with NaNs.'.format(var=parameter, thefile=thefile))
+                    return_img[parameter] = np.empty(self.grid.n_gpi).fill(np.nan)
 
         dataset.close()
 
@@ -112,10 +111,12 @@ class ERA5NcImg(ImageBase):
             return Image(self.grid.activearrlon, self.grid.activearrlat,
                          return_img, return_metadata, timestamp)
         else:
+            nlat = np.unique(self.grid.activearrlat).size
+            nlon = np.unique(self.grid.activearrlon).size
+
             for key in return_img:
-                nlat = np.unique(self.grid.activearrlat).size
-                nlon = np.unique(self.grid.activearrlon).size
                 return_img[key] = return_img[key].reshape((nlat, nlon))
+
             return Image(self.grid.activearrlon.reshape(nlat, nlon),
                          self.grid.activearrlat.reshape(nlat, nlon),
                          return_img,
@@ -140,15 +141,14 @@ class ERA5NcDs(MultiTemporalImageBase):
     Parameters
     ----------
     root_path: str
-        Root path where image data is stored
+        Root path where image data is stored.
     parameter: list or str, optional (default: ['swvl1', 'swvl2'])
-        Parameter or list of parameters to read from image files
-    subpath_templ: list, optional (default: ["%Y", "%j"])
-        List of strings that specifies a sub-path depending on date. If the
-        data is e.g. stored in day-of-year files in yearly folders.
-    subgrid: pygeogrids.CellGrid, optional (default:None)
+        Parameter or list of parameters to read from image files.
+    subgrid: pygeogrids.CellGrid, optional (default: None)
         Read only data for points of this grid and not global values.
-    array_1D: bool, optional (default:False)
+    mask_seapoints : bool, optional (default: False)
+        Use the land-sea-mask parameter in the file to mask points over water.
+    array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
     """
 
@@ -220,7 +220,7 @@ class ERA5GrbImg(ImageBase):
     def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
                  expand_grid=True):
 
-        super(ERAIntGrbImg, self).__init__(filename, mode=mode)
+        super(ERA5GrbImg, self).__init__(filename, mode=mode)
 
         if type(parameter) == str:
             parameter = [parameter]

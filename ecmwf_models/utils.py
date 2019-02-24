@@ -36,7 +36,15 @@ from datetime import datetime
 import xarray as xr
 import pandas as pd
 from datedown.fname_creator import create_dt_fpath
+import argparse
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def save_ncs_from_nc(input_nc, output_path, product_name,
                      filename_templ='{product}_AN_%Y%m%d_%H%M.nc'):
@@ -210,4 +218,4 @@ def lookup(name, variables):
         else:
             warnings.warn('Passed variable {} is not in the list of supported variables.'.format(var))
 
-    return lut.loc[selected,:]['dl_name'].values.tolist()
+    return lut.loc[selected,:]

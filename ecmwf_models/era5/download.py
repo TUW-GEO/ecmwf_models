@@ -122,6 +122,7 @@ def download_and_move(target_path, startdate, enddate, variables=None,
     else:
         variables = lookup(name='ERA5', variables=variables) # find the dl_names
 
+    variables = variables['dl_name'].values.tolist()
     curr_start = startdate
 
     c = cdsapi.Client()
@@ -202,23 +203,24 @@ def parse_args(args):
                               "     land_sea_mask) » "
                               "See the ERA5 documentation for more variable names: "
                               "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation"))
-    parser.add_argument("-keep", "--keep_original", type=bool, default=False,
-                        help=("Keep the originally downloaded file as it is"))
-    parser.add_argument("-grb", "--as_grib", type=bool, default=False,
+    parser.add_argument("-keep", "--keep_original", type=str2bool, default='False',
+                        help=("Keep the originally, temporally downloaded file as it is instread of deleting it afterwards"))
+    parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
                         help=("Download data in grib format, instead of the default netcdf format"))
 
     args = parser.parse_args(args)
 
 
-    print("Downloading ERA5 data from {} to {} into folder {}".format(args.start.isoformat(),
-                                                                      args.end.isoformat(),
-                                                                      args.localroot))
+    print("Downloading ERA5 {} data from {} to {} into folder {}"
+        .format('grib' if args.as_grib is True else 'netcdf',
+                args.start.isoformat(),
+                args.end.isoformat(),
+                args.localroot))
     return args
 
 
 def main(args):
     args = parse_args(args)
-
     download_and_move(args.localroot, args.start, args.end, args.variables,
                       grb=args.as_grib, keep_original=args.keep_original)
 
@@ -228,7 +230,4 @@ def run():
 
 if __name__ == '__main__':
     from ecmwf_models.utils import save_gribs_from_grib
-    download_and_move(target_path='/home/wolfgang/data-write/era5',
-                      variables=['swvl1', 'lsm'], startdate=datetime(2000,1,1),
-                      enddate=datetime(2000,1,2), grb=True, keep_original=True)
-
+    main(['/home/wolfgang/data-write/era5', '-s', '2010-01-01', '-e', '2010-01-01', '-var', 'swvl1', 'swvl2', 'lsm', '-keep', 'False', '-grb', 'False'])
