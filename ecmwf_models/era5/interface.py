@@ -3,11 +3,6 @@
 
 import warnings
 import os
-
-try:
-    import pygrib
-except ImportError:
-    warnings.warn("pygrib has not been imported")
 from pygeobase.io_base import ImageBase, MultiTemporalImageBase
 from pygeobase.object_base import Image
 import numpy as np
@@ -15,6 +10,11 @@ from datetime import timedelta
 from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
 from netCDF4 import Dataset
 from datetime import datetime
+try:
+    import pygrib
+except ImportError:
+    warnings.warn("pygrib has not been imported")
+
 
 
 class ERA5NcImg(ImageBase):
@@ -171,6 +171,128 @@ class ERA5NcDs(MultiTemporalImageBase):
                                       subpath_templ=subpath_templ,
                                       exact_templ=False,
                                       ioclass_kws=ioclass_kws)
+
+    def tstamps_for_daterange(self, start_date, end_date):
+        """
+        Get datetimes in 6H resolution between 2 dates
+
+        Parameters
+        ----------
+        start_date: datetime
+            Start datetime
+        end_date: datetime
+            End datetime
+        """
+
+        img_offsets = np.array([timedelta(hours=0),
+                                timedelta(hours=6),
+                                timedelta(hours=12),
+                                timedelta(hours=18)])
+
+        timestamps = []
+        diff = end_date - start_date
+        for i in range(diff.days + 1):
+            daily_dates = start_date + timedelta(days=i) + img_offsets
+            timestamps.extend(daily_dates.tolist())
+
+        return timestamps
+
+
+
+class ERA5GrbImg(ImageBase):
+    """
+    Reader for a single ERA Interim grib file.
+
+    Parameters
+    ----------
+    filename: str
+        Path to the image file to read.
+    parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        Name of parameters to read from the image file.
+    mode: str, optional (default: 'r')
+        Mode in which to open the file, changing this can cause data loss.
+    subgrid: pygeogrids.CellGrid, optional (default:None)
+        Read only data for points of this grid and not global values.
+    array_1D: bool, optional (default: False)
+        Read data as list, instead of 2D array, used for reshuffling.
+    """
+
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
+                 expand_grid=True):
+
+        super(ERAIntGrbImg, self).__init__(filename, mode=mode)
+
+        if type(parameter) == str:
+            parameter = [parameter]
+        self.parameter = parameter
+        self.expand_grid = expand_grid
+
+    def read(self, timestamp=None):
+        #TODO: Replace ERA5 missing data (!=0)
+        grbs = pygrib.open(self.filename)
+
+        img = {}
+        metadata = {}
+        for message in grbs:
+            param_name = message.short_name
+            if param_name not in self.parameter: continue
+            metadata[param_name] = {}
+            message.expand_grid(self.expand_grid)
+            img[param_name] = message.values
+            lats, lons = message.latlons()
+            metadata[param_name]['units'] = message['units']
+            metadata[param_name]['long_name'] = message['parameterName']
+
+            if 'levels' in message.keys():
+                metadata[param_name]['depth'] = '{:} cm'.format(message['levels'])
+
+        grbs.close()
+        lons_gt_180 = np.where(lons > 180.0)
+        lons[lons_gt_180] = lons[lons_gt_180] - 360
+
+
+        return Image(lons, lats, img, metadata, timestamp)
+
+    def write(self, data):
+        raise NotImplementedError()
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+
+class ERA5GrbDs(MultiTemporalImageBase):
+    """
+    Parameters
+    ----------
+    root_path: string
+        Root path where the data is stored
+    parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        Parameter or list of parameters to read
+    expand_grid: bool, optional (default: True)
+        If the reduced gaußian grid should be expanded to a full gaußian grid.
+    """
+
+    def __init__(self, root_path, parameter=['swvl1', 'swvl2'],
+                 expand_grid=True):
+
+        subpath_templ = ["%Y", "%j"]
+
+        if type(parameter) == str:
+            parameter = [parameter]
+
+        ioclass_kws = {'parameter': parameter,
+                       'expand_grid': expand_grid}
+
+        super(ERAIntGrbDs, self).__init__(root_path, ERAIntGrbImg,
+                                       fname_templ='*_{datetime}.grb',
+                                       datetime_format="%Y%m%d_%H%M",
+                                       subpath_templ=subpath_templ,
+                                       exact_templ=False,
+                                       ioclass_kws=ioclass_kws)
+
 
     def tstamps_for_daterange(self, start_date, end_date):
         """

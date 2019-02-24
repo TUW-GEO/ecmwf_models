@@ -180,8 +180,11 @@ def load_lut(name='ERA5'):
     if name == 'ERA5':
         era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                     'era5', 'era5_lut.csv')
+    elif name == 'ERAINT':
+        era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    'erainterim', 'eraint_lut.csv')
     else:
-        raise NotImplementedError
+        raise ValueError('No LUT for the selected dataset found.')
 
     lut = pd.read_csv(era_vars_csv)
     return lut

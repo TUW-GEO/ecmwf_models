@@ -45,9 +45,9 @@ def test_dry_download_era5():
 
     startdate = enddate = datetime(2010,1,1)
 
-    download_and_move_era5(dl_path, startdate, enddate, ['volumetric_soil_water_layer_1'],
+    download_and_move_era5(dl_path, startdate, enddate, variables=None,
                            keep_original=False, h_steps=[0, 6, 12, 18],
-                           netcdf=True, dry_run=True)
+                           grb=False, dry_run=True)
 
     assert(os.listdir(dl_path) == ['2010'])
     assert(os.listdir(os.path.join(dl_path, '2010')) == ['001'])
@@ -78,7 +78,7 @@ def test_dry_download_eraint():
 
     download_and_move_ei(dl_path, startdate, enddate, [39],
                       keep_original=False, grid_size=None,
-                      h_steps=[0, 6, 12, 18], netcdf=False, dry_run=True)
+                      h_steps=[0, 6, 12, 18], grb=True, dry_run=True)
 
     assert(os.listdir(dl_path) == ['2000'])
     assert(os.listdir(os.path.join(dl_path, '2000')) == ['001'])
@@ -95,3 +95,4 @@ def test_dry_download_eraint():
 
 if __name__ == '__main__':
     test_dry_download_era5()
+    test_dry_download_eraint()

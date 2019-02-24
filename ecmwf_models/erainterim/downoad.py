@@ -29,22 +29,22 @@ from ecmwfapi import ECMWFDataServer
 import argparse
 import sys
 import warnings
-try:
-    import pygrib
-except ImportError:
-    warnings.warn("pygrib has not been imported")
 import os
 from datetime import datetime, timedelta
 import shutil
 from ecmwf_models.utils import *
 
+try:
+    import pygrib
+except ImportError:
+    warnings.warn("pygrib has not been imported")
 
 
 def default_variables():
     'These variables are being downloaded, when None are passed by the user'
-    variables = [39, 40, 41, 42, 172]
-
-    return variables
+    lut = load_lut(name='ERAINT')
+    defaults = lut.loc[lut['default'] == 1]['dl_name'].values
+    return defaults.tolist()
 
 
 def download_eraint(target_path, start, end, variables, grid_size=None,
@@ -82,7 +82,7 @@ def download_eraint(target_path, start, end, variables, grid_size=None,
 
 
     for variable in variables:
-        param_strings.append("%d.128" % variable)
+        param_strings.append(str(variable))
 
     timestep_strings = []
     for timestep in h_steps:
@@ -157,10 +157,10 @@ def download_and_move(target_path, startdate, enddate, variables=None,
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     """
-    variables = variables if variables is not None else default_variables()
-
-    if land_sea_mask and (172 not in variables):
-        variables.append(172)
+    if variables is None:
+        variables = default_variables()
+    else:
+        variables = lookup(name='ERAINT', variables=variables) # find the dl_names
 
     td = timedelta(days=30)
     current_start = startdate
@@ -226,7 +226,7 @@ def parse_args(args):
     parser.add_argument("-var", "--variables", metavar="variables", type=int, default=None,
                         nargs="+",
                         help=("Variable IDs to download "
-                              "(default IDs: 39, 40, 41, 42, 172, corresponding to the top 4 levels of soil moisture "
+                              "(default variables: "
                               "and the land-sea mask) » "
                               "A list of possible IDs is available at http://apps.ecmwf.int/codes/grib/param-db "
                               "or by using the 'View MARS request' option in the web based ordering system."))
@@ -258,5 +258,5 @@ def run():
 
 if __name__ == '__main__':
     download_and_move(target_path='/home/wolfgang/data-write/eraint',
-                      variables=[39,40], startdate=datetime(1990,1,30),
+                      variables=None, startdate=datetime(1990,1,30),
                       enddate=datetime(1990,2,1), grb=True, keep_original=True)

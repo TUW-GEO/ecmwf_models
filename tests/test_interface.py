@@ -28,7 +28,8 @@ Tests for reading the data.
 import os
 from datetime import datetime
 import numpy.testing as nptest
-from ecmwf_models.erainterim.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
+from ecmwf_models.erainterim.interface import ERAIntGrbDs, ERAIntGrbImg, ERAIntNcDs, ERAIntNcImg
+from ecmwf_models.era5.interface import ERA5NcDs, ERA5NcImg
 
 
 def test_ERAInterim_image():
