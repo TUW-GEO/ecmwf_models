@@ -2,22 +2,35 @@ Reading data
 ============
 
 After downloading the data for ERA Interim or ERA5 via ``eraint_download`` resp.
-``era5_download``, images can be read with the ``ERAGrbDs`` and
-``ERANcDs`` (for grib and netcdf image stacks), respectively the
-``ERAGrbImg`` and ``ERANcImg`` (for single grib and netcdf images) classes,
-as defined in ``ecmwf_models.interface``.
+``era5_download``, images can be read with the ``ERA5GrbDs`` and
+``ERA5NcDs`` (for grib and netcdf image stacks), respectively the
+``ERA5GrbImg`` and ``ERA5NcImg`` (for single grib and netcdf images) classes,
+as defined in ``ecmwf_models.era5.interface``.
 
+The respective functions for reading ERA-Interim images are defined in
+``ecmwf_models.erainterim.interface`` and are called ``ERAIntGrbDs``, ``ERAIntNcDs``,
+``ERAIntNcImg`` and ``ERAIntGrbImg`` and work exacly in the same way as for ERA5.
+
+The following examples are shown for ERA5 data, using the respective classes for
+ERA-Interim, reading works in the same way:
 For example, you can read the image for a single variable at a specific date.
-In this case for a stack of grib files:
+In this case for a stack of downloaded image files:
 
 .. code-block:: python
 
+    # Script to load a stack of downloaded netcdf images
+    # and read a variable for a single date.
+    from ecmwf_models.era5.interface import ERA5NcDs
+    root_path = "/path/to/netcdf_storage"
+    ds = ERAGrbDs(root_path, parameter='swvl1')
+    data = ds.read(datetime(2010, 1, 1, 0))
+
     # Script to load a stack of downloaded grib images
     # and read a variable for a single date.
-    from ecmwf_models.interface import ERAGrbDs
-    root_path = "/path/to/storage"
-    ds = ERAGrbDs(root_path, 'swvl1')
-    data = ds.read(datetime(2000, 1, 1, 0))
+    from ecmwf_models.era5.interface import ERA5GrbDs
+    root_path = "/path/to/grib_storage"
+    ds = ERAGrbDs(root_path, parameter='swvl1')
+    data = ds.read(datetime(2010, 1, 1, 0))
 
 
 You can also read multiple variables at a specific date by passing a list of parameters.
@@ -27,11 +40,11 @@ In this case for a set of netcdf files:
 
     # Script to load a stack of downloaded netcdf images
     # and read two variables for a single date.
-    from ecmwf_models.interface import ERANcDs
+    from ecmwf_models.era5.interface import ERA5NcDs
     root_path = "/path/to/storage"
-    ds = ERANcDs(root_path, ['swvl1', 'swvl2'])
+    ds = ERANcDs(root_path, parameter=['swvl1', 'swvl2'])
     data = ds.read(datetime(2000, 1, 1, 0))
 
 
 All images between two given dates can be read using the
-``ERAGrbDs.iter_images`` and ``ERANcDs.iter_images`` method.
+``iter_images`` methods of all the image stack reader classes.
