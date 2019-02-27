@@ -2,7 +2,7 @@ dl_name,long_name,short_name,levtype,default
 31.128,Sea ice area fraction,an,ci,
 32.128,Snow albedo,an,asn,
 33.128,Snow density,an,rsn,1
-34.128,Sea surface temperature,sst,
+34.128,Sea surface temperature,an,sst,
 35.128,Ice temperature layer 1,an,istl1,
 36.128,Ice temperature layer 2,an,istl2,
 37.128,Ice temperature layer 3,an,istl3,
@@ -67,7 +67,7 @@ dl_name,long_name,short_name,levtype,default
 170.128,Soil temperature level 2,an,stl2,1
 172.128,Land-sea mask,an,lsm,1
 173.128,Surface roughness,an,sr,
-174.128,Albedo,al,
+174.128,Albedo,an,al,
 183.128,Soil temperature level 3,an,stl3,1
 186.128,Low cloud cover,an,lcc,
 187.128,Medium cloud cover,an,mcc,
