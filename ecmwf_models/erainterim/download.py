@@ -40,7 +40,7 @@ except ImportError:
 
 def default_variables():
     'These variables are being downloaded, when None are passed by the user'
-    lut = load_lut(name='ERAINT')
+    lut = load_var_table(name='ERAINT')
     defaults = lut.loc[lut['default'] == 1]['dl_name'].values
     return defaults.tolist()
 

@@ -181,9 +181,15 @@ def parse_filetype(inpath):
         return 'grib'
 
 
-def load_lut(name='ERA5'):
+def load_var_table(name='ERA5', lut=False):
     '''
-    Load the lookup table for supported variables to download.
+    Load the variables table for supported variables to download.
+
+    Parameters
+    --------
+    lut : bool, optional (default: False)
+        If set to true only names are loaded, so that they can be used for a LUT
+        otherwise the full table is loaded
     '''
     if name == 'ERA5':
         era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -194,8 +200,12 @@ def load_lut(name='ERA5'):
     else:
         raise ValueError('No LUT for the selected dataset found.')
 
-    lut = pd.read_csv(era_vars_csv)
-    return lut
+    if lut:
+        dat = pd.read_csv(era_vars_csv)[['dl_name','long_name','short_name']]
+    else:
+        dat = pd.read_csv(era_vars_csv)
+
+    return dat
 
 
 def lookup(name, variables):
@@ -203,7 +213,7 @@ def lookup(name, variables):
     Search the passed elements in the lookup table, if one does not exists,
     raise a Warning
     '''
-    lut = load_lut(name=name)
+    lut = load_var_table(name=name, lut=True)
 
     selected = []
     for var in variables:
