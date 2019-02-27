@@ -45,8 +45,8 @@ def default_variables():
     return defaults.tolist()
 
 
-def download_eraint(target_path, start, end, variables, grid_size=None,
-                    h_steps=[0, 6, 12, 18], grb=False, dry_run=False):
+def download_eraint(target_path, start, end, variables, grid_size=None,type='fc',
+                    h_steps=[0, 6, 12, 18], grb=False, dry_run=False, steps=[0]):
     """
     Download era interim data
 
@@ -93,12 +93,14 @@ def download_eraint(target_path, start, end, variables, grid_size=None,
 
     grid_size = "%f/%f" % (grid_size[0], grid_size[1]) if grid_size else None
 
+
+    step = '/'.join([str(s) for s in steps])
     # ATTENTION: When downloading netcdf files steps and times must not overlap!!
     # see: https://software.ecmwf.int/wiki/display/CKB/What+to+do+with+ECCODES+ERROR+%3A+Try+using+the+-T+option
     dl_params = {"class": dataclass, "dataset": dataset, "expver": "1",
-                 "stream": "oper", "type": "an", "levtype": "sfc",
+                 "stream": "oper", "type": type, "levtype": "sfc",
                  "param": param_string, "date": date_string,
-                 "time": timestep_string, "step": "0", "grid": grid_size,
+                 "time": timestep_string, "step": step, "grid": grid_size,
                  "format": 'grib1' if grb else 'netcdf',
                  "target": target_path}
 
@@ -119,7 +121,8 @@ def download_eraint(target_path, start, end, variables, grid_size=None,
 
 def download_and_move(target_path, startdate, enddate, variables=None,
                       land_sea_mask=True, keep_original=False, grid_size=None,
-                      h_steps=[0, 6, 12, 18], grb=False, dry_run=False):
+                      type='fc', h_steps=[0, 6, 12, 18], steps=[0],
+                      grb=False, dry_run=False):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 days increments between start and end date to be efficient
@@ -181,8 +184,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         dl_file = os.path.join(downloaded_data_path, fname)
 
         download_eraint(dl_file, current_start, current_end, variables,
-                                    grid_size=grid_size, h_steps=h_steps,
-                                    grb=grb, dry_run=dry_run)
+                                    grid_size=grid_size, h_steps=h_steps, type=type,
+                                    steps=steps, grb=grb, dry_run=dry_run)
 
         if grb:
             save_gribs_from_grib(dl_file, target_path, 'ERAINT')
@@ -232,6 +235,12 @@ def parse_args(args):
                         help=("Keep the originally, temporally downloaded file as it is instread of deleting it afterwards"))
     parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
                         help=("Download data in grib1 format instead of the default netcdf format"))
+    parser.add_argument("--h_steps", type=int, default=None, nargs='+',
+                        help=("Temporal resolution of donwloaded images"))
+    parser.add_argument("--steps", type=int, default=None, nargs='+',
+                        help=("Some parameters need one ore multiple specific steps selected"))
+    parser.add_argument("--type", type=str, default='an',
+                        help=("Select the data stream, e.g. 'an' (default) or 'fc'"))
     parser.add_argument("--grid_size", type=float, default=None, nargs='+',
                         help=("lon lat. Size of the grid that the data is stored to. "
                               "Should be at least (and is by default) (0.75, 0.75) for ERA-Interim "))
@@ -251,13 +260,25 @@ def parse_args(args):
 def main(args):
     args = parse_args(args)
 
+
     download_and_move(args.localroot, args.start, args.end, args.variables,
                       keep_original=args.keep_original, grid_size=args.grid_size,
-                      h_steps=[0, 6, 12, 18], grb=args.as_grib)
+                      type='fc', h_steps=[0, 6, 12, 18], grb=args.as_grib)
 
 
 def run():
     main(sys.argv[1:])
 
 if __name__ == '__main__':
-    main(['/home/wolfgang/data-write/era5', '-s', '2000-01-01', '-e', '2000-01-01', '-var', 'swvl1', 'swvl2', 'lsm', '-keep', 'True', '-grb', 'False'])
+    root = '/data-write/USERS/wpreimes/eraint'
+    start = datetime(2013,1,1)
+    end = datetime(2013,1,31)
+    variables = ['ssrd', 'lsm']
+    download_and_move(root,start, end, variables,
+                      keep_original=True, grid_size=None, type='fc', grb=False,
+                      h_steps=[0, 12], steps=[3])
+    '''
+    main(['/home/wolfgang/data-write/era5', '-s', '2000-01-01', '-e',
+          '2000-01-01', '-var', 'swvl1', 'swvl2', 'lsm', '-keep',
+          'True', '-grb', 'False', ])
+    '''

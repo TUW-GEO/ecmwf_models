@@ -34,12 +34,12 @@ import numpy as np
 from pygeogrids import BasicGrid
 
 from repurpose.img2ts import Img2Ts
-from ecmwf_models.erainterim.interface_old import ERAIntGrbDs, ERAIntNcDs
+from ecmwf_models.erainterim.interface import ERAIntGrbDs, ERAIntNcDs
 from ecmwf_models.utils import mkdate, parse_filetype
-
+from datetime import date, datetime, time
 
 def reshuffle(input_root, outputpath, startdate, enddate, variables,
-              mask_seapoints=False, imgbuffer=50):
+              mask_seapoints=False, h_steps=[0,6,12,18], imgbuffer=50):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
     series format.
@@ -58,6 +58,8 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
         Variables to read from the passed images and convert into time series format.
     mask_seapoints: bool, optional (default: False)
         Mask points over sea, replace them with nan.
+    h_steps: list, optional (default: [0,6,12,18])
+        Full hours for which images are available.
     imgbuffer: int, optional (default: 50)
         How many images to read at once before writing time series. This number
         affects how many images are stored in memory and should be chosen according
@@ -68,9 +70,11 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
     filetype = parse_filetype(input_root)
 
     if filetype == 'grib':
-        input_dataset = ERAIntGrbDs(input_root, variables, expand_grid=False)
+        input_dataset = ERAIntGrbDs(input_root, variables, mask_seapoints=mask_seapoints,
+                                    h_steps=h_steps, array_1D=True)
     elif filetype == 'netcdf':
-        input_dataset = ERAIntNcDs(input_root, variables, subgrid=None, array_1D=True)
+        input_dataset = ERAIntNcDs(input_root, variables, mask_seapoints=mask_seapoints,
+                                   h_steps=h_steps, array_1D=True)
     else:
         raise Exception('Unknown file format')
 
@@ -80,7 +84,10 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
     global_attr = {'product': 'ECMWF Reanalysis from {}'.format(filetype)}
 
     # get time series attributes from first day of data.
-    data = input_dataset.read(startdate)
+    first_date_time = datetime.combine(startdate.date(), time(h_steps[0], 0))
+    last_date_time = datetime.combine(enddate.date(), time(h_steps[-1], 0))
+
+    data = input_dataset.read(first_date_time)
     ts_attributes = data.metadata
 
     grid = BasicGrid(data.lon, data.lat)
@@ -154,6 +161,14 @@ def run():
     main(sys.argv[1:])
 
 if __name__ == '__main__':
-    run()
+    #    run()
+
+    from datetime import datetime
+    input_root = '/data-write/USERS/wpreimes/eraint/images'
+    outputpath = '/data-write/USERS/wpreimes/eraint/time_series'
+    startdate = datetime(2013,1,1)
+    enddate = datetime(2013,1,31)
+    reshuffle(input_root, outputpath, startdate, enddate, variables=['lsm', 'ssrd'],
+              mask_seapoints=False, h_steps=[3, 15], imgbuffer=100)
 
 

@@ -63,6 +63,7 @@ dl_name,long_name,short_name,default
 166.128,10 metre V wind component,v10,
 167.128,2 metre temperature,t2m,
 168.128,2 metre dewpoint temperature,d2m,
+169.128,Surface solar radiation downwards,ssrd,
 170.128,Soil temperature level 2,stl2,1
 172.128,Land-sea mask,lsm,1
 173.128,Surface roughness,sr,

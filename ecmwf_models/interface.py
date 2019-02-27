@@ -81,10 +81,11 @@ class ERANcImg(ImageBase):
 
         grid = ERA_RegularImgGrid(res_lat, res_lon) if not self.subgrid else self.subgrid
 
-        if self.mask_seapoints and 'lsm' not in dataset.variables.keys():
-            raise IOError('No land sea mask parameter (lsm) in passed image for masking.')
-        else:
-            sea_mask = dataset.variables['lsm'].values
+        if self.mask_seapoints:
+            if 'lsm' not in dataset.variables.keys():
+                raise IOError('No land sea mask parameter (lsm) in passed image for masking.')
+            else:
+                sea_mask = dataset.variables['lsm'].values
 
         for name in dataset.variables:
             if name in self.parameter:
@@ -153,13 +154,17 @@ class ERANcDs(MultiTemporalImageBase):
         Read only data for points of this grid and not global values.
     mask_seapoints : bool, optional (default: False)
         Use the land-sea-mask parameter in the file to mask points over water.
+    h_step : list, optional (default: [0,6,12,18])
+        List of full hours for which images exist.
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
     """
 
     def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
-                 subgrid=None, mask_seapoints=False, array_1D=False):
+                 subgrid=None, mask_seapoints=False, h_steps=[0,6,12,18],
+                 array_1D=False):
 
+        self.h_steps = h_steps
         subpath_templ = ["%Y", "%j"]
 
         if type(parameter) == str:
@@ -190,10 +195,7 @@ class ERANcDs(MultiTemporalImageBase):
             End datetime
         """
 
-        img_offsets = np.array([timedelta(hours=0),
-                                timedelta(hours=6),
-                                timedelta(hours=12),
-                                timedelta(hours=18)])
+        img_offsets = np.array([timedelta(hours=h) for h in self.h_steps])
 
         timestamps = []
         diff = end_date - start_date
@@ -351,7 +353,9 @@ class ERAGrbDs(MultiTemporalImageBase):
     """
 
     def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
-                 subgrid=None, mask_seapoints=False, array_1D=True):
+                 subgrid=None, mask_seapoints=False, h_steps=[0,6,12,18], array_1D=True):
+
+        self.h_steps = h_steps
 
         subpath_templ = ["%Y", "%j"]
 
@@ -384,10 +388,8 @@ class ERAGrbDs(MultiTemporalImageBase):
             End datetime
         """
 
-        img_offsets = np.array([timedelta(hours=0),
-                                timedelta(hours=6),
-                                timedelta(hours=12),
-                                timedelta(hours=18)])
+        img_offsets = np.array([timedelta(hours=h) for h in self.h_steps])
+
 
         timestamps = []
         diff = end_date - start_date
