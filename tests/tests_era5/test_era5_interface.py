@@ -1,4 +1,25 @@
 # -*- coding: utf-8 -*-
+# The MIT License (MIT)
+#
+# Copyright (c) 2019, TU Wien
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 
 import os
@@ -9,7 +30,7 @@ from datetime import datetime
 
 def test_ERA5_nc_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "era5", "nc", "2010", "001",
+                         "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
                          'ERA5_AN_20100101_0000.nc')
 
     dset = ERA5NcImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True)
@@ -31,8 +52,8 @@ def test_ERA5_nc_image():
     # data over land
     nptest.assert_allclose(data.lon[168, 60], 15.0, rtol=1e-5)
     nptest.assert_allclose(data.lat[168, 60], 48.0, rtol=1e-5)
-    nptest.assert_allclose(data.data['swvl1'][168, 60], 0.40283, rtol=1e-5)
-    nptest.assert_allclose(data.data['swvl2'][168, 60], 0.39051, rtol=1e-5)
+    nptest.assert_allclose(data.data['swvl1'][168, 60], 0.402825, rtol=1e-5)
+    nptest.assert_allclose(data.data['swvl2'][168, 60], 0.390512, rtol=1e-5)
     # data over water
     nptest.assert_allclose(data.lon[400, 320], 80.0, rtol=1e-5)
     nptest.assert_allclose(data.lat[400, 320], -10.0, rtol=1e-5)
@@ -48,7 +69,7 @@ def test_ERA5_nc_image():
 
 def test_ERA5_nc_image_1d():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "era5", "nc", "2010", "001",
+                         "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
                          'ERA5_AN_20100101_0000.nc')
 
     dset = ERA5NcImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True,
@@ -71,8 +92,8 @@ def test_ERA5_nc_image_1d():
     # data over land
     nptest.assert_allclose(data.lon[168 * 1440 + 60], 15.0, rtol=1e-5)
     nptest.assert_allclose(data.lat[168 * 1440 + 60], 48.0, rtol=1e-5)
-    nptest.assert_allclose(data.data['swvl1'][168 * 1440 + 60], 0.40283, rtol=1e-5)
-    nptest.assert_allclose(data.data['swvl2'][168 * 1440 + 60], 0.39051, rtol=1e-5)
+    nptest.assert_allclose(data.data['swvl1'][168 * 1440 + 60], 0.402825, rtol=1e-5)
+    nptest.assert_allclose(data.data['swvl2'][168 * 1440 + 60], 0.390512, rtol=1e-5)
     # data over water
     nptest.assert_allclose(data.lon[400 * 1440 + 320], 80.0, rtol=1e-4)
     nptest.assert_allclose(data.lat[400 * 1440 + 320], -10.0, rtol=1e-4)
@@ -88,7 +109,7 @@ def test_ERA5_nc_image_1d():
 
 def test_ERA5_grb_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "era5", "grb", "2010", "001",
+                         "ecmwf_models-test-data", "ERA5", "grib", "2010", "001",
                          'ERA5_AN_20100101_0000.grb')
 
     dset = ERA5GrbImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True,
@@ -111,8 +132,8 @@ def test_ERA5_grb_image():
     # data over land
     nptest.assert_allclose(data.lon[168, 60], 15.0, rtol=1e-5)
     nptest.assert_allclose(data.lat[168, 60], 48.0, rtol=1e-5)
-    nptest.assert_allclose(data.data['swvl1'][168, 60], 0.40283, rtol=1e-4)
-    nptest.assert_allclose(data.data['swvl2'][168, 60], 0.39051, rtol=1e-4)
+    nptest.assert_allclose(data.data['swvl1'][168, 60], 0.402824, rtol=1e-4)
+    nptest.assert_allclose(data.data['swvl2'][168, 60], 0.390514, rtol=1e-4)
     # data over water
     nptest.assert_allclose(data.lon[400, 320], 80.0, rtol=1e-5)
     nptest.assert_allclose(data.lat[400, 320], -10.0, rtol=1e-5)
@@ -127,7 +148,7 @@ def test_ERA5_grb_image():
 
 def test_ERA5_grb_image_1d():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "era5", "grb", "2010", "001",
+                         "ecmwf_models-test-data", "ERA5", "grib", "2010", "001",
                          'ERA5_AN_20100101_0000.grb')
 
     dset = ERA5GrbImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True,
@@ -150,8 +171,8 @@ def test_ERA5_grb_image_1d():
     # data over land
     nptest.assert_allclose(data.lon[168 * 1440 + 60], 15.0, rtol=1e-5)
     nptest.assert_allclose(data.lat[168 * 1440 + 60], 48.0, rtol=1e-5)
-    nptest.assert_allclose(data.data['swvl1'][168 * 1440 + 60], 0.40283, rtol=1e-4)
-    nptest.assert_allclose(data.data['swvl2'][168 * 1440 + 60], 0.39051, rtol=1e-4)
+    nptest.assert_allclose(data.data['swvl1'][168 * 1440 + 60], 0.402824, rtol=1e-4)
+    nptest.assert_allclose(data.data['swvl2'][168 * 1440 + 60], 0.390514, rtol=1e-4)
     # data over water
     nptest.assert_allclose(data.lon[400 * 1440 + 320], 80.0, rtol=1e-5)
     nptest.assert_allclose(data.lat[400 * 1440 + 320], -10.0, rtol=1e-5)
@@ -167,15 +188,13 @@ def test_ERA5_grb_image_1d():
 
 def test_ERA5_nc_ds():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "era5", "nc")
+                         "ecmwf_models-test-data", "ERA5", "netcdf")
 
     tstamps_should = [datetime(2010, 1, 1),
-                      datetime(2010, 1, 1, 6),
-                      datetime(2010, 1, 1, 12),
-                      datetime(2010, 1, 1, 18)]
+                      datetime(2010, 1, 1, 12)]
 
     ds = ERA5NcDs(root_path, parameter=['swvl1', 'swvl2'], array_1D=True,
-                  mask_seapoints=True)
+                  mask_seapoints=True, h_steps=[0, 12])
 
     for data, tstamp_should in zip(ds.iter_images(datetime(2010, 1, 1),
                                                   datetime(2010, 1, 1)),
@@ -202,15 +221,13 @@ def test_ERA5_nc_ds():
 
 def test_ERA5_grb_ds():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                             "ecmwf_models-test-data", "era5", "grb")
+                             "ecmwf_models-test-data", "ERA5", "grib")
 
     tstamps_should = [datetime(2010, 1, 1),
-                      datetime(2010, 1, 1, 6),
-                      datetime(2010, 1, 1, 12),
-                      datetime(2010, 1, 1, 18)]
+                      datetime(2010, 1, 1, 12)]
 
     ds = ERA5GrbDs(root_path, parameter=['swvl1', 'swvl2'], array_1D=True,
-                   mask_seapoints=True)
+                   mask_seapoints=True, h_steps=[0,12])
 
     for data, tstamp_should in zip(ds.iter_images(datetime(2010, 1, 1),
                                                   datetime(2010, 1, 1)),

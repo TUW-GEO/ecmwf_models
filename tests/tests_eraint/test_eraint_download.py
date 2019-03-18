@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
 # Copyright (c) 2018, TU Wien
@@ -27,14 +25,14 @@
 Tests for transferring downloaded data to netcdf or grib files
 '''
 
-from ecmwf_models.erainterim.download import download_and_move as download_and_move_eraint
+from ecmwf_models.erainterim.download import download_and_move
 
 import os
 import tempfile
 import shutil
 from datetime import datetime
 
-def test_dry_download_nc_era5():
+def test_dry_download_nc_eraint():
 
     dl_path = tempfile.mkdtemp()
     dl_path = os.path.join(dl_path, 'eraint')
@@ -42,23 +40,21 @@ def test_dry_download_nc_era5():
     os.mkdir(os.path.join(dl_path, 'temp_downloaded'))
 
     thefile = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-              "ecmwf_models-test-data", "eraint", "download", "20000101_20000101.nc")
+              "ecmwf_models-test-data", "download", "eraint_example_downloaded_raw.nc")
     shutil.copyfile(thefile, os.path.join(dl_path, 'temp_downloaded', '20000101_20000101.nc'))
 
     startdate = enddate = datetime(2000,1,1)
 
-    download_and_move_eraint(dl_path, startdate, enddate, variables=['swvl1', 'swvl2', 'lsm'],
-                           keep_original=False, h_steps=[0, 6, 12, 18],
-                           grb=False, dry_run=True)
+    download_and_move(dl_path, startdate, enddate, variables=['swvl1', 'swvl2', 'lsm'],
+                      keep_original=False, h_steps=[0, 12],
+                      grb=False, dry_run=True)
 
     assert(os.listdir(dl_path) == ['2000'])
     assert(os.listdir(os.path.join(dl_path, '2000')) == ['001'])
-    assert(len(os.listdir(os.path.join(dl_path, '2000', '001'))) == 4)
+    assert(len(os.listdir(os.path.join(dl_path, '2000', '001'))) == 2)
 
     should_dlfiles = ['ERAINT_AN_20000101_0000.nc',
-                      'ERAINT_AN_20000101_0600.nc',
-                      'ERAINT_AN_20000101_1200.nc',
-                      'ERAINT_AN_20000101_1800.nc']
+                      'ERAINT_AN_20000101_1200.nc']
 
     assert(sorted(os.listdir(os.path.join(dl_path, '2000', '001'))) == sorted(should_dlfiles))
 
@@ -66,7 +62,7 @@ def test_dry_download_nc_era5():
 
 
 
-def test_dry_download_grb_era5():
+def test_dry_download_grb_eraint():
 
     dl_path = tempfile.mkdtemp()
     dl_path = os.path.join(dl_path, 'eraint')
@@ -74,28 +70,26 @@ def test_dry_download_grb_era5():
     os.mkdir(os.path.join(dl_path, 'temp_downloaded'))
 
     thefile = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-              "ecmwf_models-test-data", "eraint", "download", "20000101_20000101.grb")
+              "ecmwf_models-test-data", "download", "eraint_example_downloaded_raw.grb")
     shutil.copyfile(thefile, os.path.join(dl_path, 'temp_downloaded', '20000101_20000101.grb'))
 
     startdate = enddate = datetime(2000,1,1)
 
-    download_and_move_eraint(dl_path, startdate, enddate, variables=['swvl1', 'swvl2', 'lsm'],
-                           keep_original=False, h_steps=[0, 6, 12, 18],
+    download_and_move(dl_path, startdate, enddate, variables=['swvl1', 'swvl2', 'lsm'],
+                           keep_original=False, h_steps=[0, 12],
                            grb=True, dry_run=True)
 
     assert(os.listdir(dl_path) == ['2000'])
     assert(os.listdir(os.path.join(dl_path, '2000')) == ['001'])
-    assert(len(os.listdir(os.path.join(dl_path, '2000', '001'))) == 4)
+    assert(len(os.listdir(os.path.join(dl_path, '2000', '001'))) == 2)
 
     should_dlfiles = ['ERAINT_AN_20000101_0000.grb',
-                      'ERAINT_AN_20000101_0600.grb',
-                      'ERAINT_AN_20000101_1200.grb',
-                      'ERAINT_AN_20000101_1800.grb']
+                      'ERAINT_AN_20000101_1200.grb']
 
     assert(sorted(os.listdir(os.path.join(dl_path, '2000', '001'))) == sorted(should_dlfiles))
 
     shutil.rmtree(dl_path)
 
 if __name__ == '__main__':
-    test_dry_download_nc_era5()
-    test_dry_download_grb_era5()
+    test_dry_download_grb_eraint()
+    test_dry_download_nc_eraint()
