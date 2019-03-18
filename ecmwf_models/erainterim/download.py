@@ -45,7 +45,7 @@ def default_variables():
     return defaults.tolist()
 
 
-def download_eraint(target_path, start, end, variables, grid_size=None,type='fc',
+def download_eraint(target_path, start, end, variables, grid_size=None, type='fc',
                     h_steps=[0, 6, 12, 18], grb=False, dry_run=False, steps=[0]):
     """
     Download era interim data
@@ -78,7 +78,6 @@ def download_eraint(target_path, start, end, variables, grid_size=None,type='fc'
     dataset = 'interim'
     dataclass = 'ei'
 
-
     for variable in variables:
         param_strings.append(str(variable))
 
@@ -93,7 +92,6 @@ def download_eraint(target_path, start, end, variables, grid_size=None,type='fc'
 
     grid_size = "%f/%f" % (grid_size[0], grid_size[1]) if grid_size else None
 
-
     step = '/'.join([str(s) for s in steps])
     # ATTENTION: When downloading netcdf files steps and times must not overlap!!
     # see: https://software.ecmwf.int/wiki/display/CKB/What+to+do+with+ECCODES+ERROR+%3A+Try+using+the+-T+option
@@ -106,7 +104,7 @@ def download_eraint(target_path, start, end, variables, grid_size=None,type='fc'
 
     if not grid_size:
         if not grb:
-            grid_size = "%f/%f" % (0.75,0.75)
+            grid_size = "%f/%f" % (0.75, 0.75)
             dl_params['grid'] = grid_size
         else:
             del dl_params['grid']
@@ -118,10 +116,9 @@ def download_eraint(target_path, start, end, variables, grid_size=None,type='fc'
         server.retrieve(dl_params)
 
 
-
 def download_and_move(target_path, startdate, enddate, variables=None,
-                      land_sea_mask=True, keep_original=False, grid_size=None,
-                      type='fc', h_steps=[0, 6, 12, 18], steps=[0],
+                      keep_original=False, grid_size=None,
+                      type='an', h_steps=[0, 6, 12, 18], steps=[0],
                       grb=False, dry_run=False):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
@@ -144,13 +141,13 @@ def download_and_move(target_path, startdate, enddate, variables=None,
     variables : list, optional (default: None)
         List of variable ids to pass to the client, if None are passed, the default
         variable ids will be downloaded.
-    land_sea_mask : bool, optional (default: True)
-        Add the variable for a land sea mask to the parameters
     keep_original: bool, optional (default: False)
         Keep the original downloaded data
     grid_size: list, optional (default: None)
         [lon, lat] extent of the grid (regular for netcdf, at lat=0 for grib)
         If None is passed, the default grid size for the data product is used.
+    type : str, optional (default: 'an')
+        Data stream, model to download data for (fc=forecase)
     h_steps: list, optional (default: [0, 6, 12, 18])
         List of full hours to download data at the selected dates
     grb: bool, optional (default: False)
@@ -161,9 +158,9 @@ def download_and_move(target_path, startdate, enddate, variables=None,
     if variables is None:
         variables = default_variables()
     else:
-        variables = lookup(name='ERAINT', variables=variables) # find the dl_names
-
-    variables = variables['dl_name'].values.tolist()
+        # find the dl_names
+        variables = lookup(name='ERAINT', variables=variables)
+        variables = variables['dl_name'].values.tolist()
 
     td = timedelta(days=30)
     current_start = startdate
@@ -174,7 +171,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
             current_end = enddate
 
         fname = '{start}_{end}.{ext}'.format(start=current_start.strftime("%Y%m%d"),
-                                             end=current_end.strftime("%Y%m%d"),
+                                             end=current_end.strftime(
+                                                 "%Y%m%d"),
                                              ext='grb' if grb else 'nc')
 
         downloaded_data_path = os.path.join(target_path, 'temp_downloaded')
@@ -184,8 +182,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         dl_file = os.path.join(downloaded_data_path, fname)
 
         download_eraint(dl_file, current_start, current_end, variables,
-                                    grid_size=grid_size, h_steps=h_steps, type=type,
-                                    steps=steps, grb=grb, dry_run=dry_run)
+                        grid_size=grid_size, h_steps=h_steps, type=type,
+                        steps=steps, grb=grb, dry_run=dry_run)
 
         if grb:
             save_gribs_from_grib(dl_file, target_path, 'ERAINT')
@@ -195,7 +193,6 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         if not keep_original:
             shutil.rmtree(downloaded_data_path)
         current_start = current_end + timedelta(days=1)
-
 
 
 def parse_args(args):
@@ -236,23 +233,22 @@ def parse_args(args):
     parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
                         help=("Download data in grib1 format instead of the default netcdf format"))
     parser.add_argument("--h_steps", type=int, default=None, nargs='+',
-                        help=("Temporal resolution of donwloaded images"))
+                        help=("Manually change the temporal resolution of donwloaded images"))
     parser.add_argument("--steps", type=int, default=None, nargs='+',
-                        help=("Some parameters need one ore multiple specific steps selected"))
+                        help=("Manually change the steps"))
     parser.add_argument("--type", type=str, default='an',
-                        help=("Select the data stream, e.g. 'an' (default) or 'fc'"))
+                        help=("Manually set the data stream, e.g. 'an' (default) or 'fc'"))
     parser.add_argument("--grid_size", type=float, default=None, nargs='+',
                         help=("lon lat. Size of the grid that the data is stored to. "
                               "Should be at least (and is by default) (0.75, 0.75) for ERA-Interim "))
 
     args = parser.parse_args(args)
 
-
     print("Downloading ERA Interim {} data from {} to {} into folder {}"
-        .format('grib' if args.as_grib is True else 'netcdf',
-                args.start.isoformat(),
-                args.end.isoformat(),
-                args.localroot))
+          .format('grib' if args.as_grib is True else 'netcdf',
+                  args.start.isoformat(),
+                  args.end.isoformat(),
+                  args.localroot))
 
     return args
 
@@ -260,25 +256,32 @@ def parse_args(args):
 def main(args):
     args = parse_args(args)
 
-
-    download_and_move(args.localroot, args.start, args.end, args.variables,
-                      keep_original=args.keep_original, grid_size=args.grid_size,
-                      type='fc', h_steps=[0, 6, 12, 18], grb=args.as_grib)
+    download_and_move(target_path=args.localroot,
+                      startdate=args.start,
+                      enddate=args.end,
+                      variables=args.variables,
+                      keep_original=args.keep_original,
+                      grid_size=args.grid_size,
+                      h_steps=args.h_steps,
+                      type=args.type,
+                      grb=args.as_grib)
 
 
 def run():
     main(sys.argv[1:])
 
+
 if __name__ == '__main__':
-    root = '/data-write/USERS/wpreimes/eraint'
-    start = datetime(2013,1,1)
-    end = datetime(2013,1,31)
+
+    main(['/data-write/USERS/wpreimes/test/eraint_dl_nc', '-s', '2000-01-01', '-e',
+          '2000-01-01', '-var', 'swvl1', 'swvl2', 'lsm', '-keep',
+          'True', '-grb', 'False', '--h_steps', '0' , '12'])
+
+    '''
+    start = datetime(2013, 1, 1)
+    end = datetime(2013, 1, 31)
     variables = ['ssrd', 'lsm']
-    download_and_move(root,start, end, variables,
+    download_and_move(root, start, end, variables,
                       keep_original=True, grid_size=None, type='fc', grb=False,
                       h_steps=[0, 12], steps=[3])
-    '''
-    main(['/home/wolfgang/data-write/era5', '-s', '2000-01-01', '-e',
-          '2000-01-01', '-var', 'swvl1', 'swvl2', 'lsm', '-keep',
-          'True', '-grb', 'False', ])
     '''

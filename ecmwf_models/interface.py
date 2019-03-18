@@ -1,4 +1,25 @@
 # -*- coding: utf-8 -*-
+# The MIT License (MIT)
+#
+# Copyright (c) 2019, TU Wien
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 import warnings
 import os
@@ -6,10 +27,16 @@ from pygeobase.io_base import ImageBase, MultiTemporalImageBase
 from pygeobase.object_base import Image
 import numpy as np
 from datetime import timedelta
+
+from pygeogrids.netcdf import load_grid
+from pynetcf.time_series import GriddedNcOrthoMultiTs
+
 from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution, ERA_IrregularImgGrid
 from datetime import datetime
 from ecmwf_models.utils import lookup
 import xarray as xr
+
+
 try:
     import pygrib
 except ImportError:
@@ -18,6 +45,7 @@ except ImportError:
 '''
 Base classes for reading downloaded ERA netcdf and grib images and 6H image stacks
 '''
+
 
 class ERANcImg(ImageBase):
     """
@@ -50,7 +78,8 @@ class ERANcImg(ImageBase):
         if type(parameter) == str:
             parameter = [parameter]
 
-        self.parameter = lookup(product, parameter)['short_name'].values # look up short names
+        # look up short names
+        self.parameter = lookup(product, parameter)['short_name'].values
 
         self.mask_seapoints = mask_seapoints
         self.array_1D = array_1D
@@ -79,11 +108,13 @@ class ERANcImg(ImageBase):
         res_lat, res_lon = get_grid_resolution(dataset.variables['latitude'][:],
                                                dataset.variables['longitude'][:])
 
-        grid = ERA_RegularImgGrid(res_lat, res_lon) if not self.subgrid else self.subgrid
+        grid = ERA_RegularImgGrid(
+            res_lat, res_lon) if not self.subgrid else self.subgrid
 
         if self.mask_seapoints:
             if 'lsm' not in dataset.variables.keys():
-                raise IOError('No land sea mask parameter (lsm) in passed image for masking.')
+                raise IOError(
+                    'No land sea mask parameter (lsm) in passed image for masking.')
             else:
                 sea_mask = dataset.variables['lsm'].values
 
@@ -101,7 +132,8 @@ class ERANcImg(ImageBase):
                 param_data = param_data.flatten()
 
                 return_metadata[name] = variable.attrs
-                return_img.update(dict([(str(name), param_data[grid.activegpis])]))
+                return_img.update(
+                    dict([(str(name), param_data[grid.activegpis])]))
 
                 try:
                     return_img[name]
@@ -109,7 +141,8 @@ class ERANcImg(ImageBase):
                     path, thefile = os.path.split(self.filename)
                     warnings.warn('Cannot load variable {var} from file {thefile}. '
                                   'Filling image with NaNs.'.format(var=name, thefile=thefile))
-                    return_img[name] = np.empty(grid.activegpis.size).fill(np.nan)
+                    return_img[name] = np.empty(
+                        grid.activegpis.size).fill(np.nan)
 
         dataset.close()
 
@@ -139,7 +172,6 @@ class ERANcImg(ImageBase):
         pass
 
 
-
 class ERANcDs(MultiTemporalImageBase):
     """
     Class for reading ERA 5 images in nc format.
@@ -161,7 +193,7 @@ class ERANcDs(MultiTemporalImageBase):
     """
 
     def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
-                 subgrid=None, mask_seapoints=False, h_steps=[0,6,12,18],
+                 subgrid=None, mask_seapoints=False, h_steps=[0, 6, 12, 18],
                  array_1D=False):
 
         self.h_steps = h_steps
@@ -185,7 +217,7 @@ class ERANcDs(MultiTemporalImageBase):
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
-        Get datetimes in 6H resolution between 2 dates
+        Get datetimes in the correct sub-daily resolution between 2 dates
 
         Parameters
         ----------
@@ -193,6 +225,11 @@ class ERANcDs(MultiTemporalImageBase):
             Start datetime
         end_date: datetime
             End datetime
+
+        Returns
+        ----------
+        timestamps : list
+            List of datetimes
         """
 
         img_offsets = np.array([timedelta(hours=h) for h in self.h_steps])
@@ -204,7 +241,6 @@ class ERANcDs(MultiTemporalImageBase):
             timestamps.extend(daily_dates.tolist())
 
         return timestamps
-
 
 
 class ERAGrbImg(ImageBase):
@@ -238,12 +274,12 @@ class ERAGrbImg(ImageBase):
         if type(parameter) == str:
             parameter = [parameter]
 
-        self.parameter = lookup(product, parameter)['short_name'].values # look up short names
+        self.parameter = lookup(product, parameter)[
+            'short_name'].values  # look up short names
 
         self.mask_seapoints = mask_seapoints
         self.array_1D = array_1D
         self.subgrid = subgrid
-
 
     def read(self, timestamp=None):
         '''
@@ -271,11 +307,11 @@ class ERAGrbImg(ImageBase):
                     sea_mask = message.values.flatten()
 
             param_name = message.short_name
-            if param_name not in self.parameter: continue
+            if param_name not in self.parameter:
+                continue
 
             return_metadata[param_name] = {}
             param_data = message.values.flatten()
-
 
             return_img[param_name] = param_data
 
@@ -284,7 +320,7 @@ class ERAGrbImg(ImageBase):
                 try:
                     res_lat, res_lon = get_grid_resolution(lats, lons)
                     grid = ERA_RegularImgGrid(res_lat, res_lon)
-                except ValueError: # when grid not regular
+                except ValueError:  # when grid not regular
                     lons_gt_180 = np.where(lons > 180.0)
                     lons[lons_gt_180] = lons[lons_gt_180] - 360
                     grid = ERA_IrregularImgGrid(lons, lats)
@@ -293,13 +329,15 @@ class ERAGrbImg(ImageBase):
             return_metadata[param_name]['long_name'] = message['parameterName']
 
             if 'levels' in message.keys():
-                return_metadata[param_name]['depth'] = '{:} cm'.format(message['levels'])
+                return_metadata[param_name]['depth'] = '{:} cm'.format(
+                    message['levels'])
 
         if self.mask_seapoints:
             if sea_mask is None:
-                raise IOError('No land sea mask parameter (lsm) in passed image for masking.')
+                raise IOError(
+                    'No land sea mask parameter (lsm) in passed image for masking.')
             else:
-                #mask the loaded data
+                # mask the loaded data
                 for name in return_img.keys():
                     param_data = return_img[name]
                     param_data = np.ma.array(param_data, mask=np.logical_not(sea_mask),
@@ -308,7 +346,6 @@ class ERAGrbImg(ImageBase):
                     return_img[name] = param_data
 
         grbs.close()
-
 
         if self.array_1D:
             return Image(grid.activearrlon, grid.activearrlat,
@@ -327,7 +364,6 @@ class ERAGrbImg(ImageBase):
                          return_metadata,
                          timestamp)
 
-
     def write(self, data):
         raise NotImplementedError()
 
@@ -340,6 +376,8 @@ class ERAGrbImg(ImageBase):
 
 class ERAGrbDs(MultiTemporalImageBase):
     """
+    Reader for a stack of ERA grib files.
+
     Parameters
     ----------
     root_path: string
@@ -353,7 +391,8 @@ class ERAGrbDs(MultiTemporalImageBase):
     """
 
     def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
-                 subgrid=None, mask_seapoints=False, h_steps=[0,6,12,18], array_1D=True):
+                 subgrid=None, mask_seapoints=False, h_steps=[0, 6, 12, 18],
+                 array_1D=True):
 
         self.h_steps = h_steps
 
@@ -375,10 +414,9 @@ class ERAGrbDs(MultiTemporalImageBase):
                                        exact_templ=False,
                                        ioclass_kws=ioclass_kws)
 
-
     def tstamps_for_daterange(self, start_date, end_date):
         """
-        Get datetimes in 6H resolution between 2 dates
+        Get datetimes in the correct sub-daily resolution between 2 dates
 
         Parameters
         ----------
@@ -386,10 +424,14 @@ class ERAGrbDs(MultiTemporalImageBase):
             Start datetime
         end_date: datetime
             End datetime
+
+        Returns
+        ----------
+        timestamps : list
+            List of datetimes
         """
 
         img_offsets = np.array([timedelta(hours=h) for h in self.h_steps])
-
 
         timestamps = []
         diff = end_date - start_date
@@ -398,3 +440,53 @@ class ERAGrbDs(MultiTemporalImageBase):
             timestamps.extend(daily_dates.tolist())
 
         return timestamps
+
+
+
+class ERATs(GriddedNcOrthoMultiTs):
+    '''
+     Time series reader for all reshuffled ERA reanalysis products in time
+     series format.
+
+     Use the read_ts(lon, lat) resp. read_ts(gpi) function of this class
+     to read data for locations (gpi or latlon).
+
+
+     Parameters
+     ----------
+     ts_path : str
+         Directory where the netcdf time series files are stored
+     grid_path : str, optional (default: None)
+         Path to grid file, that is used to organize the location of time
+         series to read. If None is passed, grid.nc is searched for in the
+         ts_path.
+
+     Optional keyword arguments that are passed to the Gridded Base:
+     ------------------------------------------------------------------------
+         parameters : list, optional (default: None)
+             Specific variable names to read, if None are selected, all are read.
+         offsets : dict, optional (default: None)
+             Offsets (values) that are added to the parameters (keys)
+         scale_factors : dict, optional (default: None)
+             Offset (value) that the parameters (key) is multiplied with
+         ioclass_kws: dict, (optional)
+
+             Optional keyword arguments to pass to OrthoMultiTs class:
+             ----------------------------------------------------------------
+                 read_bulk : boolean, optional (default: False)
+                     If set to True, the data of all locations is read into memory,
+                     and subsequent calls to read_ts then read from cache and
+                     not from disk. This makes reading complete files faster.
+                 read_dates : boolean, optional (default: False)
+                     If false, dates will not be read automatically but only on
+                     specific request useable for bulk reading because currently
+                     the netCDF num2date routine is very slow for big datasets.
+     '''
+
+    def __init__(self, ts_path, grid_path=None, **kwargs):
+
+        if grid_path is None:
+            grid_path = os.path.join(ts_path, "grid.nc")
+
+        grid = load_grid(grid_path)
+        super(ERATs, self).__init__(ts_path, grid, **kwargs)

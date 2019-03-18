@@ -1,4 +1,4 @@
-dl_name,long_name,short_name,levtype,default
+dl_name,long_name,levtype,short_name,default
 31.128,Sea ice area fraction,an,ci,
 32.128,Snow albedo,an,asn,
 33.128,Snow density,an,rsn,1

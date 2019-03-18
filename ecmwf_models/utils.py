@@ -32,19 +32,35 @@ import xarray as xr
 import pandas as pd
 from datedown.fname_creator import create_dt_fpath
 import argparse
+import numpy as np
 
 try:
     import pygrib
 except ImportError:
     warnings.warn("pygrib has not been imported")
 
+
 def str2bool(v):
+    '''
+    Parse a string to True/False
+
+    Parameters
+    ---------
+    v : str
+        String to parse, must be part of the lists below.
+
+    Return
+    ---------
+    str2bool : bool
+        The parsed bool from the passed string
+    '''
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
 
 def save_ncs_from_nc(input_nc, output_path, product_name,
                      filename_templ='{product}_AN_%Y%m%d_%H%M.nc'):
@@ -71,16 +87,18 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
 
     for time in nc_in.time.values:
         subset = nc_in.sel(time=time)
-
         timestamp = pd.Timestamp(time).to_pydatetime()
         filepath = create_dt_fpath(timestamp,
-                                      root=output_path,
-                                      fname=filename_templ,
-                                      subdirs=localsubdirs)
+                                   root=output_path,
+                                   fname=filename_templ,
+                                   subdirs=localsubdirs)
         if not os.path.exists(os.path.dirname(filepath)):
             os.makedirs(os.path.dirname(filepath))
 
-        subset.to_netcdf(filepath)
+        # same compression for all variables
+        var_encode = {'zlib': True, 'complevel': 6}
+        subset.to_netcdf(filepath, encoding={
+                         var: var_encode for var in subset.variables})
     nc_in.close()
 
 
@@ -147,6 +165,7 @@ def mkdate(datestring):
     if len(datestring) == 16:
         return datetime.strptime(datestring, '%Y-%m-%dT%H:%M')
 
+
 def parse_filetype(inpath):
     """
     Tries to find out the file type by searching for
@@ -193,7 +212,7 @@ def load_var_table(name='ERA5', lut=False):
     '''
     if name == 'ERA5':
         era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                    'era5', 'era5_lut.csv')
+                                    'era5', 'era5_lut.csv')
     elif name == 'ERAINT':
         era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     'erainterim', 'eraint_lut.csv')
@@ -201,7 +220,7 @@ def load_var_table(name='ERA5', lut=False):
         raise ValueError('No LUT for the selected dataset found.')
 
     if lut:
-        dat = pd.read_csv(era_vars_csv)[['dl_name','long_name','short_name']]
+        dat = pd.read_csv(era_vars_csv)[['dl_name', 'long_name', 'short_name']]
     else:
         dat = pd.read_csv(era_vars_csv)
 
@@ -226,6 +245,7 @@ def lookup(name, variables):
         if found:
             continue
         else:
-            warnings.warn('Passed variable {} is not in the list of supported variables.'.format(var))
+            raise ValueError(
+                'Passed variable {} is not in the list of supported variables.'.format(var))
 
-    return lut.loc[selected,:]
+    return lut.loc[selected, :]

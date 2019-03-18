@@ -34,12 +34,14 @@ import numpy as np
 from pygeogrids import BasicGrid
 
 from repurpose.img2ts import Img2Ts
-from ecmwf_models.era5.interface import ERA5NcDs
+from ecmwf_models.era5.interface import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.utils import mkdate, parse_filetype
+from datetime import time
+
 
 
 def reshuffle(input_root, outputpath, startdate, enddate, variables,
-              mask_seapoints=False, imgbuffer=50):
+              h_steps=[0,6,12,18], mask_seapoints=False, imgbuffer=200):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
     series format.
@@ -56,6 +58,10 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
         End date, from which images are read and time series are generated.
     variables: list or str
         Variables to read from the passed images and convert into time series format.
+    h_steps : list, optional (default: [0, 6, 12, 18]
+        Hours at which images are read for each day and used for reshuffling,
+        therefore this defines the sub-daily temporal resolution of the time series that
+        are generated.
     mask_seapoints: bool, optional (default: False)
         Mask points over sea, replace them with nan.
     imgbuffer: int, optional (default: 50)
@@ -64,14 +70,15 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
         to the available amount of memory and the size of a single image.
     """
 
-
     filetype = parse_filetype(input_root)
 
     if filetype == 'grib':
-        raise NotImplementedError
-        #input_dataset = ERAGrbDs(input_root, variables, expand_grid=False)
+        input_dataset = ERA5GrbDs(root_path=input_root, parameter=variables,
+                                  subgrid=None, array_1D=True, h_steps=h_steps,
+                                  mask_seapoints=mask_seapoints)
     elif filetype == 'netcdf':
-        input_dataset = ERA5NcDs(input_root, variables, subgrid=None, array_1D=True,
+        input_dataset = ERA5NcDs(root_path=input_root, parameter=variables,
+                                 subgrid=None, array_1D=True, h_steps=h_steps,
                                  mask_seapoints=mask_seapoints)
     else:
         raise Exception('Unknown file format')
@@ -79,10 +86,13 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
     if not os.path.exists(outputpath):
         os.makedirs(outputpath)
 
-    global_attr = {'product': 'ECMWF Reanalysis from {}'.format(filetype)}
+    global_attr = {'product': 'ERA5 (from {})'.format(filetype)}
 
     # get time series attributes from first day of data.
-    data = input_dataset.read(startdate)
+    first_date_time = datetime.combine(startdate.date(), time(h_steps[0], 0))
+
+    # get time series attributes from first day of data.
+    data = input_dataset.read(first_date_time)
     ts_attributes = data.metadata
 
     grid = BasicGrid(data.lon, data.lat)
@@ -127,7 +137,10 @@ def parse_args(args):
                               "for more information on variable names of the product. "))
     parser.add_argument("--mask_seapoints", type=bool, default=False,
                         help=("Replace points over water with nan. This option needs the"
-                              "lsm variable in the image data."))
+                              "lsm variable in the first file of the image data (mask will be static)."))
+    parser.add_argument("--h_steps", type=int, default=None, nargs='+',
+                        help=("Time steps (full hours) of images that will be reshuffled (must be in the images). "
+                              "By default 6H images (starting at 0:00 UTC) will be reshuffled."))
     parser.add_argument("--imgbuffer", type=int, default=50,
                         help=("How many images to read at once. Bigger numbers make the "
                               "conversion faster but consume more memory. Choose this according to your "
@@ -143,22 +156,53 @@ def parse_args(args):
 def main(args):
     args = parse_args(args)
 
-    reshuffle(args.dataset_root,
-              args.timeseries_root,
-              args.start,
-              args.end,
-              args.variables,
-              args.mask_seapoints,
+    reshuffle(input_root=args.dataset_root,
+              outputpath=args.timeseries_root,
+              startdate=args.start,
+              enddate=args.end,
+              variables=args.variables,
+              mask_seapoints=args.mask_seapoints,
+              h_steps=args.h_steps,
               imgbuffer=args.imgbuffer)
 
 
 def run():
     main(sys.argv[1:])
 
+
 if __name__ == '__main__':
     # run()
-    from datetime import datetime
-    dataset_root = 'data-read/USERS/wpreimes/era5_netcdf_image'
-    outpath = '/data-write/USERS/wpreimes/era5_ts/ts_out'
-    reshuffle(dataset_root,outpath,startdate=datetime(1979,1,1),enddate=datetime(2018,12,31),variables = 'swvl1',mask_seapoints=True,imgbuffer=800)
+    from ecmwf_models.interface import ERATs
 
+    ts_nc = '/data-write/USERS/wpreimes/test/era5_ts_nc'
+    ts_grb = '/data-write/USERS/wpreimes/test/era5_ts_grib'
+
+    ds_nc = ERATs(ts_nc)
+    ts_nc = ds_nc.read(15, 48)
+
+    ds_grb = ERATs(ts_grb)
+    ts_grb = ds_grb.read(15, 48)
+
+
+
+    '''
+    from datetime import datetime
+    dataset_root = '/data-write/USERS/wpreimes/test/era5_dl_nc'
+    outpath = '/data-write/USERS/wpreimes/test/era5_ts_nc'
+
+    
+    from ecmwf_models.interface import ERATs
+    ds = ERATs(outpath)
+    ts = ds.read(45, 14)
+    
+
+    reshuffle(dataset_root, outpath, startdate=datetime(2010, 1, 1), enddate=datetime(2010, 1, 5),
+              h_steps=[0,12], variables=['swvl1', 'swvl2', 'lsm'], mask_seapoints=False, imgbuffer=800)
+
+    dataset_root = '/data-write/USERS/wpreimes/test/era5_dl_grib'
+    outpath = '/data-write/USERS/wpreimes/test/era5_ts_grib'
+
+    reshuffle(dataset_root, outpath, startdate=datetime(2010, 1, 1), enddate=datetime(2010, 1, 5),
+              h_steps=[0,12], variables=['swvl1', 'swvl2', 'lsm'], mask_seapoints=False, imgbuffer=800)
+
+    '''

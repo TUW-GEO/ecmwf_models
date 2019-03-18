@@ -36,10 +36,11 @@ from pygeogrids import BasicGrid
 from repurpose.img2ts import Img2Ts
 from ecmwf_models.erainterim.interface import ERAIntGrbDs, ERAIntNcDs
 from ecmwf_models.utils import mkdate, parse_filetype
-from datetime import date, datetime, time
+from datetime import time, datetime
+
 
 def reshuffle(input_root, outputpath, startdate, enddate, variables,
-              mask_seapoints=False, h_steps=[0,6,12,18], imgbuffer=50):
+              mask_seapoints=False, h_steps=[0, 6, 12, 18], imgbuffer=50):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
     series format.
@@ -66,26 +67,28 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
         to the available amount of memory and the size of a single image.
     """
 
-
     filetype = parse_filetype(input_root)
 
     if filetype == 'grib':
-        input_dataset = ERAIntGrbDs(input_root, variables, mask_seapoints=mask_seapoints,
-                                    h_steps=h_steps, array_1D=True)
+        input_dataset = ERAIntGrbDs(root_path=input_root, parameter=variables,
+                                    subgrid=None, array_1D=True,
+                                    mask_seapoints=mask_seapoints,
+                                    h_steps=h_steps)
     elif filetype == 'netcdf':
-        input_dataset = ERAIntNcDs(input_root, variables, mask_seapoints=mask_seapoints,
-                                   h_steps=h_steps, array_1D=True)
+        input_dataset = ERAIntNcDs(root_path=input_root, parameter=variables,
+                                   subgrid=None, array_1D=True,
+                                   mask_seapoints=mask_seapoints,
+                                   h_steps=h_steps)
     else:
         raise Exception('Unknown file format')
 
     if not os.path.exists(outputpath):
         os.makedirs(outputpath)
 
-    global_attr = {'product': 'ECMWF Reanalysis from {}'.format(filetype)}
+    global_attr = {'product': 'ERA Interim (from {})'.format(filetype)}
 
     # get time series attributes from first day of data.
     first_date_time = datetime.combine(startdate.date(), time(h_steps[0], 0))
-    last_date_time = datetime.combine(enddate.date(), time(h_steps[-1], 0))
 
     data = input_dataset.read(first_date_time)
     ts_attributes = data.metadata
@@ -133,6 +136,9 @@ def parse_args(args):
     parser.add_argument("--mask_seapoints", type=bool, default=False,
                         help=("Replace points over water with nan. This option needs the"
                               "lsm variable in the image data."))
+    parser.add_argument("--h_steps", type=int, default=None, nargs='+',
+                        help=("Time steps (full hours) of images that will be reshuffled (must be in the images). "
+                              "By default 6H images (starting at 0:00 UTC) will be reshuffled."))
     parser.add_argument("--imgbuffer", type=int, default=50,
                         help=("How many images to read at once. Bigger numbers make the "
                               "conversion faster but consume more memory. Choose this according to your "
@@ -148,27 +154,53 @@ def parse_args(args):
 def main(args):
     args = parse_args(args)
 
-    reshuffle(args.dataset_root,
-              args.timeseries_root,
-              args.start,
-              args.end,
-              args.variables,
-              args.mask_seapoints,
+    reshuffle(input_root=args.dataset_root,
+              outputpath=args.timeseries_root,
+              startdate=args.start,
+              enddate=args.end,
+              variables=args.variables,
+              mask_seapoints=args.mask_seapoints,
+              h_steps=args.h_steps,
               imgbuffer=args.imgbuffer)
 
 
 def run():
     main(sys.argv[1:])
 
+
 if __name__ == '__main__':
     #    run()
 
+    from ecmwf_models.interface import ERATs
+
+
+    ts_nc = '/data-write/USERS/wpreimes/test/eraint_ts_nc'
+    ts_grb = '/data-write/USERS/wpreimes/test/eraint_ts_grib'
+
+
+    ds_nc = ERATs(ts_nc)
+    ts_nc = ds_nc.read(48, 15)
+
+    ds_grb = ERATs(ts_grb)
+    ts_grb = ds_grb.read(48, 15)
+
+
+    '''
     from datetime import datetime
-    input_root = '/data-write/USERS/wpreimes/eraint/images'
-    outputpath = '/data-write/USERS/wpreimes/eraint/time_series'
-    startdate = datetime(2013,1,1)
-    enddate = datetime(2013,1,31)
-    reshuffle(input_root, outputpath, startdate, enddate, variables=['lsm', 'ssrd'],
-              mask_seapoints=False, h_steps=[3, 15], imgbuffer=100)
+    input_root = '/data-write/USERS/wpreimes/test/eraint_dl_nc'
+    outputpath = '/data-write/USERS/wpreimes/test/eraint_ts_nc'
+    startdate = datetime(2000, 1, 1)
+    enddate = datetime(2000, 1, 5)
 
 
+    reshuffle(input_root, outputpath, startdate, enddate, variables=['lsm', 'swvl1', 'swvl2'],
+             mask_seapoints=False, h_steps=[0,12], imgbuffer=100)
+
+    input_root = '/data-write/USERS/wpreimes/test/eraint_dl_grib'
+    outputpath = '/data-write/USERS/wpreimes/test/eraint_ts_grib'
+    startdate = datetime(2000, 1, 1)
+    enddate = datetime(2000, 1, 5)
+
+    reshuffle(input_root, outputpath, startdate, enddate, variables=['lsm', 'swvl1', 'swvl2'],
+              mask_seapoints=False, h_steps=[0, 12], imgbuffer=100)
+    '''

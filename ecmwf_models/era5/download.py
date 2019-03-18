@@ -22,7 +22,7 @@
 # SOFTWARE.
 
 '''
-Module to download ERA5 from terminal.
+Module to download ERA5 from terminal in netcdf and grib format.
 '''
 
 from ecmwf_models.utils import *
@@ -34,11 +34,13 @@ import shutil
 import cdsapi
 import calendar
 
+
 def default_variables():
     'These variables are being downloaded, when None are passed by the user'
     lut = load_var_table(name='ERA5')
     defaults = lut.loc[lut['default'] == 1]['dl_name'].values
     return defaults.tolist()
+
 
 def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
                   dry_run=False):
@@ -55,19 +57,22 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
         Months for which data is downloaded, e.g. [4, 8, 12]
     days : list
         Days for which data is downloaded (range(31)=All days) e.g. [10, 20, 31]
+    h_steps: list
+        List of full hours to download data at the selected dates e.g [0, 12]
     variables : list, optional (default: None)
         List of variables to pass to the client, if None are passed, the default
         variables will be downloaded.
-    h_steps: list
-        List of full hours to download data at the selected dates e.g [0, 12]
-    land_sea_mask : bool
-        Also download the land sea mask variable.
     target : str
         File name, where the data is stored.
-    geb : bool, optional (deault: False)
+    geb : bool, optional (default: False)
         Download data in grib format
-    dry_run: bool
-        Do not download anything, this is just used for testing the functions
+    dry_run: bool, optional (default: False)
+        Do not download anything, this is just used for testing the functionality
+
+    Returns
+    ---------
+    success : bool
+        Return True after downloading finished
     '''
 
     if not dry_run:
@@ -80,19 +85,19 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
                 'year': [str(y) for y in years],
                 'month': [str(m).zfill(2) for m in months],
                 'day': [str(d).zfill(2) for d in days],
-                'time': [time(h,0).strftime('%H:%M') for h in h_steps]
+                'time': [time(h, 0).strftime('%H:%M') for h in h_steps]
             },
             target)
 
+    return True
+
 
 def download_and_move(target_path, startdate, enddate, variables=None,
-                      keep_original=False, h_steps=[0, 6, 12, 18], grb=False,
-                      dry_run=False):
+                      keep_original=False, h_steps=[0, 6, 12, 18],
+                      grb=False, dry_run=False):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
-    This is done in 30 day increments between start and end date to be efficient with the MARS system.
-    See the recommendation for doing it this way in
-    https://software.ecmwf.int/wiki/display/WEBAPI/ERA-Interim+daily+retrieval+efficiency
+    This is done in 30 day increments between start and end date.
 
     The files are then extracted into separate grib files per parameter and stored
     in yearly folders under the target_path.
@@ -120,16 +125,17 @@ def download_and_move(target_path, startdate, enddate, variables=None,
     if variables is None:
         variables = default_variables()
     else:
-        variables = lookup(name='ERA5', variables=variables) # find the dl_names
+        # find the dl_names
+        variables = lookup(name='ERA5', variables=variables)
+        variables = variables['dl_name'].values.tolist()
 
-    variables = variables['dl_name'].values.tolist()
     curr_start = startdate
 
     c = cdsapi.Client()
 
     while curr_start <= enddate:
         sy, sm, sd = curr_start.year, curr_start.month, curr_start.day
-        sm_days = calendar.monthrange(sy, sm)[1] # days in the current month
+        sm_days = calendar.monthrange(sy, sm)[1]  # days in the current month
         y, m = sy, sm
 
         if (enddate.year == y) and (enddate.month == m):
@@ -148,9 +154,21 @@ def download_and_move(target_path, startdate, enddate, variables=None,
             os.mkdir(downloaded_data_path)
         dl_file = os.path.join(downloaded_data_path, fname)
 
-        download_era5(c, years=[sy], months=[sm], days=range(sd, d+1),
-                      h_steps=h_steps, variables=variables, grb=grb,
-                      target=dl_file, dry_run=dry_run)
+        finished, i = False, 0
+
+        while (not finished) and (i < 5):  # try max 5 times
+            try:
+                finished = download_era5(c, years=[sy], months=[sm], days=range(sd, d+1),
+                                         h_steps=h_steps, variables=variables, grb=grb,
+                                         target=dl_file, dry_run=dry_run)
+                break
+
+            except:
+                # delete the partly downloaded data and retry
+                os.remove(dl_file)
+                finished = False
+                i += 1
+                continue
 
         if grb:
             save_gribs_from_grib(dl_file, target_path, product_name='ERA5')
@@ -179,7 +197,7 @@ def parse_args(args):
     """
 
     parser = argparse.ArgumentParser(
-        description="Download ERA 5 reanalysis data (6H) between two dates. "
+        description="Download ERA 5 reanalysis data images between two dates. "
                     "Before this program can be used, you have to register at the CDS "
                     "and setup your .cdsapirc file as described here: "
                     "https://cds.climate.copernicus.eu/api-how-to")
@@ -207,27 +225,41 @@ def parse_args(args):
                         help=("Keep the originally, temporally downloaded file as it is instread of deleting it afterwards"))
     parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
                         help=("Download data in grib format, instead of the default netcdf format"))
+    parser.add_argument("--h_steps", type=int, default=None, nargs='+',
+                        help=("Manually change the temporal resolution of donwloaded images, must be full hours. "
+                              "By default 6H images (starting at 0:00 UTC) will be downloaded"))
 
     args = parser.parse_args(args)
 
-
     print("Downloading ERA5 {} data from {} to {} into folder {}"
-        .format('grib' if args.as_grib is True else 'netcdf',
-                args.start.isoformat(),
-                args.end.isoformat(),
-                args.localroot))
+          .format('grib' if args.as_grib is True else 'netcdf',
+                  args.start.isoformat(),
+                  args.end.isoformat(),
+                  args.localroot))
     return args
 
 
 def main(args):
     args = parse_args(args)
-    download_and_move(args.localroot, args.start, args.end, args.variables,
-                      grb=args.as_grib, keep_original=args.keep_original)
+    download_and_move(target_path=args.localroot,
+                      startdate=args.start,
+                      enddate=args.end,
+                      variables=args.variables,
+                      h_steps=args.h_steps,
+                      grb=args.as_grib,
+                      keep_original=args.keep_original)
 
 
 def run():
     main(sys.argv[1:])
 
+
 if __name__ == '__main__':
-    from ecmwf_models.utils import save_gribs_from_grib
-    main(['/home/wolfgang/data-write/era5', '-s', '2010-01-01', '-e', '2010-01-01', '-var', 'swvl1', 'swvl2', 'lsm', '-keep', 'False', '-grb', 'False'])
+
+    main(['/data-write/USERS/wpreimes/test/era5_dl_grib', '-s', '2010-01-01', '-e',
+          '2010-01-01',  '-var', 'swvl1', 'lsm', 'swvl2', '-keep', 'True', '-grb', 'True', '--h_steps', '0', '12'])
+
+    '''
+    save_ncs_from_nc('/data-write/USERS/wpreimes/test/era5_dl/temp_downloaded/20100101_20100105.nc',
+                     '/data-write/USERS/wpreimes/test/era5_dl', product_name='ERA5')
+    '''
