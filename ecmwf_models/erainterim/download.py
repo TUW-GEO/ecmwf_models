@@ -72,7 +72,12 @@ def download_eraint(target_path, start, end, variables, grid_size=None, type='fc
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     """
-    server = ECMWFDataServer()
+    if dry_run:
+        warnings.warn('Dry run does not create connection to ECMWF')
+        server = None
+    else:
+        server = ECMWFDataServer()
+
     param_strings = []
 
     dataset = 'interim'

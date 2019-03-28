@@ -131,7 +131,11 @@ def download_and_move(target_path, startdate, enddate, variables=None,
 
     curr_start = startdate
 
-    c = cdsapi.Client()
+    if dry_run:
+        warnings.warn('Dry run does not create connection to CDS')
+        c = None
+    else:
+        c = cdsapi.Client()
 
     while curr_start <= enddate:
         sy, sm, sd = curr_start.year, curr_start.month, curr_start.day
