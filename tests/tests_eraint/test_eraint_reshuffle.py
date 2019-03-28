@@ -86,8 +86,3 @@ def test_ERAInterim_reshuffle_nc():
     except Exception as e:
         shutil.rmtree(ts_path)
         raise e
-
-
-
-if __name__ == '__main__':
-    test_ERAInterim_reshuffle_grb()

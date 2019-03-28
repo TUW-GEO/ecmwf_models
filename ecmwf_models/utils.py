@@ -249,3 +249,16 @@ def lookup(name, variables):
                 'Passed variable {} is not in the list of supported variables.'.format(var))
 
     return lut.loc[selected, :]
+
+
+def get_default_params(name='ERA5'):
+    '''
+    Read only lines that are marked as default variable in the csv file
+
+    Parameters:
+    ---------
+    name : str
+        Name of the product to get the default parameters for
+    '''
+    vars = load_var_table(name, lut=False)
+    return vars.loc[vars.default == 1.0]

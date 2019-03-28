@@ -36,7 +36,7 @@ from pygeogrids import BasicGrid
 from repurpose.img2ts import Img2Ts
 from ecmwf_models.era5.interface import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.utils import mkdate, parse_filetype
-from datetime import time
+from datetime import time, datetime
 
 
 
@@ -69,6 +69,9 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
         affects how many images are stored in memory and should be chosen according
         to the available amount of memory and the size of a single image.
     """
+
+    if h_steps is None:
+        h_steps = [0,6,12,18]
 
     filetype = parse_filetype(input_root)
 
@@ -168,41 +171,3 @@ def main(args):
 
 def run():
     main(sys.argv[1:])
-
-
-if __name__ == '__main__':
-    # run()
-    from ecmwf_models.interface import ERATs
-
-    ts_nc = '/data-write/USERS/wpreimes/test/era5_ts_nc'
-    ts_grb = '/data-write/USERS/wpreimes/test/era5_ts_grib'
-
-    ds_nc = ERATs(ts_nc)
-    ts_nc = ds_nc.read(15, 48)
-
-    ds_grb = ERATs(ts_grb)
-    ts_grb = ds_grb.read(15, 48)
-
-
-
-    '''
-    from datetime import datetime
-    dataset_root = '/data-write/USERS/wpreimes/test/era5_dl_nc'
-    outpath = '/data-write/USERS/wpreimes/test/era5_ts_nc'
-
-    
-    from ecmwf_models.interface import ERATs
-    ds = ERATs(outpath)
-    ts = ds.read(45, 14)
-    
-
-    reshuffle(dataset_root, outpath, startdate=datetime(2010, 1, 1), enddate=datetime(2010, 1, 5),
-              h_steps=[0,12], variables=['swvl1', 'swvl2', 'lsm'], mask_seapoints=False, imgbuffer=800)
-
-    dataset_root = '/data-write/USERS/wpreimes/test/era5_dl_grib'
-    outpath = '/data-write/USERS/wpreimes/test/era5_ts_grib'
-
-    reshuffle(dataset_root, outpath, startdate=datetime(2010, 1, 1), enddate=datetime(2010, 1, 5),
-              h_steps=[0,12], variables=['swvl1', 'swvl2', 'lsm'], mask_seapoints=False, imgbuffer=800)
-
-    '''

@@ -250,14 +250,4 @@ def test_ERAInt_grb_ds():
         nptest.assert_allclose(data.lon[0], 0.0)
         nptest.assert_allclose(data.lon[256], 179.99956164383)  # middle of image
 
-if __name__ == '__main__':
-    test_ERAInt_grb_image_1d()
-
-    test_ERAInt_grb_image()
-    test_ERAInt_nc_image()
-
-    test_ERAInt_nc_ds()
-    test_ERAInt_grb_ds()
-    test_ERAInt_nc_image_1d()
-
 

@@ -249,12 +249,3 @@ def test_ERA5_grb_ds():
         nptest.assert_allclose(data.lat[-1], -90.0)
         nptest.assert_allclose(data.lon[0], 0.0)
         nptest.assert_allclose(data.lon[720], 180.0)  # middle of image
-
-
-if __name__ == '__main__':
-    test_ERA5_nc_image()
-    test_ERA5_nc_ds()
-    test_ERA5_grb_ds()
-    test_ERA5_grb_image_1d()
-    test_ERA5_grb_image()
-    test_ERA5_nc_image_1d()

@@ -254,12 +254,3 @@ def run():
     main(sys.argv[1:])
 
 
-if __name__ == '__main__':
-
-    main(['/data-write/USERS/wpreimes/test/era5_dl_grib', '-s', '2010-01-01', '-e',
-          '2010-01-01',  '-var', 'swvl1', 'lsm', 'swvl2', '-keep', 'True', '-grb', 'True', '--h_steps', '0', '12'])
-
-    '''
-    save_ncs_from_nc('/data-write/USERS/wpreimes/test/era5_dl/temp_downloaded/20100101_20100105.nc',
-                     '/data-write/USERS/wpreimes/test/era5_dl', product_name='ERA5')
-    '''

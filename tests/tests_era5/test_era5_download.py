@@ -88,7 +88,3 @@ def test_dry_download_grb_era5():
     assert(sorted(os.listdir(os.path.join(dl_path, '2010', '001'))) == sorted(should_dlfiles))
 
     shutil.rmtree(dl_path)
-
-if __name__ == '__main__':
-    test_dry_download_nc_era5()
-    test_dry_download_grb_era5()

@@ -89,7 +89,3 @@ def test_dry_download_grb_eraint():
     assert(sorted(os.listdir(os.path.join(dl_path, '2000', '001'))) == sorted(should_dlfiles))
 
     shutil.rmtree(dl_path)
-
-if __name__ == '__main__':
-    test_dry_download_grb_eraint()
-    test_dry_download_nc_eraint()

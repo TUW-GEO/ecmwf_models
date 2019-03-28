@@ -84,14 +84,3 @@ class ERA5GrbDs(ERAGrbDs):
                                         mask_seapoints=mask_seapoints,
                                         array_1D=array_1D)
 
-
-if __name__ == '__main__':
-    from datetime import datetime
-    import matplotlib.pyplot as plt
-    afile = "/data-write/USERS/wpreimes/test/era5_dl/2010/002/ERA5_AN_20100102_0000.nc"
-    f = ERA5NcImg(afile)
-    dat = f.read()
-    imgf = ERA5NcDs('/data-read/USERS/wpreimes/era5_netcdf_image', mask_seapoints=False)
-    img = imgf.read(datetime(1979, 1, 2))
-    plt.imshow(img['swvl1'])
-    plt.savefig('test.png')
