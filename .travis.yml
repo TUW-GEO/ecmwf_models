@@ -21,10 +21,10 @@ install:
   # reshuffling multiple params for py3 results in a bad chunk size error unless netcdf4 is downgraded
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-      downgrade_netcdf=false;
+      #downgrade_netcdf=false;
     else
       wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-      downgrade_netcdf=true;
+      #downgrade_netcdf=true;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -41,9 +41,9 @@ install:
 
   - python setup.py develop
 
-  - if "$downgrade_netcdf" ; then
-      conda install -c conda-forge netcdf4==1.2.2 --yes;
-    fi
+  #- if "$downgrade_netcdf" ; then
+  #   conda install -c conda-forge netcdf4==1.2.2 --yes;
+  #  fi
 
   - conda list
   - pip list

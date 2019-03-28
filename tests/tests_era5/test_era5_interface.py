@@ -104,7 +104,7 @@ def test_ERA5_nc_image_1d():
     nptest.assert_allclose(data.lat[0], 90.0)
     nptest.assert_allclose(data.lat[-1], -90.0)
     nptest.assert_allclose(data.lon[0], 0.0)
-    nptest.assert_allclose(data.lon[len(data.lon)/2], 180.0) # middle of image
+    nptest.assert_allclose(data.lon[len(data.lon)//2], 180.0) # middle of image
 
 
 def test_ERA5_grb_image():

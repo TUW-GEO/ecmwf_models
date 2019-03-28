@@ -5,7 +5,7 @@ dependencies:
 - matplotlib
 - pandas
 - pygrib>=2.0.1
-- netcdf4
+- netCDF4
 - scipy
 - pyresample
 - xarray
