@@ -1,0 +1,3 @@
+[submodule "tests/ecmwf_models-test-data"]
+	path = tests/ecmwf_models-test-data
+	url = https://www.geo.tuwien.ac.at/downloads/gittd/ecmwf_models-test-data.git/
