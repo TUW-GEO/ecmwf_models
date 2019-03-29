@@ -1,11 +1,12 @@
-name: ecmwf-models
+name: ecmwf-models_py37
 channels:
 - conda-forge
 dependencies:
 - matplotlib
 - pandas
 - pygrib>=2.0.1
-- netCDF4
+- hdf5
+- netcdf4>=1.4.2
 - scipy
 - pyresample
 - xarray
