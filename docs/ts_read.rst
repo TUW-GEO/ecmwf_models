@@ -2,8 +2,9 @@
 Reading converted time series data
 ----------------------------------
 
-For reading time series data, that the ``ecmwf_repurpose`` command produces, the class
-``ERATs`` can be used. Optional arguments that are passed to the parent class
+For reading time series data, that the ``era5_reshuffle`` and ``eraint_reshuffle``
+command produces, the class ``ERATs`` can be used.
+Optional arguments that are passed to the parent class
 (``OrthoMultiTs``, as defined in `pynetcf.time_series <https://github.com/TUW-GEO/pynetCF/blob/master/pynetcf/time_series.py>`_)
 can be passed as well:
 
@@ -16,4 +17,6 @@ can be passed as well:
     ts = ds.read_ts(45, 15)
 
 Bulk reading speeds up reading multiple points from a cell file by storing the
-file in memory for subsequent calls.
+file in memory for subsequent calls. Either Longitude and Latitude can be passed
+to perform a nearest neighbour search on the data grid (``grid.nc`` in the time series
+path) or the grid point index (GPI) can be passed directly.

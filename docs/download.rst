@@ -8,24 +8,41 @@ have to set up an `account at the CDS
 <https://cds.climate.copernicus.eu/drupal_auth_check>`_ and setup
 the `CDS key <https://cds.climate.copernicus.eu/api-how-to>`_.
 
-Then you can use the program ``era5_download`` to download ERA5 images with
-a temporal resolution of 6 hours between a passed start and end date.
+Then you can use the program ``era5_download`` to download ERA5 images between
+a passed start and end date.
 ``era5_download --help`` will show additional information on using the command.
 
 
 For example, the following command in your terminal would download ERA5 images
 for all available layers of soil moisture in netcdf format, between
 January 1st and February 1st 2000 in grib format into ``/path/to/storage``.
-The data will be stored in subfolders of the format ``YYYY/jjj``.
+The data will be stored in subfolders of the format ``YYYY/jjj``. The temporal
+resolution of the images is 6 hours by default.
 
 .. code-block:: shell
 
     era5_download /path/to/storage -s 2000-01-01 -e 2000-02-01 --variables swvl1 swvl2 swvl3 swvl4
 
+The names of the variables to download can be its long names, the short names
+(as in the example) or the parameter IDs. We use the ``era5_lut.csv`` file to
+look up the right name for the CDS API.
+Other flags, that can be activated in ``era5_download`` are:
+
+- **-h (--help)** : shows the help text for the download function
+- **-keep (--keep_original)** : keeps the originally downloaded files [1] as well.
+  We split the downloaded, monthly stacks into single images and discard the original
+  files by default.
+- **-grb (--as_grib)** : download the data in grib format instead of the default nc4
+   format (grib reading is only supported for Linux OS).
+- **--h_steps** : full hours for which images are downloaded (e.g. --h_steps 0
+  would download only data at 00:00 UTC). By default we use 0, 6, 12 and 18.
+
+
 
 
 Downloading ERA Interim Data
 =================================
+**ERA-Interim has been decommissioned. Use ERA5 instead.**
 
 ERA-Interim data can be downloaded manually from the ECMWF servers. It can also
 be done automatically using the ECMWF API. To use the ECMWF API you have to be
@@ -50,4 +67,5 @@ describes the year and ``jjj`` the day of the year for the downloaded files.
     eraint_download /path/to/storage  -s 2000-01-01 -e 2000-02-01 --variables swvl1 swvl2 swvl3 swvl4
 
 Additional optional parameters allow downloading images in netcdf format, and
-in a different spatial resolution.
+in a different spatial resolution (see the --help function and descriptions for
+downloading ERA5 data)

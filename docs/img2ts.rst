@@ -19,19 +19,30 @@ methods. We have chosen to do it in the following way:
   .. image:: 5x5_cell_partitioning.png
      :target: _images/5x5_cell_partitioning.png
 
-This conversion can be performed using the ``ecmwf_repurpose`` command line
-program. An example would be:
+This conversion can be performed using the ``era5_reshuffle`` (respectively
+``eraint_reshuffle``) command line program. An example would be:
 
 .. code-block:: shell
 
-   ecmwf_repurpose /era_data /timeseries/data 2000-01-01 2001-01-01 swvl1 swvl2
+   era5_reshuffle /era_data /timeseries/data 2000-01-01 2001-01-01 swvl1 swvl2
 
-Which would take ERA images stored in ``/era_data`` from January
-1st 2000 to January 1st 2001 and store the parameters "swvl1" and "swvl2"
-(don't enter parameter IDs here, since they are only stored in grib files,
-it is necessary to access variables via their short names, to also allow
-time series conversion from netcdf images) as time series in the folder
-``/timeseries/data``.
+Which would take g-hourly ERA images stored in ``/era_data`` from January
+1st 2000 to January 1st 2001 and store the parameters "swvl1" and "swvl2" as time
+series in the folder ``/timeseries/data``. If a different resolution than 6H
+was chosen for download, use the ``h_steps`` flag here accordingly.
+
+The passed names have to correspond with the names in the downloaded file,
+i.e. use the variable short names here.
+Other flags, that can be used in ``era5_reshuffle`` are:
+
+- **-h (--help)** : shows the help text for the reshuffle function
+- **--mask_seapoints** : Replace points over sea with NaNs. This speeds up
+  the time series creation and data size. By default this option is deactivated.
+- **-h_steps (--as_grib)** : full hours for which images are reshuffled (e.g. --h_steps 0
+  would reshuffle only data at 00:00 UTC). By default we use 0, 6, 12 and 18.
+- **--imgbuffer** : The number of images that are read into memory before converting
+  them into time series. Bigger numbers make the conversion faster but consume more memory.
+
 
 Conversion to time series is performed by the `repurpose package
 <https://github.com/TUW-GEO/repurpose>`_ in the background. For custom settings
