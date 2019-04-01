@@ -379,7 +379,7 @@ class ERAGrbDs(MultiTemporalImageBase):
     parameter: list or str, optional (default: ['swvl1', 'swvl2'])
         Parameter or list of parameters to read
     expand_grid: bool, optional (default: True)
-        If the reduced gaußian grid should be expanded to a full gaußian grid.
+        If the reduced gaussian grid should be expanded to a full gaussian grid.
     """
     def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
                  subgrid=None, mask_seapoints=False, h_steps=[0, 6, 12, 18],
