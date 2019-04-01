@@ -31,7 +31,7 @@ import tempfile
 import numpy as np
 import numpy.testing as nptest
 
-from ecmwf_models.erainterim.reshuffle import main
+from ecmwf_models.era5.reshuffle import main
 from ecmwf_models.interface import ERATs
 import shutil
 
