@@ -25,7 +25,7 @@
 Tests for grid generation
 '''
 
-from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution
+from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution, ERA_IrregularImgGrid
 import numpy as np
 
 def test_ERA_regular_grid():
@@ -36,3 +36,12 @@ def test_ERA_regular_grid():
                                reg_grid.activearrlon) == (0.3, 0.3)
 
 
+def test_ERA_irregular_grid():
+    # we test this with a regular grid, because it's easier
+    lon = np.arange(0, 360 - 1. / 2, 1.)
+    lat = np.arange(90, -1 * 90 - 1. / 2, -1 * 1.)
+    lons, lats = np.meshgrid(lon, lat)
+
+    grid = ERA_IrregularImgGrid(lons, lats)
+
+    assert grid == ERA_RegularImgGrid(1.,1.)

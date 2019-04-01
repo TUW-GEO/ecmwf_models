@@ -17,8 +17,10 @@ install:
   # conda line below will keep everything up-to-date.  We do this
   # conditionally because it saves us some downloading if the version is
   # the same.
+
+  # reshuffling multiple params for py3 results in a bad chunk size error unless netcdf4 is downgraded
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+      wget http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
     else
       wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
     fi
@@ -32,9 +34,16 @@ install:
 
   - conda create -n ecmwf-models python=${TRAVIS_PYTHON_VERSION}
   - source activate ecmwf-models
+
   - conda env update -f environment.yml
 
-  - python setup.py install
+  - python setup.py develop
+
+  - conda list
+  - pip list
+  - which pip
+  - which python
+
 
 script:
   - python setup.py test

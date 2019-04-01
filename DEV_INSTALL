@@ -1,0 +1,14 @@
+# Add commands to create a full environment setup here
+# Run this in the cloned repository directory to setup the development environment.
+
+wget https://repo.continuum.io/miniconda/Miniconda2-4.5.12-Linux-x86_64.sh -O miniconda.sh
+bash miniconda.sh -b -p $HOME/ecmwf_models_conda
+export PATH="$HOME/ecmwf_models_conda/bin:$PATH"
+conda config --set always_yes yes
+source deactivate
+conda remove -n ecmwf-models --all
+conda create -n ecmwf-models python=3.6 # we will only support python 3 in future
+source activate ecmwf-models
+conda env update -f environment.yml
+python setup.py develop
+conda config --set always_yes no

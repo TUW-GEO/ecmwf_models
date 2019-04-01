@@ -39,3 +39,7 @@ docs/api/*
 docs/_build/*
 cover/*
 MANIFEST
+
+#others
+ecmwf_models/bin/*
+local_scripts/*
