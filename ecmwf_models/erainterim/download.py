@@ -274,19 +274,3 @@ def main(args):
 
 def run():
     main(sys.argv[1:])
-
-
-if __name__ == '__main__':
-
-    main(['/data-write/USERS/wpreimes/test/eraint_dl_nc', '-s', '2000-01-01', '-e',
-          '2000-01-01', '-var', 'swvl1', 'swvl2', 'lsm', '-keep',
-          'True', '-grb', 'False', '--h_steps', '0' , '12'])
-
-    '''
-    start = datetime(2013, 1, 1)
-    end = datetime(2013, 1, 31)
-    variables = ['ssrd', 'lsm']
-    download_and_move(root, start, end, variables,
-                      keep_original=True, grid_size=None, type='fc', grb=False,
-                      h_steps=[0, 12], steps=[3])
-    '''
