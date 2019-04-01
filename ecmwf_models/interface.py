@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2019, TU Wien
+# Copyright (c) 2019, TU Wien, Department of Geodesy and Geoinformation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +29,6 @@ from datetime import timedelta
 
 from pygeogrids.netcdf import load_grid
 from pynetcf.time_series import GriddedNcOrthoMultiTs
-
 from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution, ERA_IrregularImgGrid
 from datetime import datetime
 from ecmwf_models.utils import lookup

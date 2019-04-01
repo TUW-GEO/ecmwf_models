@@ -1,18 +1,18 @@
 # Add your requirements here like:
 # numpy
 # scipy>=0.9
-numpy
+numpy>=1.15.4
 pandas
 scipy
-netCDF4>1.4.2
+netcdf4
 pygrib>=2.0.1
 pyresample
 xarray
 cdsapi
 ecmwf-api-client
 datedown>=0.3
-pygeogrids
 pygeobase
+pygeogrids
 repurpose
 pynetcf
 configobj
