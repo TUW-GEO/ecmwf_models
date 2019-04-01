@@ -230,8 +230,8 @@ def parse_args(args):
     parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
                         help=("Download data in grib format, instead of the default netcdf format"))
     parser.add_argument("--h_steps", type=int, default=None, nargs='+',
-                        help=("Manually change the temporal resolution of donwloaded images, must be full hours. "
-                              "By default 6H images (starting at 0:00 UTC) will be downloaded"))
+                        help=("Manually change the temporal resolution of downloaded images, must be full hours. "
+                              "By default 6H images (starting at 0:00 UTC, i.e. 0 6 12 18) will be downloaded"))
 
     args = parser.parse_args(args)
 

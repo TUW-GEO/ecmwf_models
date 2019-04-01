@@ -7,7 +7,7 @@ export PATH="$HOME/ecmwf_models_conda/bin:$PATH"
 conda config --set always_yes yes
 source deactivate
 conda remove -n ecmwf-models --all
-conda create -n ecmwf-models python=2.7 # depending on the installed conda version
+conda create -n ecmwf-models python=3.6 # we will only support python 3 in future
 source activate ecmwf-models
 conda env update -f environment.yml
 python setup.py develop

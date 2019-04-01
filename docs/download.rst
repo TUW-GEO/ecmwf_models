@@ -29,15 +29,13 @@ look up the right name for the CDS API.
 Other flags, that can be activated in ``era5_download`` are:
 
 - **-h (--help)** : shows the help text for the download function
-- **-keep (--keep_original)** : keeps the originally downloaded files [1] as well.
+- **-keep (--keep_original)** : keeps the originally downloaded files as well.
   We split the downloaded, monthly stacks into single images and discard the original
   files by default.
 - **-grb (--as_grib)** : download the data in grib format instead of the default nc4
    format (grib reading is only supported for Linux OS).
 - **--h_steps** : full hours for which images are downloaded (e.g. --h_steps 0
   would download only data at 00:00 UTC). By default we use 0, 6, 12 and 18.
-
-
 
 
 Downloading ERA Interim Data

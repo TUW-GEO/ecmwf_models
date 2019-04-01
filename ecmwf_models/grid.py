@@ -86,6 +86,9 @@ def ERA_IrregularImgGrid(lons, lats):
 
 
 def ERA_LandGrid():
-    # TODO: add function to generate TS from land points only,
-    # use land mask (param: 172) to detect land points
+    # use land mask (param: 172) to detect land points and create a subgrid that
+    # is passe to the reshuffle module.
     raise NotImplementedError
+    # TODO: add function to generate TS from land points only, so that points over
+    # TODO: water are not only replaced by NaN, but not in the time series files.
+

@@ -35,8 +35,6 @@ from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution, ERA_Irreg
 from datetime import datetime
 from ecmwf_models.utils import lookup
 import xarray as xr
-
-
 try:
     import pygrib
 except ImportError:
@@ -45,7 +43,6 @@ except ImportError:
 '''
 Base classes for reading downloaded ERA netcdf and grib images and 6H image stacks
 '''
-
 
 class ERANcImg(ImageBase):
     """
@@ -69,7 +66,6 @@ class ERANcImg(ImageBase):
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
     """
-
     def __init__(self, filename, product, parameter=['swvl1', 'swvl2'], mode='r',
                  subgrid=None, mask_seapoints=False, array_1D=False):
 
@@ -191,7 +187,6 @@ class ERANcDs(MultiTemporalImageBase):
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
     """
-
     def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
                  subgrid=None, mask_seapoints=False, h_steps=[0, 6, 12, 18],
                  array_1D=False):
@@ -265,7 +260,6 @@ class ERAGrbImg(ImageBase):
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
     """
-
     def __init__(self, filename, product, parameter=['swvl1', 'swvl2'], mode='r',
                  subgrid=None, mask_seapoints=False, array_1D=True):
 
@@ -389,7 +383,6 @@ class ERAGrbDs(MultiTemporalImageBase):
     expand_grid: bool, optional (default: True)
         If the reduced gaußian grid should be expanded to a full gaußian grid.
     """
-
     def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
                  subgrid=None, mask_seapoints=False, h_steps=[0, 6, 12, 18],
                  array_1D=True):
@@ -430,7 +423,6 @@ class ERAGrbDs(MultiTemporalImageBase):
         timestamps : list
             List of datetimes
         """
-
         img_offsets = np.array([timedelta(hours=h) for h in self.h_steps])
 
         timestamps = []
@@ -441,16 +433,12 @@ class ERAGrbDs(MultiTemporalImageBase):
 
         return timestamps
 
-
-
 class ERATs(GriddedNcOrthoMultiTs):
     '''
      Time series reader for all reshuffled ERA reanalysis products in time
      series format.
-
      Use the read_ts(lon, lat) resp. read_ts(gpi) function of this class
-     to read data for locations (gpi or latlon).
-
+     to read data for locations (gpi or latlon)!
 
      Parameters
      ----------
@@ -461,7 +449,7 @@ class ERATs(GriddedNcOrthoMultiTs):
          series to read. If None is passed, grid.nc is searched for in the
          ts_path.
 
-     Optional keyword arguments that are passed to the Gridded Base:
+     Optional keyword arguments that are passed to the Gridded Base when used:
      ------------------------------------------------------------------------
          parameters : list, optional (default: None)
              Specific variable names to read, if None are selected, all are read.
@@ -471,7 +459,7 @@ class ERATs(GriddedNcOrthoMultiTs):
              Offset (value) that the parameters (key) is multiplied with
          ioclass_kws: dict, (optional)
 
-             Optional keyword arguments to pass to OrthoMultiTs class:
+             Optional keyword arguments, passed to the OrthoMultiTs class when used:
              ----------------------------------------------------------------
                  read_bulk : boolean, optional (default: False)
                      If set to True, the data of all locations is read into memory,
@@ -482,7 +470,6 @@ class ERATs(GriddedNcOrthoMultiTs):
                      specific request useable for bulk reading because currently
                      the netCDF num2date routine is very slow for big datasets.
      '''
-
     def __init__(self, ts_path, grid_path=None, **kwargs):
 
         if grid_path is None:

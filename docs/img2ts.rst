@@ -26,18 +26,20 @@ This conversion can be performed using the ``era5_reshuffle`` (respectively
 
    era5_reshuffle /era_data /timeseries/data 2000-01-01 2001-01-01 swvl1 swvl2
 
-Which would take g-hourly ERA images stored in ``/era_data`` from January
+Which would take 6-hourly ERA5 images stored in ``/era_data`` from January
 1st 2000 to January 1st 2001 and store the parameters "swvl1" and "swvl2" as time
-series in the folder ``/timeseries/data``. If a different resolution than 6H
-was chosen for download, use the ``h_steps`` flag here accordingly.
-
+series in the folder ``/timeseries/data``. If you time series should have a different
+resolution than 6H, use the ``h_steps`` flag here accordingly (images to use for time
+series generation have to be in the downloaded raw data).
 The passed names have to correspond with the names in the downloaded file,
 i.e. use the variable short names here.
 Other flags, that can be used in ``era5_reshuffle`` are:
 
-- **-h (--help)** : shows the help text for the reshuffle function
-- **--mask_seapoints** : Replace points over sea with NaNs. This speeds up
-  the time series creation and data size. By default this option is deactivated.
+- **-h (--help)** : Shows the help text for the reshuffle function
+- **--mask_seapoints** : Replaces points over sea with NaNs (static mask). This speeds up
+  the time series creation and reduces data size. This option needs the Land-Sea-Mask
+  variable at least in one image file (we use the LSM from the first available file).
+  By default this option is deactivated.
 - **-h_steps (--as_grib)** : full hours for which images are reshuffled (e.g. --h_steps 0
   would reshuffle only data at 00:00 UTC). By default we use 0, 6, 12 and 18.
 - **--imgbuffer** : The number of images that are read into memory before converting
@@ -57,3 +59,5 @@ consider downgrading the netcdf4 C-library via:
 .. code-block:: shell
 
   conda install -c conda-forge libnetcdf==4.3.3.1 --yes
+  # if this does not work, consider downgrading the netcdf4 library and its dependencies:
+  conda install -c conda-forge netcdf4==1.2.2 --yes

@@ -5,6 +5,7 @@ Changelog
 Version 0.X
 ===========
 
+- Add more tests, also for download functions
 - Update documentation, add installation script
 - Fix bugs, update command line interfaces, update dependencies
 - Separate download programs for ERA5 and ERA Interim

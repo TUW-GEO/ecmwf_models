@@ -4,14 +4,13 @@ Reading data
 After downloading the data for ERA Interim or ERA5 via ``eraint_download`` resp.
 ``era5_download``, images can be read with the ``ERA5GrbDs`` and
 ``ERA5NcDs`` (for grib and netcdf image stacks), respectively the
-``ERA5GrbImg`` and ``ERA5NcImg`` (for single grib and netcdf images) classes,
-as defined in ``ecmwf_models.era5.interface``.
-
+``ERA5GrbImg`` and ``ERA5NcImg`` (for single grib and netcdf images) classes.
 The respective functions for reading images are defined in
 ``ecmwf_models.erainterim.interface`` ``ecmwf_models.era5.interface``.
 
-The following examples are shown for ERA5 data, using the respective classes for
-ERA-Interim, reading works in the same way:
+The following examples are shown for ERA5 data, but work the same way with the
+respective ERA Interim functions.
+
 For example, you can read the image for a single variable at a specific date.
 In this case for a stack of downloaded image files:
 

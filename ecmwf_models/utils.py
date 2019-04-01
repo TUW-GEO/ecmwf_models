@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2018, TU Wien
+# Copyright (c) 2019, TU Wien
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,6 @@ import xarray as xr
 import pandas as pd
 from datedown.fname_creator import create_dt_fpath
 import argparse
-import numpy as np
-
 try:
     import pygrib
 except ImportError:
@@ -60,7 +58,6 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
-
 
 def save_ncs_from_nc(input_nc, output_path, product_name,
                      filename_templ='{product}_AN_%Y%m%d_%H%M.nc'):
@@ -101,7 +98,6 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
                          var: var_encode for var in subset.variables})
     nc_in.close()
 
-
 def save_gribs_from_grib(input_grib, output_path, product_name,
                          filename_templ="{product}_AN_%Y%m%d_%H%M.grb"):
     """
@@ -119,7 +115,6 @@ def save_gribs_from_grib(input_grib, output_path, product_name,
     filename_templ : str, optional (default: product_OPER_0001_AN_date_time)
         Template for naming each separated grb file
     """
-
     localsubdirs = ['%Y', '%j']
     grib_in = pygrib.open(input_grib)
 
@@ -144,7 +139,6 @@ def save_gribs_from_grib(input_grib, output_path, product_name,
         grb_out.close()
     grib_in.close()
 
-
 def mkdate(datestring):
     '''
     Turns a datetime string into a datetime object
@@ -159,12 +153,10 @@ def mkdate(datestring):
     datetime : datetime
         Converted string
     '''
-
     if len(datestring) == 10:
         return datetime.strptime(datestring, '%Y-%m-%d')
     if len(datestring) == 16:
         return datetime.strptime(datestring, '%Y-%m-%dT%H:%M')
-
 
 def parse_filetype(inpath):
     """
@@ -199,7 +191,6 @@ def parse_filetype(inpath):
         # if file type cannot be detected, guess grib
         return 'grib'
 
-
 def load_var_table(name='ERA5', lut=False):
     '''
     Load the variables table for supported variables to download.
@@ -226,7 +217,6 @@ def load_var_table(name='ERA5', lut=False):
 
     return dat
 
-
 def lookup(name, variables):
     '''
     Search the passed elements in the lookup table, if one does not exists,
@@ -249,7 +239,6 @@ def lookup(name, variables):
                 'Passed variable {} is not in the list of supported variables.'.format(var))
 
     return lut.loc[selected, :]
-
 
 def get_default_params(name='ERA5'):
     '''
