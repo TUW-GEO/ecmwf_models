@@ -11,8 +11,8 @@ ecmwf_models
 .. image:: https://badge.fury.io/py/ecmwf-models.svg
     :target: https://badge.fury.io/py/ecmwf-models
 
-.. image:: https://readthedocs.org/projects/ecmwf_models/badge/?version=latest
-   :target: http://ecmwf_models.readthedocs.org/
+.. image:: https://readthedocs.org/projects/ecmwf-models/badge/?version=latest
+   :target: https://ecmwf-models.readthedocs.io/en/latest/
 
 Readers and converters for data from the `ECMWF reanalysis models
 <http://apps.ecmwf.int/datasets/>`_. Written in Python.
