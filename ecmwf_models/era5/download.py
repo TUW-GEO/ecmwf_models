@@ -169,7 +169,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
 
             except:
                 # delete the partly downloaded data and retry
-                os.remove(dl_file)
+                if os.path.isfile(dl_file):
+                    os.remove(dl_file)
                 finished = False
                 i += 1
                 continue
@@ -229,8 +230,9 @@ def parse_args(args):
                         help=("Keep the originally, temporally downloaded file as it is instread of deleting it afterwards"))
     parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
                         help=("Download data in grib format, instead of the default netcdf format"))
-    parser.add_argument("--h_steps", type=int, default=None, nargs='+',
-                        help=("Manually change the temporal resolution of downloaded images, must be full hours. "
+    parser.add_argument("--h_steps", type=int, default=[0,6,12,18], nargs='+',
+                        help=("Manually change the temporal resolution of downloaded images."
+                              "Pass a set of full hours here, like '--h_steps 0 12'. "
                               "By default 6H images (starting at 0:00 UTC, i.e. 0 6 12 18) will be downloaded"))
 
     args = parser.parse_args(args)
@@ -256,5 +258,3 @@ def main(args):
 
 def run():
     main(sys.argv[1:])
-
-
