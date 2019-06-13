@@ -2,9 +2,15 @@
 Changelog
 =========
 
-Version 0.X
+Unreleased
+==========
+-
+
+
+Version 0.5
 ===========
 
+- Change default time steps to 6 hours.
 - Add more tests, also for download functions
 - Update documentation, add installation script
 - Fix bugs, update command line interfaces, update dependencies
