@@ -139,8 +139,9 @@ def parse_args(args):
                               "See documentation on image download for resp. ERA products, "
                               "for more information on variable names of the product. "))
     parser.add_argument("--mask_seapoints", type=bool, default=False,
-                        help=("Replace points over water with nan. This option needs the"
-                              "lsm variable in the first file of the image data (mask will be static)."))
+                        help=("Replace points over water with nan. This option needs the "
+                              "LandSeaMask (lsm) variable in the image data (will use mask from first available file). "
+                              "To use a dynamic LSM, reshuffle the LSM variable to time series."))
     parser.add_argument("--h_steps", type=int, default=None, nargs='+',
                         help=("Time steps (full hours) of images that will be reshuffled (must be in the images). "
                               "By default 6H images (starting at 0:00 UTC) will be reshuffled."))
