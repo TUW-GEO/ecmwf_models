@@ -27,7 +27,8 @@ Common grid definitions for ECMWF model reanalysis products (regular gridded)
 
 import numpy as np
 from pygeogrids.grids import BasicGrid
-
+from netCDF4 import Dataset
+import os
 
 def get_grid_resolution(lats, lons):
     lats = np.unique(lats)
@@ -50,6 +51,22 @@ def get_grid_resolution(lats, lons):
     else:
         lon_res = lons_res[0]
     return lat_res, lon_res
+
+
+def ERA_RegularImgLandGrid():
+    global_grid = ERA_RegularImgGrid(0.25, 0.25)
+
+    ds = Dataset(os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                              'ERA5_landmask_025.nc'))
+
+    land_mask = ds.variables['land'][:].flatten().filled(0.) == 1.
+    land_points = np.ma.masked_array(global_grid.get_grid_points()[0], ~land_mask)
+
+    land_grid = global_grid.subgrid_from_gpis(land_points[~land_points.mask].filled())
+
+    from pygeogrids.netcdf import save_grid
+    return land_grid
+
 
 
 def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
@@ -85,10 +102,6 @@ def ERA_IrregularImgGrid(lons, lats):
     return BasicGrid(lons.flatten(), lats.flatten()).to_cell_grid(cellsize=5.)
 
 
-def ERA_LandGrid():
-    # use land mask (param: 172) to detect land points and create a subgrid that
-    # is passe to the reshuffle module.
-    raise NotImplementedError
-    # TODO: add function to generate TS from land points only, so that points over
-    # TODO: water are not only replaced by NaN, but not in the time series files.
+if __name__ == '__main__':
+    ERA_RegularImgLandGrid()
 

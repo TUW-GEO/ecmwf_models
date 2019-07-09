@@ -1,11 +1,8 @@
-# Add your requirements here like:
-# numpy
-# scipy>=0.9
+# Common requirements for all platforms
 numpy>=1.15.4
 pandas
 scipy
 netcdf4
-pygrib>=2.0.1
 pyresample
 xarray
 cdsapi
