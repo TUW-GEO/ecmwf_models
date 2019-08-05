@@ -160,11 +160,12 @@ def download_and_move(target_path, startdate, enddate, variables=None,
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     """
+    product = 'eraint'
     if variables is None:
         variables = default_variables()
     else:
         # find the dl_names
-        variables = lookup(name='ERAINT', variables=variables)
+        variables = lookup(name=product, variables=variables)
         variables = variables['dl_name'].values.tolist()
 
     td = timedelta(days=30)
@@ -191,9 +192,9 @@ def download_and_move(target_path, startdate, enddate, variables=None,
                         steps=steps, grb=grb, dry_run=dry_run)
 
         if grb:
-            save_gribs_from_grib(dl_file, target_path, 'ERAINT')
+            save_gribs_from_grib(dl_file, target_path, product.upper())
         else:
-            save_ncs_from_nc(dl_file, target_path, 'ERAINT')
+            save_ncs_from_nc(dl_file, target_path, product.upper())
 
         if not keep_original:
             shutil.rmtree(downloaded_data_path)
