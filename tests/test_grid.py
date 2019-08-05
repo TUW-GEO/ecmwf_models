@@ -21,11 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-'''
+"""
 Tests for grid generation
-'''
+"""
 
-from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution, ERA_IrregularImgGrid
+from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution, \
+    ERA_IrregularImgGrid, ERA_RegularImgLandGrid
 import numpy as np
 
 def test_ERA_regular_grid():
@@ -45,3 +46,9 @@ def test_ERA_irregular_grid():
     grid = ERA_IrregularImgGrid(lons, lats)
 
     assert grid == ERA_RegularImgGrid(1.,1.)
+
+def test_ERA5_landgrid():
+    grid = ERA_RegularImgLandGrid() # 0.25*0.25
+    assert grid.get_grid_points()[0].size == 244450
+    assert grid.find_nearest_gpi(16.375, 48.125)[0] == 240545
+    assert grid.gpi2cell(240545) == 1431
