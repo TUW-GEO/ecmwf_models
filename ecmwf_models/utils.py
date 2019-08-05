@@ -161,6 +161,38 @@ def mkdate(datestring):
     if len(datestring) == 16:
         return datetime.strptime(datestring, '%Y-%m-%dT%H:%M')
 
+def parse_product(inpath):
+    """
+    Tries to find out what product is stored in the path. This is done based
+    on the name of the first file in the path that is found.
+
+    Parameters
+    ----------
+    inpath: str
+        Input path where ERA data was downloaded to
+
+    Returns
+    -------
+    product : str
+        Product name
+    """
+    onedown = os.path.join(inpath, os.listdir(inpath)[0])
+    twodown = os.path.join(onedown, os.listdir(onedown)[0])
+
+    for path, subdirs, files in os.walk(twodown):
+        for name in files:
+            filename, extension = os.path.splitext(name)
+            parts = filename.split('_')
+
+            if 'ERA5-LAND' in parts:
+                return 'era5-land'
+            elif 'ERA5' in parts:
+                return 'era5'
+            elif 'ERAINT' in parts:
+                return 'eraint'
+            else:
+                continue
+
 def parse_filetype(inpath):
     """
     Tries to find out the file type by searching for
@@ -329,6 +361,7 @@ def make_era5_land_definition_file(data_file, out_file, data_file_y_res=0.25,
     ds_out.close()
 
 if __name__ == '__main__':
+    parse_product(r"R:\Datapool_raw\ECMWF_reanalysis\ERA5\datasets\images_core_vars")
     make_era5_land_definition_file(r"C:\Temp\era5_landgrid\ERA5_AN_20100101_0000.nc",
                                    r"C:\Temp\era5_landgrid\landmask_0.25_0.25.nc")
 
