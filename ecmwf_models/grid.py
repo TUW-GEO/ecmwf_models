@@ -21,9 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-'''
+"""
 Common grid definitions for ECMWF model reanalysis products (regular gridded)
-'''
+"""
 
 import numpy as np
 from pygeogrids.grids import BasicGrid
@@ -53,24 +53,33 @@ def get_grid_resolution(lats, lons):
     return lat_res, lon_res
 
 
-def ERA_RegularImgLandGrid():
-    global_grid = ERA_RegularImgGrid(0.25, 0.25)
+def ERA5_RegularImgLandGrid(res_lat=0.25, res_lon=0.25):
+    """
+    Uses the 0.25 DEG ERA5 land mask to create a land grid of the same size,
+    which also excluded Antarctica.
+    """
+    try:
+        ds = Dataset(os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                  'era5', 'land_definition_files',
+                                  'landmask_{dlat}_{dlon}.nc'.format(
+                                      dlat=res_lat, dlon=res_lon)))
+    except FileNotFoundError as e:
+        print('Land definition for this grid resolution not yet available. Please create and add it.')
+        raise e
 
-    ds = Dataset(os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                              'ERA5_landmask_025.nc'))
+    global_grid = ERA_RegularImgGrid(res_lat, res_lon)
 
     land_mask = ds.variables['land'][:].flatten().filled(0.) == 1.
     land_points = np.ma.masked_array(global_grid.get_grid_points()[0], ~land_mask)
 
     land_grid = global_grid.subgrid_from_gpis(land_points[~land_points.mask].filled())
 
-    from pygeogrids.netcdf import save_grid
-    return land_grid
+    return land_grid.to_cell_grid(5., 5.)
 
 
 
 def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
-    '''
+    """
     Create ECMWF regular cell grid
 
     Parameters
@@ -84,7 +93,7 @@ def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
     ----------
     CellGrid : pygeogrids.CellGrid
         Regular, global CellGrid with 5DEG*5DEG cells
-    '''
+    """
 
     lon = np.arange(0, 360 - res_lon / 2, res_lon)
     lat = np.arange(90, -1 * 90 - res_lat / 2, -1 * res_lat)
@@ -103,5 +112,5 @@ def ERA_IrregularImgGrid(lons, lats):
 
 
 if __name__ == '__main__':
-    ERA_RegularImgLandGrid()
+    land_grid = ERA5_RegularImgLandGrid()
 
