@@ -45,12 +45,13 @@ def test_ERA5_reshuffle_nc():
     enddate = '2010-01-01'
     parameters = ["swvl1"] #, "swvl2"]
     h_steps = ['--h_steps', '0', '12']
+    landpoints = ['--land_points', 'True']
 
 
-    args = [inpath, ts_path, startdate, enddate] + parameters + h_steps
+    args = [inpath, ts_path, startdate, enddate] + parameters + h_steps + landpoints
     try:
         main(args)
-        assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 2593
+        assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 948 # less files because only land points
         ds = ERATs(ts_path, ioclass_kws={'read_bulk':True})
         ts = ds.read(15, 48)
         swvl1_values_should = np.array([0.402825,  0.390983], dtype=np.float32)
@@ -72,12 +73,13 @@ def test_ERA5_reshuffle_grb():
     enddate = '2010-01-01'
     parameters = ["swvl1"] #, "swvl2"]
     h_steps = ['--h_steps', '0', '12']
+    landpoints = ['--land_points', 'False']
 
 
-    args = [inpath, ts_path, startdate, enddate] + parameters + h_steps
+    args = [inpath, ts_path, startdate, enddate] + parameters + h_steps + landpoints
     try:
         main(args)
-        assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 2593
+        assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 2593 # more files because all points
         ds = ERATs(ts_path, ioclass_kws={'read_bulk':True})
         ts = ds.read(15, 48)
         swvl1_values_should = np.array([0.402824,  0.390979], dtype=np.float32)
@@ -88,3 +90,6 @@ def test_ERA5_reshuffle_grb():
     except Exception as e:
         shutil.rmtree(ts_path)
         raise e
+
+if __name__ == '__main__':
+    test_ERA5_reshuffle_nc()

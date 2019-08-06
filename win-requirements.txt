@@ -1,2 +1,0 @@
-# windows requirements
--r requirements.txt

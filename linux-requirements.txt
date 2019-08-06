@@ -1,3 +1,0 @@
-# Platform specific requirements
--r requirements.txt
-pygrib>=2.0.1
