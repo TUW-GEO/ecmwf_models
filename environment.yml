@@ -11,6 +11,7 @@ dependencies:
 - scipy
 - pyresample
 - xarray
+- pip
 - pip:
     - pygeobase
     - pynetcf

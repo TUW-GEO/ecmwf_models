@@ -1,7 +1,7 @@
 Downloading ERA5 Data
 ==========================
 
-ERA5 data can be downloaded manually from the `Copernicus Data Store (CDS)
+ERA5 (and ERA5-Land) data can be downloaded manually from the `Copernicus Data Store (CDS)
 <https://cds.climate.copernicus.eu/#!/home>`_ or automatically via the CDS api,
 as done in the download module (era5_download). Before you can use this, you
 have to set up an `account at the CDS
@@ -29,11 +29,12 @@ look up the right name for the CDS API.
 Other flags, that can be activated in ``era5_download`` are:
 
 - **-h (--help)** : shows the help text for the download function
+- **-p (--product)**: specify the ERA5 product to download. Choose either ERA5 or ERA5-Land. Default is ERA5.
 - **-keep (--keep_original)** : keeps the originally downloaded files as well.
   We split the downloaded, monthly stacks into single images and discard the original
   files by default.
 - **-grb (--as_grib)** : download the data in grib format instead of the default nc4
-   format (grib reading is only supported for Linux OS).
+   format (grib reading is not supported on Windows OS).
 - **--h_steps** : full hours for which images are downloaded (e.g. --h_steps 0
   would download only data at 00:00 UTC). By default we use 0, 6, 12 and 18.
 
