@@ -250,6 +250,7 @@ def parse_args(args):
 
     args = parser.parse_args(args)
 
+    print("ERA Interim data is deprecated. Use ERA5 instead.")
     print("Downloading ERA Interim {} data from {} to {} into folder {}"
           .format('grib' if args.as_grib is True else 'netcdf',
                   args.start.isoformat(),
