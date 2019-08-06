@@ -113,7 +113,3 @@ def ERA_IrregularImgGrid(lons, lats):
     lons[lons_gt_180] = lons[lons_gt_180] - 360
     return BasicGrid(lons.flatten(), lats.flatten()).to_cell_grid(cellsize=5.)
 
-
-if __name__ == '__main__':
-    land_grid = ERA5_RegularImgLandGrid()
-

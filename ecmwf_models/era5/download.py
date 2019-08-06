@@ -286,9 +286,3 @@ def main(args):
 
 def run():
     main(sys.argv[1:])
-
-
-if __name__ == '__main__':
-    download_and_move(r'C:\Temp\era5_land', datetime(2010,1,1), datetime(2010,1,2), product='era5-land',
-                      variables=None, keep_original=False, h_steps=[0, 6, 12, 18],
-                      grb=False, dry_run=False)
