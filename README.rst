@@ -73,8 +73,13 @@ data in netCDF format instead.
 Supported Products
 ==================
 
-At the moment this package supports **ERA Interim**, **ERA5** and **ERA5-Land** reanalysis data in
-**grib** and **netcdf** format (reading, time series creation) with a default spatial
+At the moment this package supports
+
+- **ERA Interim** (deprecated)
+- **ERA5**
+- **ERA5-Land** 
+
+reanalysis data in **grib** and **netcdf** format (download, reading, time series creation) with a default spatial
 sampling of 0.75 degrees (ERA Interim), 0.25 degrees (ERA5), resp. 0.1 degrees (ERA5-Land).
 It should be easy to extend the package to support other ECMWF reanalysis products.
 This will be done as need arises.
