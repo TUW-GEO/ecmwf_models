@@ -51,11 +51,9 @@ class ERANcImg(ImageBase):
     filename: str
         Path to the image file to read.
     product : str
-        ERA5 or ERAINT
+        'era5' or 'era5-land' or 'eraint'
     parameter: list or str, optional (default: ['swvl1', 'swvl2'])
         Name of parameters to read from the image file.
-    mode: str, optional (default: 'r')
-        Mode in which to open the file, changing this can cause data loss.
     subgrid: pygeogrids.CellGrid, optional (default:None)
         Read only data for points of this grid and not global values.
     mask_seapoints : bool, optional (default: False)
@@ -63,9 +61,13 @@ class ERANcImg(ImageBase):
         This option needs the 'lsm' parameter to be in the file!
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
+    mode : str, optional (default: 'r')
+        Mode in which to open the file, changing this can cause data loss.
+        This argument should not be changed!
+
     """
-    def __init__(self, filename, product, parameter=['swvl1', 'swvl2'], mode='r',
-                 subgrid=None, mask_seapoints=False, array_1D=False):
+    def __init__(self, filename, product, parameter=['swvl1', 'swvl2'],
+                 subgrid=None, mask_seapoints=False, array_1D=False, mode='r'):
 
         super(ERANcImg, self).__init__(filename, mode=mode)
 
@@ -78,6 +80,10 @@ class ERANcImg(ImageBase):
         self.mask_seapoints = mask_seapoints
         self.array_1D = array_1D
         self.subgrid = subgrid
+
+        if self.subgrid and not self.array_1D:
+            warnings.warn("Reading spatial subsets as 2D arrays ony works if there is an "
+                          "equal number of points in each line")
 
     def read(self, timestamp=None):
         '''
@@ -248,8 +254,6 @@ class ERAGrbImg(ImageBase):
         ERA5 or ERAINT
     parameter: list or str, optional (default: ['swvl1', 'swvl2'])
         Name of parameters to read from the image file.
-    mode: str, optional (default: 'r')
-        Mode in which to open the file, changing this can cause data loss.
     subgrid: pygeogrids.CellGrid, optional (default:None)
         Read only data for points of this grid and not global values.
     mask_seapoints : bool, optional (default: False)
@@ -257,9 +261,12 @@ class ERAGrbImg(ImageBase):
         This option needs the 'lsm' parameter to be in the file!
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
+    mode : str, optional (default: 'r')
+        Mode in which to open the file, changing this can cause data loss.
+        This argument should not be changed!
     """
-    def __init__(self, filename, product, parameter=['swvl1', 'swvl2'], mode='r',
-                 subgrid=None, mask_seapoints=False, array_1D=True):
+    def __init__(self, filename, product, parameter=['swvl1', 'swvl2'],
+                 subgrid=None, mask_seapoints=False, array_1D=True, mode='r'):
 
         super(ERAGrbImg, self).__init__(filename, mode=mode)
 

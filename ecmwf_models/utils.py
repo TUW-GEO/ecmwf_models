@@ -226,7 +226,7 @@ def parse_filetype(inpath):
         # if file type cannot be detected, guess grib
         return 'grib'
 
-def load_var_table(name='ERA5', lut=False):
+def load_var_table(name='era5', lut=False):
     '''
     Load the variables table for supported variables to download.
 
@@ -236,6 +236,7 @@ def load_var_table(name='ERA5', lut=False):
         If set to true only names are loaded, so that they can be used for a LUT
         otherwise the full table is loaded
     '''
+    name = name.lower()
     if name == 'era5':
         era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     'era5', 'era5_lut.csv')
@@ -278,7 +279,7 @@ def lookup(name, variables):
 
     return lut.loc[selected, :]
 
-def get_default_params(name='ERA5'):
+def get_default_params(name='era5'):
     '''
     Read only lines that are marked as default variable in the csv file
 
@@ -359,15 +360,3 @@ def make_era5_land_definition_file(data_file, out_file, data_file_y_res=0.25,
 
     ds_in.close()
     ds_out.close()
-
-if __name__ == '__main__':
-    parse_product(r"R:\Datapool_raw\ECMWF_reanalysis\ERA5\datasets\images_core_vars")
-    make_era5_land_definition_file(r"C:\Temp\era5_landgrid\ERA5_AN_20100101_0000.nc",
-                                   r"C:\Temp\era5_landgrid\landmask_0.25_0.25.nc")
-
-    make_era5_land_definition_file(r"C:\Temp\era5_landgrid\ERA5-LAND_AN_20100101_0000.nc",
-                                   r"C:\Temp\era5_landgrid\landmask_0.1_0.1.nc",
-                                   data_file_y_res=0.1,
-                                   ref_var='swvl1', threshold=np.nan,
-                                   exclude_antarctica=True
-                                   )

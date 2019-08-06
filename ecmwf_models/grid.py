@@ -50,7 +50,7 @@ def get_grid_resolution(lats, lons):
         raise ValueError('Grid not regular')
     else:
         lon_res = lons_res[0]
-    return lat_res, lon_res
+    return float(lat_res), float(lon_res)
 
 
 def ERA5_RegularImgLandGrid(res_lat=0.25, res_lon=0.25):
@@ -95,14 +95,17 @@ def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
         Regular, global CellGrid with 5DEG*5DEG cells
     """
 
-    lon = np.arange(0, 360 - res_lon / 2, res_lon)
-    lat = np.arange(90, -1 * 90 - res_lat / 2, -1 * res_lat)
+    lon = np.arange(0., 360. - res_lon / 2., res_lon)
+    lat = np.arange(90., -1. * 90. - res_lat / 2., -1. * res_lat)
     lons_gt_180 = np.where(lon > 180.0)
-    lon[lons_gt_180] = lon[lons_gt_180] - 360
+    lon[lons_gt_180] = lon[lons_gt_180] - 360.
 
     lon, lat = np.meshgrid(lon, lat)
 
-    return BasicGrid(lon.flatten(), lat.flatten()).to_cell_grid(cellsize=5.)
+    glob_basic_grid = BasicGrid(lon.flatten(), lat.flatten())
+    glob_cell_grid = glob_basic_grid.to_cell_grid(cellsize=5.)
+
+    return glob_cell_grid
 
 
 def ERA_IrregularImgGrid(lons, lats):
