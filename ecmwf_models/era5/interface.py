@@ -23,21 +23,22 @@
 
 from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
 
+#import matplotlib as mpl
+#mpl.use("Qt5Agg")
+
 '''
-This module contains ERA5 specific child classes of the netcdf and grib
+This module contains ERA5/ERA5-Land specific child classes of the netcdf and grib
 base classes, that are used for reading all ecmwf products.
 '''
 
 
 class ERA5NcImg(ERANcImg):
-    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'], product='era5',
                  subgrid=None, mask_seapoints=False, array_1D=False):
 
-        product = 'ERA5'
         super(ERA5NcImg, self).__init__(filename=filename,
                                         product=product,
                                         parameter=parameter,
-                                        mode=mode,
                                         subgrid=subgrid,
                                         mask_seapoints=mask_seapoints,
                                         array_1D=array_1D)
@@ -45,9 +46,8 @@ class ERA5NcImg(ERANcImg):
 
 class ERA5NcDs(ERANcDs):
     def __init__(self, root_path, parameter=['swvl1', 'swvl2'], h_steps=[0,6,12,18],
-                 subgrid=None, mask_seapoints=False, array_1D=False):
+                 product='era5', subgrid=None, mask_seapoints=False, array_1D=False):
 
-        product = 'ERA5'
         super(ERA5NcDs, self).__init__(root_path=root_path,
                                        product=product,
                                        parameter=parameter,
@@ -58,14 +58,12 @@ class ERA5NcDs(ERANcDs):
 
 
 class ERA5GrbImg(ERAGrbImg):
-    def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
+    def __init__(self, filename, parameter=['swvl1', 'swvl2'], product='era5',
                  subgrid=None, mask_seapoints=False, array_1D=False):
 
-        product = 'ERA5'
         super(ERA5GrbImg, self).__init__(filename=filename,
                                          product=product,
                                          parameter=parameter,
-                                         mode=mode,
                                          subgrid=subgrid,
                                          mask_seapoints=mask_seapoints,
                                          array_1D=array_1D)
@@ -73,9 +71,8 @@ class ERA5GrbImg(ERAGrbImg):
 
 class ERA5GrbDs(ERAGrbDs):
     def __init__(self, root_path, parameter=['swvl1', 'swvl2'], h_steps=[0,6,12,18],
-                 subgrid=None, mask_seapoints=False, array_1D=False):
+                 product='era5', subgrid=None, mask_seapoints=False, array_1D=False):
 
-        product = 'ERA5'
         super(ERA5GrbDs, self).__init__(root_path=root_path,
                                         product=product,
                                         parameter=parameter,
@@ -83,4 +80,3 @@ class ERA5GrbDs(ERAGrbDs):
                                         h_steps=h_steps,
                                         mask_seapoints=mask_seapoints,
                                         array_1D=array_1D)
-

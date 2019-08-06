@@ -31,18 +31,16 @@ import sys
 import argparse
 import numpy as np
 
-from pygeogrids import BasicGrid
-
 from repurpose.img2ts import Img2Ts
 from ecmwf_models.era5.interface import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.grid import ERA_RegularImgGrid, ERA5_RegularImgLandGrid
-from ecmwf_models.utils import mkdate, parse_filetype, parse_product
+from ecmwf_models.utils import mkdate, parse_filetype, parse_product, str2bool
 from datetime import time, datetime
 
 
 
-def reshuffle(input_root, outputpath, startdate, enddate, variables,
-              h_steps=[0,6,12,18], land_points=False, imgbuffer=200):
+def reshuffle(input_root, outputpath, startdate, enddate, variables, product=None,
+              h_steps=[0,6,12,18], land_points=False, imgbuffer=50):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
     series format.
@@ -59,13 +57,16 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
         End date, from which images are read and time series are generated.
     variables: list or str
         Variables to read from the passed images and convert into time series format.
+    product : str, optional (default: None)
+        Either era5 or era5-land, if None is passed we guess the product from the
+        downloaded image files.
     h_steps : list, optional (default: [0, 6, 12, 18]
         Hours at which images are read for each day and used for reshuffling,
         therefore this defines the sub-daily temporal resolution of the time series that
         are generated.
-    land_points: bool, optional (default: True)
+    land_points: bool, optional (default: False)
         Reshuffle only land points. Uses the ERA5 land mask to create a land grid.
-        The land grid is fixed to 0.25x0.25 deg for now.
+        The land grid is fixed to 0.25*0.25 or 0.1*0.1 deg for now.
     imgbuffer: int, optional (default: 200)
         How many images to read at once before writing time series. This number
         affects how many images are stored in memory and should be chosen according
@@ -76,7 +77,7 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
         h_steps = [0,6,12,18]
 
     filetype = parse_filetype(input_root)
-    product = parse_product(input_root)
+    product = parse_product(input_root) if not product else product
 
 
     if land_points:
@@ -86,6 +87,7 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
             grid = ERA5_RegularImgLandGrid(res_lat=0.1, res_lon=0.1)
         else:
             raise NotImplementedError(product, 'Land grid not implemented for product.')
+        subgrid = grid
     else:
         if product == 'era5':
             grid = ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25)
@@ -93,26 +95,26 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables,
             grid = ERA_RegularImgGrid(res_lat=0.1, res_lon=0.1)
         else:
             raise NotImplementedError(product, 'Grid not implemented for product.')
-
+        subgrid = None
 
     if filetype == 'grib':
         if land_points:
             raise NotImplementedError('Reshuffling land points only implemented for netcdf files')
 
         input_dataset = ERA5GrbDs(root_path=input_root, parameter=variables,
-                                  subgrid=None, array_1D=True, h_steps=h_steps,
-                                  mask_seapoints=land_points)
+                                  subgrid=subgrid, array_1D=True, h_steps=h_steps,
+                                  product=product, mask_seapoints=False)
     elif filetype == 'netcdf':
         input_dataset = ERA5NcDs(root_path=input_root, parameter=variables,
-                                 subgrid=grid, array_1D=True, h_steps=h_steps,
-                                 mask_seapoints=land_points)
+                                 subgrid=subgrid, array_1D=True, h_steps=h_steps,
+                                 product=product, mask_seapoints=False)
     else:
         raise Exception('Unknown file format')
 
     if not os.path.exists(outputpath):
         os.makedirs(outputpath)
 
-    global_attr = {'product': 'ERA5 (from {})'.format(filetype)}
+    global_attr = {'product': '{} (from {})'.format(product.upper(), filetype)}
 
     # get time series attributes from first day of data.
     first_date_time = datetime.combine(startdate.date(), time(h_steps[0], 0))
@@ -160,7 +162,7 @@ def parse_args(args):
                         help=("Short name of variables as stored in the images, which are reshuffled. "
                               "See documentation on image download for resp. ERA products, "
                               "for more information on variable names of the product. "))
-    parser.add_argument("--land_points", type=bool, default=False,
+    parser.add_argument("--land_points", type=str2bool, default='False',
                         help=("Store only time series for points that are over land"))
     parser.add_argument("--h_steps", type=int, default=None, nargs='+',
                         help=("Time steps (full hours) of images that will be reshuffled (must be in the images). "
@@ -171,7 +173,7 @@ def parse_args(args):
                               "system and the size of a single image."))
     args = parser.parse_args(args)
 
-    print("Converting data from {} to {} into {}."
+    print("Converting ERA5/ERA5-Land data from {} to {} into {}."
           .format(args.start.isoformat(), args.end.isoformat(), args.timeseries_root))
 
     return args
