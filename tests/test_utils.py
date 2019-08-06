@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Testing the utitlity functions
+Testing the utility functions
 '''
 
 from ecmwf_models.utils import *
@@ -68,7 +68,7 @@ def test_create_land_definition_file():
     ds_actual = Dataset(out_file)
     actual = ds_actual.variables['land'][:]
 
-    ds_disired = Dataset(path_desired)
-    desired = ds_disired.variables['land'][:]
+    ds_desired = Dataset(path_desired)
+    desired = ds_desired.variables['land'][:]
 
     assert np.allclose(actual, desired, equal_nan=True)

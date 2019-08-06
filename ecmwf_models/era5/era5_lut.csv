@@ -27,7 +27,7 @@ convective_available_potential_energy,Convective available potential energy,cape
 convective_inhibition,Convective inhibition,cin,0
 convective_precipitation,Convective precipitation,cp,0
 convective_rain_rate,Convective rain rate,crr,0
-convective_snowfall,Convective snowfall,csf,
+convective_snowfall,Convective snowfall,csf,0
 convective_snowfall_rate_water_equivalent,Convective snowfall rate water equivalent,csfr,1
 downward_uv_radiation_at_the_surface,Downward UV radiation at the surface,uvb,0
 duct_base_height,Duct base height,dctb,0
@@ -257,7 +257,7 @@ volumetric_soil_water_layer_1,Volumetric soil water layer 1,swvl1,1
 volumetric_soil_water_layer_2,Volumetric soil water layer 2,swvl2,1
 volumetric_soil_water_layer_3,Volumetric soil water layer 3,swvl3,1
 volumetric_soil_water_layer_4,Volumetric soil water layer 4,swvl4,1
-wave_spectral_directional_width,Wave spectral directional width,wdw,
+wave_spectral_directional_width,Wave spectral directional width,wdw,0
 wave_spectral_directional_width_for_swell,Wave spectral directional width for swell,dwps,0
 wave_spectral_directional_width_for_wind_waves,Wave spectral directional width for wind waves,dwww,0
 wave_spectral_kurtosis,Wave spectral kurtosis,wsk,0

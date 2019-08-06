@@ -21,16 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
-
-#import matplotlib as mpl
-#mpl.use("Qt5Agg")
 
 '''
 This module contains ERA5/ERA5-Land specific child classes of the netcdf and grib
 base classes, that are used for reading all ecmwf products.
 '''
 
+from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
+
+#import matplotlib as mpl
+#mpl.use("Qt5Agg")
 
 class ERA5NcImg(ERANcImg):
     def __init__(self, filename, parameter=['swvl1', 'swvl2'], product='era5',

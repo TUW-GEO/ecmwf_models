@@ -37,8 +37,6 @@ from ecmwf_models.grid import ERA_RegularImgGrid, ERA5_RegularImgLandGrid
 from ecmwf_models.utils import mkdate, parse_filetype, parse_product, str2bool
 from datetime import time, datetime
 
-
-
 def reshuffle(input_root, outputpath, startdate, enddate, variables, product=None,
               h_steps=[0,6,12,18], land_points=False, imgbuffer=50):
     """
