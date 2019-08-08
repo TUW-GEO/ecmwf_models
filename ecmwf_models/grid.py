@@ -21,13 +21,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-'''
+"""
 Common grid definitions for ECMWF model reanalysis products (regular gridded)
-'''
+"""
 
 import numpy as np
 from pygeogrids.grids import BasicGrid
-
+from netCDF4 import Dataset
+import os
 
 def get_grid_resolution(lats, lons):
     lats = np.unique(lats)
@@ -49,11 +50,36 @@ def get_grid_resolution(lats, lons):
         raise ValueError('Grid not regular')
     else:
         lon_res = lons_res[0]
-    return lat_res, lon_res
+    return float(lat_res), float(lon_res)
+
+
+def ERA5_RegularImgLandGrid(res_lat=0.25, res_lon=0.25):
+    """
+    Uses the 0.25 DEG ERA5 land mask to create a land grid of the same size,
+    which also excluded Antarctica.
+    """
+    try:
+        ds = Dataset(os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                  'era5', 'land_definition_files',
+                                  'landmask_{dlat}_{dlon}.nc'.format(
+                                      dlat=res_lat, dlon=res_lon)))
+    except FileNotFoundError as e:
+        print('Land definition for this grid resolution not yet available. Please create and add it.')
+        raise e
+
+    global_grid = ERA_RegularImgGrid(res_lat, res_lon)
+
+    land_mask = ds.variables['land'][:].flatten().filled(0.) == 1.
+    land_points = np.ma.masked_array(global_grid.get_grid_points()[0], ~land_mask)
+
+    land_grid = global_grid.subgrid_from_gpis(land_points[~land_points.mask].filled())
+
+    return land_grid.to_cell_grid(5., 5.)
+
 
 
 def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
-    '''
+    """
     Create ECMWF regular cell grid
 
     Parameters
@@ -67,28 +93,23 @@ def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
     ----------
     CellGrid : pygeogrids.CellGrid
         Regular, global CellGrid with 5DEG*5DEG cells
-    '''
+    """
 
-    lon = np.arange(0, 360 - res_lon / 2, res_lon)
-    lat = np.arange(90, -1 * 90 - res_lat / 2, -1 * res_lat)
+    lon = np.arange(0., 360. - res_lon / 2., res_lon)
+    lat = np.arange(90., -1. * 90. - res_lat / 2., -1. * res_lat)
     lons_gt_180 = np.where(lon > 180.0)
-    lon[lons_gt_180] = lon[lons_gt_180] - 360
+    lon[lons_gt_180] = lon[lons_gt_180] - 360.
 
     lon, lat = np.meshgrid(lon, lat)
 
-    return BasicGrid(lon.flatten(), lat.flatten()).to_cell_grid(cellsize=5.)
+    glob_basic_grid = BasicGrid(lon.flatten(), lat.flatten())
+    glob_cell_grid = glob_basic_grid.to_cell_grid(cellsize=5.)
+
+    return glob_cell_grid
 
 
 def ERA_IrregularImgGrid(lons, lats):
     lons_gt_180 = np.where(lons > 180.0)
     lons[lons_gt_180] = lons[lons_gt_180] - 360
     return BasicGrid(lons.flatten(), lats.flatten()).to_cell_grid(cellsize=5.)
-
-
-def ERA_LandGrid():
-    # use land mask (param: 172) to detect land points and create a subgrid that
-    # is passe to the reshuffle module.
-    raise NotImplementedError
-    # TODO: add function to generate TS from land points only, so that points over
-    # TODO: water are not only replaced by NaN, but not in the time series files.
 

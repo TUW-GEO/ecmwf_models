@@ -36,10 +36,7 @@ i.e. use the variable short names here.
 Other flags, that can be used in ``era5_reshuffle`` are:
 
 - **-h (--help)** : Shows the help text for the reshuffle function
-- **--mask_seapoints** : Replaces points over sea with NaNs (static mask). This speeds up
-  the time series creation and reduces data size. This option needs the Land-Sea-Mask
-  variable at least in one image file (we use the LSM from the first available file).
-  By default this option is deactivated.
+- **--land_points** : Reshuffle and store only data over land land points.
 - **-h_steps (--as_grib)** : full hours for which images are reshuffled (e.g. --h_steps 0
   would reshuffle only data at 00:00 UTC). By default we use 0, 6, 12 and 18.
 - **--imgbuffer** : The number of images that are read into memory before converting

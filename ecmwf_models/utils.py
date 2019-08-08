@@ -32,6 +32,9 @@ import xarray as xr
 import pandas as pd
 from datedown.fname_creator import create_dt_fpath
 import argparse
+import numpy as np
+from netCDF4 import Dataset
+from collections import OrderedDict
 try:
     import pygrib
 except ImportError:
@@ -158,6 +161,38 @@ def mkdate(datestring):
     if len(datestring) == 16:
         return datetime.strptime(datestring, '%Y-%m-%dT%H:%M')
 
+def parse_product(inpath):
+    """
+    Tries to find out what product is stored in the path. This is done based
+    on the name of the first file in the path that is found.
+
+    Parameters
+    ----------
+    inpath: str
+        Input path where ERA data was downloaded to
+
+    Returns
+    -------
+    product : str
+        Product name
+    """
+    onedown = os.path.join(inpath, os.listdir(inpath)[0])
+    twodown = os.path.join(onedown, os.listdir(onedown)[0])
+
+    for path, subdirs, files in os.walk(twodown):
+        for name in files:
+            filename, extension = os.path.splitext(name)
+            parts = filename.split('_')
+
+            if 'ERA5-LAND' in parts:
+                return 'era5-land'
+            elif 'ERA5' in parts:
+                return 'era5'
+            elif 'ERAINT' in parts:
+                return 'eraint'
+            else:
+                continue
+
 def parse_filetype(inpath):
     """
     Tries to find out the file type by searching for
@@ -191,7 +226,7 @@ def parse_filetype(inpath):
         # if file type cannot be detected, guess grib
         return 'grib'
 
-def load_var_table(name='ERA5', lut=False):
+def load_var_table(name='era5', lut=False):
     '''
     Load the variables table for supported variables to download.
 
@@ -201,14 +236,18 @@ def load_var_table(name='ERA5', lut=False):
         If set to true only names are loaded, so that they can be used for a LUT
         otherwise the full table is loaded
     '''
-    if name == 'ERA5':
+    name = name.lower()
+    if name == 'era5':
         era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     'era5', 'era5_lut.csv')
-    elif name == 'ERAINT':
+    elif name == 'era5-land':
+        era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    'era5', 'era5-land_lut.csv')
+    elif name == 'eraint':
         era_vars_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     'erainterim', 'eraint_lut.csv')
     else:
-        raise ValueError('No LUT for the selected dataset found.')
+        raise ValueError(name, 'No LUT for the selected dataset found.')
 
     if lut:
         dat = pd.read_csv(era_vars_csv)[['dl_name', 'long_name', 'short_name']]
@@ -240,7 +279,7 @@ def lookup(name, variables):
 
     return lut.loc[selected, :]
 
-def get_default_params(name='ERA5'):
+def get_default_params(name='era5'):
     '''
     Read only lines that are marked as default variable in the csv file
 
@@ -251,3 +290,73 @@ def get_default_params(name='ERA5'):
     '''
     vars = load_var_table(name, lut=False)
     return vars.loc[vars.default == 1.0]
+
+
+def make_era5_land_definition_file(data_file, out_file, data_file_y_res=0.25,
+                                   ref_var='lsm', threshold=0.5,
+                                   exclude_antarctica=True):
+    """
+    Create a land grid definition file from a variable within a downloaded,
+    regular (netcdf) era5 file.
+
+    Parameters:
+    ---------
+    data_file : str
+        Path to the downloaded file that cotains the image that is used as the
+        reference for creating the land definition file.
+    out_file: str
+        Full output path to the land defintion file to create.
+    data_file_y_res : float, optional (default: 0.25)
+        The resolution of the data file in latitude direction.
+    ref_var: str, optional (default: 'lsm')
+        A variable in the data_file that is the refernece for the land definiton.
+        By default, we use the land-sea-mask variable.
+    threshold: float, optional (default: 0.5)
+        Threshold value below which a point is declared water, and above (or equal)
+        which it is declared a land-point.
+        If None is passed, then a point is declared a land point if it is not masked
+        (numpy masked array) in the reference variable.
+    exclude_antarctica: bool, optional (default: True)
+        Cut off the definition file at -60° Lat to exclude Land Points in Antarctica.
+    """
+    lat_name, lon_name = 'latitude', 'longitude'
+    ds_in = Dataset(data_file)
+    ds_out = Dataset(out_file, 'w', format='NETCDF4')
+
+    for dim_name in ds_in.dimensions.keys():
+        ds_out.createDimension(dim_name, size=ds_in.dimensions[dim_name].size)
+        ds_out.createVariable(dim_name, 'float32', (dim_name, ), zlib=True)
+        ds_out.variables[dim_name][:] = ds_in.variables[dim_name][:]
+
+    ref = ds_in.variables[ref_var]
+
+    land_mask =  np.zeros(ref.shape)
+
+    if np.isnan(threshold):
+        land_mask[~ref[:].mask] = 1.
+    else:
+        land_mask[ref[:]>=threshold] = 1.
+
+    # drop values below -60° Lat
+    if exclude_antarctica:
+        cut_off_lat = -60.
+        index_thres_lat = ((180. / data_file_y_res) + 1) - ((90. + cut_off_lat) / data_file_y_res)
+        land_mask[int(index_thres_lat):,:] = np.nan
+    else:
+        cut_off_lat = None
+
+
+    ds_out.createVariable('land', 'float32', (lat_name, lon_name), zlib=True)
+    ds_out.variables['land'][:] = land_mask
+
+    land_attrs = OrderedDict([('units', '(0,1)'),('long_name', 'Land-sea mask'),
+                              ('based_on_variable', ref_var),
+                              ('standard_name', 'land_binary_mask'),
+                              ('threshold_land_>=', str(threshold)),
+                              ('cut_off_at', str(cut_off_lat))])
+
+    for attr, val in land_attrs.items():
+        ds_out.variables['land'].setncattr(attr, val)
+
+    ds_in.close()
+    ds_out.close()

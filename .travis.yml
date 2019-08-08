@@ -13,6 +13,13 @@ python:
   - "2.7"
   - "3.6"
   - "3.7"
+env:
+  - PINNED=true # use fixed dependencies
+  - PINNED=false # use latest dependencies
+matrix:
+  exclude:
+    - python: "3.7"
+      env: PINNED=true
 install:
   # You may want to periodically update this, although the conda update
   # conda line below will keep everything up-to-date.  We do this
@@ -22,8 +29,10 @@ install:
   # reshuffling multiple params for py3 results in a bad chunk size error unless netcdf4 is downgraded
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+      pinned_yml=environment_pinned_py2.yml;
     else
       wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      pinned_yml=environment_pinned_py3.yml;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -34,11 +43,16 @@ install:
   - conda info -a
 
   - conda create -n ecmwf-models python=${TRAVIS_PYTHON_VERSION}
-  - conda env update -f environment.yml -n ecmwf-models
+
+  - if $PINNED; then
+      conda env update -f $pinned_yml -n ecmwf-models;
+    else
+      conda env update -f environment.yml -n ecmwf-models;
+    fi
+
   - source activate ecmwf-models
 
-
-  - python setup.py develop
+  - python setup.py install
 
   - conda list
   - pip list

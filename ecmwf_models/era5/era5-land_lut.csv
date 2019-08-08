@@ -1,0 +1,51 @@
+dl_name,long_name,short_name,default
+10m_u_component_of_wind,10 metre U wind component,u10,0
+10m_v_component_of_wind,10 metre V wind component,v10,0
+2m_dewpoint_temperature,2 metre dewpoint temperature,d2m,1
+2m_temperature,2 metre temperature,t2m,1
+evaporation_from_bare_soil,Evaporation from bare soil,evabs,1
+evaporation_from_open_water_surfaces_excluding_oceans,Evaporation from open water surfaces excluding oceans,evaow,1
+evaporation_from_the_top_of_canopy,Evaporation from the top of canopy,evatc,1
+evaporation_from_vegetation_transpiration,Evaporation from vegetation transpiration,evavt,1
+evapotranspiration,Evapotranspiration,et,1
+forecast_albedo,Forecast albedo,fal,1
+lake_bottom_temperature,Lake bottom temperature,lblt,0
+lake_ice_depth,Lake ice depth,licd,0
+lake_ice_temperature,Lake ice temperature,lict,0
+lake_mix_layer_depth,Lake mix-layer depth,lmld,0
+lake_mix_layer_temperature,Lake mix-layer temperature,lmlt,0
+lake_shape_factor,Lake shape factor,lshf,0
+lake_total_layer_temperature,Lake total layer temperature,ltlt,0
+leaf_area_index_high_vegetation,Leaf area index high vegetation,lai_hv,1
+leaf_area_index_low_vegetation,Leaf area index low vegetation,lai_lv,1
+potential_evaporation,Potential evaporation,pev,1
+runoff,Runoff,ro,1
+skin_reservoir_content,Skin reservoir content,src,1
+skin_temperature,Skin temperature,skt,1
+snow_albedo,Snow albedo,asn,1
+snow_cover,Snow Cover,snowc,1
+snow_density,Snow density,rsn,1
+snow_depth,Snow depth,sd,1
+snow_depth_water_equivalent,Snow Depth Water Equivalent,swe,1
+snow_evaporation,Snow evaporation,es,1
+snowfall,Snowfall,sf,1
+snowmelt,Snowmelt,smlt,1
+soil_temperature_level_1,Soil temperature level 1,stl1,1
+soil_temperature_level_2,Soil temperature level 2,stl2,1
+soil_temperature_level_3,Soil temperature level 3,stl3,1
+soil_temperature_level_4,Soil temperature level 4,stl4,1
+sub_surface_runoff,Sub-surface runoff,ssro,1
+surface_latent_heat_flux,Surface latent heat flux,slhf,1
+surface_net_solar_radiation,Surface net solar radiation,ssr,1
+surface_net_thermal_radiation,Surface net thermal radiation,str,1
+surface_pressure,Surface pressure,sp,1
+surface_runoff,Surface runoff,sro,1
+surface_sensible_heat_flux,Surface sensible heat flux,sshf,1
+surface_solar_radiation_downwards,Surface solar radiation downwards,ssrd,1
+surface_thermal_radiation_downwards,Surface thermal radiation downwards,strd,1
+temperature_of_snow_layer,Temperature of snow layer,tsn,1
+total_precipitation,Total precipitation,tp,1
+volumetric_soil_water_layer_1,Volumetric soil water layer 1,swvl1,1
+volumetric_soil_water_layer_2,Volumetric soil water layer 2,swvl2,1
+volumetric_soil_water_layer_3,Volumetric soil water layer 3,swvl3,1
+volumetric_soil_water_layer_4,Volumetric soil water layer 4,swvl4,1

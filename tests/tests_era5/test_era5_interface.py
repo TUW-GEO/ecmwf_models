@@ -27,6 +27,40 @@ import numpy.testing as nptest
 from ecmwf_models.era5.interface import ERA5NcDs, ERA5NcImg, ERA5GrbImg, ERA5GrbDs
 import numpy as np
 from datetime import datetime
+from ecmwf_models.grid import ERA5_RegularImgLandGrid
+
+def test_ERA5_nc_image_landpoints():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
+                         "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
+                         'ERA5_AN_20100101_0000.nc')
+    subgrid = ERA5_RegularImgLandGrid(0.25, 0.25)
+    dset = ERA5NcImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True,
+                     array_1D=True, subgrid=subgrid)
+    data = dset.read()
+    assert data.data['swvl1'].shape == (244450, )
+    assert data.data['swvl2'].shape == (244450, )
+    assert data.lon.shape == (244450, )
+    assert data.lat.shape == (244450, )
+    metadata_should = {'long_name': u'Volumetric soil water layer 1',
+                       'units': u'm**3 m**-3'}
+    assert data.metadata['swvl1']['long_name'] == metadata_should['long_name']
+    assert data.metadata['swvl1']['units'] == metadata_should['units']
+
+    metadata_should = {'long_name': u'Volumetric soil water layer 2',
+                       'units': u'm**3 m**-3'}
+    assert data.metadata['swvl2']['long_name'] == metadata_should['long_name']
+    assert data.metadata['swvl2']['units'] == metadata_should['units']
+
+    # data over land
+    nptest.assert_allclose(data.lon[1000], -29.0, rtol=1e-5)
+    nptest.assert_allclose(data.lat[1000], 82.0, rtol=1e-5)
+    nptest.assert_allclose(data.data['swvl1'][1000], 0.41698003, rtol=1e-5)
+    #boundaries
+    nptest.assert_allclose(data.lat[0], 83.5)
+    nptest.assert_allclose(data.lat[-1], -55.25)
+    nptest.assert_allclose(data.lon[0], -36)
+
+
 
 def test_ERA5_nc_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',

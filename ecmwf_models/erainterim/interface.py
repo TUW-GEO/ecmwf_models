@@ -22,6 +22,7 @@
 # SOFTWARE.
 
 from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
+import warnings
 
 '''
 This module contains ERA Interim specific child classes of the netcdf and grib
@@ -31,7 +32,7 @@ base classes, that are used for reading all ecmwf products.
 class ERAIntNcImg(ERANcImg):
     def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
                  subgrid=None, mask_seapoints=False, array_1D=False):
-
+        warnings.warn("ERA Interim data is deprecated. Use ERA5 instead.", DeprecationWarning)
         product = 'ERAINT'
         super(ERAIntNcImg, self).__init__(filename=filename,
                                           product=product,
@@ -46,6 +47,7 @@ class ERAIntNcDs(ERANcDs):
     def __init__(self, root_path, parameter=['swvl1', 'swvl2'], subgrid=None,
                  mask_seapoints=False, h_steps=[0, 6, 12, 18], array_1D=False):
 
+        warnings.warn("ERA Interim data is deprecated. Use ERA5 instead.", DeprecationWarning)
         product = 'ERAINT'
         super(ERAIntNcDs, self).__init__(root_path=root_path,
                                          product=product,
@@ -60,6 +62,7 @@ class ERAIntGrbImg(ERAGrbImg):
     def __init__(self, filename, parameter=['swvl1', 'swvl2'], mode='r',
                  subgrid=None, mask_seapoints=False, array_1D=False):
 
+        warnings.warn("ERA Interim data is deprecated. Use ERA5 instead.", DeprecationWarning)
         product = 'ERAINT'
         super(ERAIntGrbImg, self).__init__(filename=filename,
                                            product=product,
@@ -74,6 +77,7 @@ class ERAIntGrbDs(ERAGrbDs):
     def __init__(self, root_path, parameter=['swvl1', 'swvl2'], subgrid=None,
                  mask_seapoints=False,  h_steps=[0, 6, 12, 18], array_1D=False):
 
+        warnings.warn("ERA Interim data is deprecated. Use ERA5 instead.", DeprecationWarning)
         product = 'ERAINT'
         super(ERAIntGrbDs, self).__init__(root_path=root_path,
                                           product=product,

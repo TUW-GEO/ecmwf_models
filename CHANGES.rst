@@ -4,8 +4,10 @@ Changelog
 
 Unreleased
 ==========
--
-
+- Add support for downloading, reading, reshuffling era5-land
+- Add support for reading, reshuffling points over land only
+- Add function to create land definition files
+- Test with pinned environments
 
 Version 0.5
 ===========

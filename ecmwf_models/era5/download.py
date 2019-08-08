@@ -34,16 +34,22 @@ import shutil
 import cdsapi
 import calendar
 
+def default_variables(product='era5'):
+    """
+    These variables are being downloaded, when None are passed by the user
 
-def default_variables():
-    'These variables are being downloaded, when None are passed by the user'
-    lut = load_var_table(name='ERA5')
+    Parameters
+    ---------
+    product : str, optional (default: 'era5')
+        Name of the era5 product to read the default variables for.
+        Either 'era5' or 'era5-land'.
+    """
+    lut = load_var_table(name=product)
     defaults = lut.loc[lut['default'] == 1]['dl_name'].values
     return defaults.tolist()
 
-
 def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
-                  dry_run=False):
+                  product='era5', dry_run=False):
     '''
     Download era5 reanalysis data for single levels of a defined time span
 
@@ -66,6 +72,8 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
         File name, where the data is stored.
     geb : bool, optional (default: False)
         Download data in grib format
+    product : str
+        ERA5 data product to download, either era5 or era5-land
     dry_run: bool, optional (default: False)
         Do not download anything, this is just used for testing the functionality
 
@@ -75,7 +83,10 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
         Return True after downloading finished
     '''
 
-    if not dry_run:
+    if dry_run:
+        return
+
+    if product == 'era5':
         c.retrieve(
             'reanalysis-era5-single-levels',
             {
@@ -88,12 +99,27 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
                 'time': [time(h, 0).strftime('%H:%M') for h in h_steps]
             },
             target)
+    elif product == 'era5-land':
+        c.retrieve(
+            'reanalysis-era5-land',
+            {
+                'format': 'grib' if grb else 'netcdf',
+                'variable': variables,
+                'year': [str(y) for y in years],
+                'month': [str(m).zfill(2) for m in months],
+                'day': [str(d).zfill(2) for d in days],
+                'time': [time(h, 0).strftime('%H:%M') for h in h_steps]
+            },
+            target)
+    else:
+        raise ValueError(product, "Unknown product, choose either 'era5' or 'era5-land'")
 
     return True
 
 
-def download_and_move(target_path, startdate, enddate, variables=None,
-                      keep_original=False, h_steps=[0, 6, 12, 18],
+
+def download_and_move(target_path, startdate, enddate, product='era5',
+                      variables=None, keep_original=False, h_steps=[0, 6, 12, 18],
                       grb=False, dry_run=False):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
@@ -110,6 +136,8 @@ def download_and_move(target_path, startdate, enddate, variables=None,
         first date to download
     enddate: datetime
         last date to download
+    product : str, optional (default: ERA5)
+        Either ERA5 or ERA5Land
     variables : list, optional (default: None)
         Name of variables to download
     keep_original: bool
@@ -121,12 +149,13 @@ def download_and_move(target_path, startdate, enddate, variables=None,
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     """
+    product = product.lower()
 
     if variables is None:
-        variables = default_variables()
+        variables = default_variables(product=product)
     else:
         # find the dl_names
-        variables = lookup(name='ERA5', variables=variables)
+        variables = lookup(name=product, variables=variables)
         variables = variables['dl_name'].values.tolist()
 
     curr_start = startdate
@@ -164,7 +193,7 @@ def download_and_move(target_path, startdate, enddate, variables=None,
             try:
                 finished = download_era5(c, years=[sy], months=[sm], days=range(sd, d+1),
                                          h_steps=h_steps, variables=variables, grb=grb,
-                                         target=dl_file, dry_run=dry_run)
+                                         product=product, target=dl_file, dry_run=dry_run)
                 break
 
             except:
@@ -176,9 +205,9 @@ def download_and_move(target_path, startdate, enddate, variables=None,
                 continue
 
         if grb:
-            save_gribs_from_grib(dl_file, target_path, product_name='ERA5')
+            save_gribs_from_grib(dl_file, target_path, product_name=product.upper())
         else:
-            save_ncs_from_nc(dl_file, target_path, product_name='ERA5')
+            save_ncs_from_nc(dl_file, target_path, product_name=product.upper())
 
         if not keep_original:
             shutil.rmtree(downloaded_data_path)
@@ -214,18 +243,15 @@ def parse_args(args):
     parser.add_argument("-e", "--end", type=mkdate, default=datetime.now(),
                         help=("Enddate in format YYYY-MM-DD. "
                               "If not given then the current date is used."))
+    parser.add_argument("-p", "--product", type=str, default='ERA5',
+                        help=("Choose either ERA5 or ERA5-Land. Default is ERA5."))
     parser.add_argument("-var", "--variables", metavar="variables", type=str, default=None,
                         nargs="+",
-                        help=("Name of variables to download "
-                              "(default variables:"
-                              "     evaporation, potential_evaporation, soil_temperature_level_1, "
-                              "     soil_temperature_level_2, soil_temperature_level_3, soil_temperature_level_4, "
-                              "     soil_type, total_precipitation, volumetric_soil_water_layer_1, "
-                              "     volumetric_soil_water_layer_2, volumetric_soil_water_layer_3, "
-                              "     volumetric_soil_water_layer_4, large_scale_snowfall_rate_water_equivalent,"
-                              "     land_sea_mask) » "
-                              "See the ERA5 documentation for more variable names: "
-                              "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation"))
+                        help=("Name of variables to download. If None are passed, we use the default ones from the"
+                              "era5_lut.csv and era5-land_lut.csv files."
+                              "See the ERA5/ERA5-LAND documentation for more variable names: "
+                              "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation "
+                              "     https://confluence.ecmwf.int/display/CKB/ERA5-Land+data+documentation"))
     parser.add_argument("-keep", "--keep_original", type=str2bool, default='False',
                         help=("Keep the originally, temporally downloaded file as it is instread of deleting it afterwards"))
     parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
@@ -237,11 +263,12 @@ def parse_args(args):
 
     args = parser.parse_args(args)
 
-    print("Downloading ERA5 {} data from {} to {} into folder {}"
-          .format('grib' if args.as_grib is True else 'netcdf',
-                  args.start.isoformat(),
-                  args.end.isoformat(),
-                  args.localroot))
+    print("Downloading {p} {f} files between {s} and {e} into folder {root}"
+          .format(p=args.product,
+                  f='grib' if args.as_grib is True else 'netcdf',
+                  s=args.start.isoformat(),
+                  e=args.end.isoformat(),
+                  root=args.localroot))
     return args
 
 
@@ -250,6 +277,7 @@ def main(args):
     download_and_move(target_path=args.localroot,
                       startdate=args.start,
                       enddate=args.end,
+                      product=args.product,
                       variables=args.variables,
                       h_steps=args.h_steps,
                       grb=args.as_grib,

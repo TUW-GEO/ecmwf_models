@@ -146,6 +146,7 @@ def parse_args(args):
                               "system and the size of a single image."))
     args = parser.parse_args(args)
 
+    print("ERA Interim data is deprecated. Use ERA5 instead.")
     print("Converting data from {} to {} into {}."
           .format(args.start.isoformat(), args.end.isoformat(), args.timeseries_root))
 
