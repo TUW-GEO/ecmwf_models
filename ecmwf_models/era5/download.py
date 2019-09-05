@@ -253,9 +253,10 @@ def parse_args(args):
                               "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation "
                               "     https://confluence.ecmwf.int/display/CKB/ERA5-Land+data+documentation"))
     parser.add_argument("-keep", "--keep_original", type=str2bool, default='False',
-                        help=("Keep the originally, temporally downloaded file as it is instread of deleting it afterwards"))
+                        help=("Keep the originally, temporally downloaded file as it is instead of deleting it afterwards. "
+                              "Default is False."))
     parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
-                        help=("Download data in grib format, instead of the default netcdf format"))
+                        help=("Download data in grib format instead of netcdf. Default is False."))
     parser.add_argument("--h_steps", type=int, default=[0,6,12,18], nargs='+',
                         help=("Manually change the temporal resolution of downloaded images."
                               "Pass a set of full hours here, like '--h_steps 0 12'. "
