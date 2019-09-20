@@ -244,21 +244,21 @@ def parse_args(args):
                         help=("Enddate in format YYYY-MM-DD. "
                               "If not given then the current date is used."))
     parser.add_argument("-p", "--product", type=str, default='ERA5',
-                        help=("Choose either ERA5 or ERA5-Land. Default is ERA5."))
+                        help=("The ERA5 product to download. Choose either ERA5 or ERA5-Land. Default is ERA5."))
     parser.add_argument("-var", "--variables", metavar="variables", type=str, default=None,
                         nargs="+",
-                        help=("Name of variables to download. If None are passed, we use the default ones from the"
-                              "era5_lut.csv and era5-land_lut.csv files."
+                        help=("Name of variables to download. If None are passed, we use the default ones from the "
+                              "era5_lut.csv resp. era5-land_lut.csv files in this package. "
                               "See the ERA5/ERA5-LAND documentation for more variable names: "
                               "     https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation "
                               "     https://confluence.ecmwf.int/display/CKB/ERA5-Land+data+documentation"))
     parser.add_argument("-keep", "--keep_original", type=str2bool, default='False',
-                        help=("Keep the originally, temporally downloaded file as it is instead of deleting it afterwards. "
-                              "Default is False."))
+                        help=("Also keep the originally, temporarily downloaded image stack instead of deleting it "
+                              "after extracting single images. Default is False."))
     parser.add_argument("-grb", "--as_grib", type=str2bool, default='False',
                         help=("Download data in grib format instead of netcdf. Default is False."))
     parser.add_argument("--h_steps", type=int, default=[0,6,12,18], nargs='+',
-                        help=("Manually change the temporal resolution of downloaded images."
+                        help=("Temporal resolution of downloaded images. "
                               "Pass a set of full hours here, like '--h_steps 0 12'. "
                               "By default 6H images (starting at 0:00 UTC, i.e. 0 6 12 18) will be downloaded"))
 
