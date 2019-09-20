@@ -38,9 +38,10 @@ try:
 except ImportError:
     warnings.warn("pygrib has not been imported")
 
-'''
-Base classes for reading downloaded ERA netcdf and grib images and 6H image stacks
-'''
+"""
+Base classes for reading downloaded ERA netcdf and grib images and stacks
+"""
+
 
 class ERANcImg(ImageBase):
     """
@@ -54,7 +55,7 @@ class ERANcImg(ImageBase):
         'era5' or 'era5-land' or 'eraint'
     parameter: list or str, optional (default: ['swvl1', 'swvl2'])
         Name of parameters to read from the image file.
-    subgrid: pygeogrids.CellGrid, optional (default:None)
+    subgrid: pygeogrids.CellGrid, optional (default: None)
         Read only data for points of this grid and not global values.
     mask_seapoints : bool, optional (default: False)
         Read the land-sea mask to mask points over water and set them to nan.
@@ -86,14 +87,14 @@ class ERANcImg(ImageBase):
                           "equal number of points in each line")
 
     def read(self, timestamp=None):
-        '''
+        """
         Read data from the loaded image file.
 
         Parameters
         ---------
         timestamp : datetime, optional (default: None)
             Specific date (time) to read the data for.
-        '''
+        """
         return_img = {}
         return_metadata = {}
 
@@ -186,7 +187,7 @@ class ERANcDs(MultiTemporalImageBase):
         Read only data for points of this grid and not global values.
     mask_seapoints : bool, optional (default: False)
         Use the land-sea-mask parameter in the file to mask points over water.
-    h_step : list, optional (default: [0,6,12,18])
+    h_steps : list, optional (default: [0,6,12,18])
         List of full hours for which images exist.
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
@@ -439,42 +440,41 @@ class ERAGrbDs(MultiTemporalImageBase):
         return timestamps
 
 class ERATs(GriddedNcOrthoMultiTs):
-    '''
-     Time series reader for all reshuffled ERA reanalysis products in time
-     series format.
-     Use the read_ts(lon, lat) resp. read_ts(gpi) function of this class
-     to read data for locations (gpi or latlon)!
+    """
+    Time series reader for all reshuffled ERA reanalysis products in time
+    series format.
+    Use the read_ts(lon, lat) resp. read_ts(gpi) function of this class
+    to read data for locations!
 
-     Parameters
-     ----------
-     ts_path : str
-         Directory where the netcdf time series files are stored
-     grid_path : str, optional (default: None)
-         Path to grid file, that is used to organize the location of time
-         series to read. If None is passed, grid.nc is searched for in the
-         ts_path.
+    Parameters
+    ----------
+    ts_path : str
+        Directory where the netcdf time series files are stored
+    grid_path : str, optional (default: None)
+        Path to grid file, that is used to organize the location of time
+        series to read. If None is passed, grid.nc is searched for in the
+        ts_path.
 
-     Optional keyword arguments that are passed to the Gridded Base when used:
-     ------------------------------------------------------------------------
-         parameters : list, optional (default: None)
-             Specific variable names to read, if None are selected, all are read.
-         offsets : dict, optional (default: None)
-             Offsets (values) that are added to the parameters (keys)
-         scale_factors : dict, optional (default: None)
-             Offset (value) that the parameters (key) is multiplied with
-         ioclass_kws: dict, (optional)
-
-             Optional keyword arguments, passed to the OrthoMultiTs class when used:
-             ----------------------------------------------------------------
-                 read_bulk : boolean, optional (default: False)
-                     If set to True, the data of all locations is read into memory,
-                     and subsequent calls to read_ts then read from cache and
-                     not from disk. This makes reading complete files faster.
-                 read_dates : boolean, optional (default: False)
-                     If false, dates will not be read automatically but only on
-                     specific request useable for bulk reading because currently
-                     the netCDF num2date routine is very slow for big datasets.
-     '''
+    Optional keyword arguments that are passed to the Gridded Base when used:
+    ------------------------------------------------------------------------
+        parameters : list, optional (default: None)
+            Specific variable names to read, if None are selected, all are read.
+        offsets : dict, optional (default: None)
+            Offsets (values) that are added to the parameters (keys)
+        scale_factors : dict, optional (default: None)
+            Offset (value) that the parameters (key) is multiplied with
+        ioclass_kws: dict, (optional)
+            Optional keyword arguments, passed to the OrthoMultiTs class when used:
+            ----------------------------------------------------------------
+                read_bulk : boolean, optional (default: False)
+                    If set to True, the data of all locations is read into memory,
+                    and subsequent calls to read_ts then read from cache and
+                    not from disk. This makes reading complete files faster.
+                read_dates : boolean, optional (default: False)
+                    If false, dates will not be read automatically but only on
+                    specific request useable for bulk reading because currently
+                    the netCDF num2date routine is very slow for big datasets.
+    """
     def __init__(self, ts_path, grid_path=None, **kwargs):
 
         if grid_path is None:
