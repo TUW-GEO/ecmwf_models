@@ -32,7 +32,7 @@ import numpy as np
 import numpy.testing as nptest
 
 from ecmwf_models.era5.reshuffle import main
-from ecmwf_models.interface import ERATs
+from ecmwf_models import ERATs
 import shutil
 
 def test_ERA5_reshuffle_nc():

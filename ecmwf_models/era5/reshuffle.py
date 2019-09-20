@@ -161,14 +161,14 @@ def parse_args(args):
                               "See documentation on image download for resp. ERA products, "
                               "for more information on variable names of the product. "))
     parser.add_argument("--land_points", type=str2bool, default='False',
-                        help=("Store only time series for points that are over land"))
+                        help=("Store only time series for points that are over land. Default is False."))
     parser.add_argument("--h_steps", type=int, default=None, nargs='+',
                         help=("Time steps (full hours) of images that will be reshuffled (must be in the images). "
-                              "By default 6H images (starting at 0:00 UTC) will be reshuffled."))
+                              "By default 6H images (starting at 0:00 UTC) will be reshuffled: 0 6 12 18"))
     parser.add_argument("--imgbuffer", type=int, default=50,
                         help=("How many images to read at once. Bigger numbers make the "
                               "conversion faster but consume more memory. Choose this according to your "
-                              "system and the size of a single image."))
+                              "system and the size of a single image. Default is 50."))
     args = parser.parse_args(args)
 
     print("Converting ERA5/ERA5-Land data from {} to {} into {}."
