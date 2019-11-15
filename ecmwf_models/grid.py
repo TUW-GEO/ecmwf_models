@@ -72,7 +72,7 @@ def ERA5_RegularImgLandGrid(res_lat=0.25, res_lon=0.25):
     land_mask = ds.variables['land'][:].flatten().filled(0.) == 1.
     land_points = np.ma.masked_array(global_grid.get_grid_points()[0], ~land_mask)
 
-    land_grid = global_grid.subgrid_from_gpis(land_points[~land_points.mask].filled())
+    land_grid = global_grid.subgrid_from_gpis(land_points[~land_points.mask].filled().astype('int'))
 
     return land_grid.to_cell_grid(5., 5.)
 
@@ -94,22 +94,28 @@ def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
     CellGrid : pygeogrids.CellGrid
         Regular, global CellGrid with 5DEG*5DEG cells
     """
-
-    lon = np.arange(0., 360. - res_lon / 2., res_lon)
-    lat = np.arange(90., -1. * 90. - res_lat / 2., -1. * res_lat)
-    lons_gt_180 = np.where(lon > 180.0)
-    lon[lons_gt_180] = lon[lons_gt_180] - 360.
+    # np.arange is not precise...
+    f_lon = (1. / res_lon)
+    f_lat = (1. / res_lat)
+    res_lon = res_lon * f_lon
+    res_lat = res_lat * f_lat
+    lon = np.arange(0., 360. * f_lon, res_lon)
+    lat = np.arange(90. * f_lat, -90 * f_lat - res_lat, -1 * res_lat)
+    lons_gt_180 = np.where(lon > (180. * f_lon))
+    lon[lons_gt_180] = lon[lons_gt_180] - (360. *f_lon)
 
     lon, lat = np.meshgrid(lon, lat)
 
-    glob_basic_grid = BasicGrid(lon.flatten(), lat.flatten())
+    glob_basic_grid = BasicGrid(lon.flatten() / f_lon, lat.flatten()  / f_lat)
     glob_cell_grid = glob_basic_grid.to_cell_grid(cellsize=5.)
 
     return glob_cell_grid
-
 
 def ERA_IrregularImgGrid(lons, lats):
     lons_gt_180 = np.where(lons > 180.0)
     lons[lons_gt_180] = lons[lons_gt_180] - 360
     return BasicGrid(lons.flatten(), lats.flatten()).to_cell_grid(cellsize=5.)
 
+
+if __name__ == '__main__':
+    grid = ERA5_RegularImgLandGrid(0.1,0.1)
