@@ -12,6 +12,7 @@ pygeobase
 pygeogrids
 repurpose
 pynetcf
+pygrib
 configobj
 requests
 more_itertools
