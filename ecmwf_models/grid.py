@@ -52,7 +52,6 @@ def get_grid_resolution(lats, lons):
         lon_res = lons_res[0]
     return float(lat_res), float(lon_res)
 
-
 def ERA5_RegularImgLandGrid(res_lat=0.25, res_lon=0.25):
     """
     Uses the 0.25 DEG ERA5 land mask to create a land grid of the same size,
@@ -75,8 +74,6 @@ def ERA5_RegularImgLandGrid(res_lat=0.25, res_lon=0.25):
     land_grid = global_grid.subgrid_from_gpis(land_points[~land_points.mask].filled().astype('int'))
 
     return land_grid.to_cell_grid(5., 5.)
-
-
 
 def ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25):
     """
@@ -115,7 +112,3 @@ def ERA_IrregularImgGrid(lons, lats):
     lons_gt_180 = np.where(lons > 180.0)
     lons[lons_gt_180] = lons[lons_gt_180] - 360
     return BasicGrid(lons.flatten(), lats.flatten()).to_cell_grid(cellsize=5.)
-
-
-if __name__ == '__main__':
-    grid = ERA5_RegularImgLandGrid(0.1,0.1)

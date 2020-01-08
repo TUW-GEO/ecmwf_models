@@ -6,6 +6,13 @@ Unreleased
 ==========
 -
 
+Version 0.6.1
+===========
+
+- Fix bug when creating 0.1 deg grid cells (floating point precision)
+- Missing variables in grib files are now replaced by empty images.
+- Read variable names from grib files from cfVarNameECMF instead of short_name field
+
 Version 0.6
 ===========
 
