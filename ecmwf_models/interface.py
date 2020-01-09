@@ -192,8 +192,8 @@ class ERANcDs(MultiTemporalImageBase):
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
     """
-    def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
-                 subgrid=None, mask_seapoints=False, h_steps=[0, 6, 12, 18],
+    def __init__(self, root_path, product, parameter=('swvl1', 'swvl2'),
+                 subgrid=None, mask_seapoints=False, h_steps=(0, 6, 12, 18),
                  array_1D=False):
 
         self.h_steps = h_steps
@@ -266,7 +266,7 @@ class ERAGrbImg(ImageBase):
         Mode in which to open the file, changing this can cause data loss.
         This argument should not be changed!
     """
-    def __init__(self, filename, product, parameter=['swvl1', 'swvl2'],
+    def __init__(self, filename, product, parameter=('swvl1', 'swvl2'),
                  subgrid=None, mask_seapoints=False, array_1D=True, mode='r'):
 
         super(ERAGrbImg, self).__init__(filename, mode=mode)
@@ -276,20 +276,21 @@ class ERAGrbImg(ImageBase):
 
         self.parameter = lookup(product, parameter)[
             'short_name'].values  # look up short names
+        self.product = product
 
         self.mask_seapoints = mask_seapoints
         self.array_1D = array_1D
         self.subgrid = subgrid
 
     def read(self, timestamp=None):
-        '''
+        """
         Read data from the loaded image file.
 
         Parameters
         ---------
         timestamp : datetime, optional (default: None)
             Specific date (time) to read the data for.
-        '''
+        """
         grbs = pygrib.open(self.filename)
 
         grid = self.subgrid
@@ -297,22 +298,36 @@ class ERAGrbImg(ImageBase):
         return_img = {}
         return_metadata = {}
 
-        sea_mask = None
 
-        for message in grbs:
-            param_name = message.short_name
+        var_msg_lut = {p : None for p in self.parameter}
+        sea_mask = None
+        for N in range(grbs.messages):
+            n = N+1
+            message = grbs.message(n)
+            param_name = str(message.cfVarNameECMF)
 
             if param_name == 'lsm':
                 if self.mask_seapoints and sea_mask is None:
                     sea_mask = message.values.flatten()
 
-            param_name = message.short_name
             if param_name not in self.parameter:
+                continue
+            else:
+                var_msg_lut[param_name] = n
+
+        # available variables
+        shape = None
+        for param_name, n in var_msg_lut.items():
+            if n is None:
                 continue
 
             return_metadata[param_name] = {}
-            param_data = message.values.flatten()
 
+            message = grbs.message(n)
+
+            param_data = message.values.flatten()
+            if not shape:
+                shape  = param_data.shape
             return_img[param_name] = param_data
 
             if grid is None:
@@ -347,10 +362,21 @@ class ERAGrbImg(ImageBase):
 
         grbs.close()
 
+        # missing variables
+        for param_name, n in var_msg_lut.items():
+            if n is not None:
+                continue
+            param_data= np.full(shape, np.nan)
+            warnings.warn('Cannot load variable {var} from file {thefile}. '
+                          'Filling image with NaNs.'.format(var=param_name, thefile=self.filename))
+            return_img[param_name] = param_data
+            return_metadata[param_name] = {}
+            return_metadata[param_name]['long_name'] = \
+                lookup(self.product, [param_name]).iloc[0]['long_name']
+
         if self.array_1D:
             return Image(grid.activearrlon, grid.activearrlat,
                          return_img, return_metadata, timestamp)
-
         else:
             nlat = np.unique(grid.activearrlat).size
             nlon = np.unique(grid.activearrlon).size
@@ -389,8 +415,8 @@ class ERAGrbDs(MultiTemporalImageBase):
     expand_grid: bool, optional (default: True)
         If the reduced gaussian grid should be expanded to a full gaussian grid.
     """
-    def __init__(self, root_path, product, parameter=['swvl1', 'swvl2'],
-                 subgrid=None, mask_seapoints=False, h_steps=[0, 6, 12, 18],
+    def __init__(self, root_path, product, parameter=('swvl1', 'swvl2'),
+                 subgrid=None, mask_seapoints=False, h_steps=(0, 6, 12, 18),
                  array_1D=True):
 
         self.h_steps = h_steps
