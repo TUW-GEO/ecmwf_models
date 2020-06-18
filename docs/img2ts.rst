@@ -50,9 +50,6 @@ or other options see the `repurpose documentation
 ``ecmwf_models.reshuffle``.
 
 
-**Note**: If a ``RuntimeError: NetCDF: Bad chunk sizes.`` appears during reshuffling,
-consider downgrading the netcdf4 C-library via:
-
 .. code-block:: shell
 
   conda install -c conda-forge libnetcdf==4.3.3.1 --yes

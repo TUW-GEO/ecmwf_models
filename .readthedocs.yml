@@ -7,9 +7,6 @@ formats:
   - pdf
 
 python:
-   install:
-      - method: pip
-        path: .
-
-conda:
-  environment: environment.yml
+  version: 3.7
+  install:
+    - requirements: docs/requirements.txt
