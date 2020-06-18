@@ -491,7 +491,7 @@ class ERATs(GriddedNcOrthoMultiTs):
             Offset (value) that the parameters (key) is multiplied with
         ioclass_kws: dict, (optional)
             Optional keyword arguments, passed to the OrthoMultiTs class when used:
-            ----------------------------------------------------------------
+            -----------------------------------------------------------------------
                 read_bulk : boolean, optional (default: False)
                     If set to True, the data of all locations is read into memory,
                     and subsequent calls to read_ts then read from cache and

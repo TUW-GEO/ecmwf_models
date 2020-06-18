@@ -231,7 +231,7 @@ def load_var_table(name='era5', lut=False):
     Load the variables table for supported variables to download.
 
     Parameters
-    --------
+    ----------
     lut : bool, optional (default: False)
         If set to true only names are loaded, so that they can be used for a LUT
         otherwise the full table is loaded
@@ -283,8 +283,8 @@ def get_default_params(name='era5'):
     '''
     Read only lines that are marked as default variable in the csv file
 
-    Parameters:
-    ---------
+    Parameters
+    ----------
     name : str
         Name of the product to get the default parameters for
     '''
@@ -299,8 +299,8 @@ def make_era5_land_definition_file(data_file, out_file, data_file_y_res=0.25,
     Create a land grid definition file from a variable within a downloaded,
     regular (netcdf) era5 file.
 
-    Parameters:
-    ---------
+    Parameters
+    ----------
     data_file : str
         Path to the downloaded file that cotains the image that is used as the
         reference for creating the land definition file.

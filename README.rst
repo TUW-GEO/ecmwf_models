@@ -60,15 +60,13 @@ in this repository can be used.
 
     git clone git@github.com:TUW-GEO/ecmwf_models.git ecmwf_models
     cd ecmwf_models
-    conda create -n ecmwf-models python=2.7 # or any other supported version
+    conda create -n ecmwf-models python=3.6 # or any other supported version
     source activate ecmwf-models
     conda env update -f environment.yml
     python setup.py develop
 
 This script should work on Linux or OSX and uses the ``environment.yml`` file
-included in this repository. On Windows the reading of grib files is not
-available at the moment. On Windows a solution would be to download the ECMWF
-data in netCDF format instead.
+included in this repository.
 
 Supported Products
 ==================
