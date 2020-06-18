@@ -6,6 +6,12 @@ Unreleased
 ==========
 -
 
+Version 0.6.2
+=============
+
+- Update pyscaffold structure
+- Drop support for python2 
+
 Version 0.6.1
 =============
 
