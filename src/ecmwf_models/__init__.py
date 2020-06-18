@@ -9,3 +9,5 @@ except DistributionNotFound:
     __version__ = 'unknown'
 finally:
     del get_distribution, DistributionNotFound
+
+from ecmwf_models.interface import ERATs
