@@ -41,5 +41,5 @@ cover/*
 MANIFEST
 
 #others
-ecmwf_models/bin/*
-local_scripts/*
+src/ecmwf_models/bin/*
+*/local_scripts/*

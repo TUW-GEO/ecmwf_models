@@ -13,7 +13,7 @@ Contents
 
    License <license>
    Authors <authors>
-   Changelog <changes>
+   Changelog <changelog>
    Module Reference <api/modules>
 
 
