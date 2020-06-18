@@ -56,7 +56,7 @@ def test_create_land_definition_file():
     inpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           "ecmwf_models-test-data", "ERA5", "netcdf")
     path_desired = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        '..', 'ecmwf_models', 'era5', 'land_definition_files',
+                        '..', 'src', 'ecmwf_models', 'era5', 'land_definition_files',
                         'landmask_0.25_0.25.nc')
 
     data_file = os.path.join(inpath, '2010', '001', 'ERA5_AN_20100101_0000.nc')

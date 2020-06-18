@@ -20,6 +20,8 @@ matrix:
   exclude:
     - python: "3.8"
       env: PINNED=true
+    - python: "3.7"
+      env: PINNED=true
 install:
   # You may want to periodically update this, although the conda update
   # conda line below will keep everything up-to-date.  We do this
