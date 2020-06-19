@@ -6,11 +6,12 @@ Unreleased
 ==========
 -
 
-Version 0.6.2
-=============
+Version 0.7
+===========
 
 - Update pyscaffold structure
-- Drop support for python2 
+- Drop support for python2
+- Travis deoploy to pypi
 
 Version 0.6.1
 =============

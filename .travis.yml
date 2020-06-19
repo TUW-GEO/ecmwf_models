@@ -57,10 +57,18 @@ install:
   - which pip
   - which python
 
-
 script:
   - python setup.py test
 after_success:
   # report coverage results to coveralls.io
   - pip install coveralls
   - coveralls
+deploy:
+  provider: pypi
+  # better then hiding the token would be to encrypt it with travis...
+  username: __token__
+  password: $PYPI_TOKEN
+  skip_existing: true
+  on:
+    repo: TUW-GEO/ecmwf_models
+    tags: true
