@@ -70,5 +70,5 @@ deploy:
   password: $PYPI_TOKEN
   skip_existing: true
   on:
-    repo: TUW-GEO/gldas
+    repo: TUW-GEO/ecmwf_models
     tags: true
