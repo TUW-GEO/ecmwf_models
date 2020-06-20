@@ -36,7 +36,7 @@ i.e. use the variable short names here.
 Other flags, that can be used in ``era5_reshuffle`` are:
 
 - **-h (--help)** : Shows the help text for the reshuffle function
-- **--land_points** : Reshuffle and store only data over land land points.
+- **--land_points** : Reshuffle and store only data over land points.
 - **-h_steps (--as_grib)** : full hours for which images are reshuffled (e.g. --h_steps 0
   would reshuffle only data at 00:00 UTC). By default we use 0, 6, 12 and 18.
 - **--imgbuffer** : The number of images that are read into memory before converting
@@ -48,10 +48,3 @@ Conversion to time series is performed by the `repurpose package
 or other options see the `repurpose documentation
 <http://repurpose.readthedocs.io/en/latest/>`_ and the code in
 ``ecmwf_models.reshuffle``.
-
-
-.. code-block:: shell
-
-  conda install -c conda-forge libnetcdf==4.3.3.1 --yes
-  # if this does not work, consider downgrading the netcdf4 library and its dependencies:
-  conda install -c conda-forge netcdf4==1.2.2 --yes
