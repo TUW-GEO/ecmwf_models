@@ -18,12 +18,12 @@ def test_mkdate():
 
 def test_parse_product():
     inpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          "ecmwf_models-test-data", "ERA5", "netcdf")
+                          "ecmwf_models-test-data", "era5", "nc")
     assert parse_product(inpath) == 'era5'
 
 def test_parse_filetype():
     inpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          "ecmwf_models-test-data", "ERA5", "netcdf")
+                          "ecmwf_models-test-data", "era5", "nc")
     assert parse_filetype(inpath) == 'netcdf'
 
 def test_load_var_table():
@@ -54,7 +54,7 @@ def test_get_default_params():
 
 def test_create_land_definition_file():
     inpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          "ecmwf_models-test-data", "ERA5", "netcdf")
+                          "ecmwf_models-test-data", "era5", "nc")
     path_desired = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         '..', 'src', 'ecmwf_models', 'era5', 'land_definition_files',
                         'landmask_0.25_0.25.nc')

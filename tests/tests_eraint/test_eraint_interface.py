@@ -29,7 +29,7 @@ from datetime import datetime
 
 def test_ERAInt_nc_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "ERA-Interim", "netcdf", "2000", "001",
+                         "ecmwf_models-test-data", "eraint", "nc", "2000", "001",
                          'ERAINT_AN_20000101_0000.nc')
 
     dset = ERAIntNcImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True)
@@ -68,7 +68,7 @@ def test_ERAInt_nc_image():
 
 def test_ERAInt_nc_image_1d():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "ERA-Interim", "netcdf", "2000", "001",
+                         "ecmwf_models-test-data", "eraint", "nc", "2000", "001",
                          'ERAINT_AN_20000101_0000.nc')
 
     dset = ERAIntNcImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True,
@@ -108,7 +108,7 @@ def test_ERAInt_nc_image_1d():
 
 def test_ERAInt_grb_image():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "ERA-Interim", "grib", "2000", "001",
+                         "ecmwf_models-test-data", "eraint", "grb", "2000", "001",
                          'ERAINT_AN_20000101_0000.grb')
 
     dset = ERAIntGrbImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True,
@@ -147,7 +147,7 @@ def test_ERAInt_grb_image():
 
 def test_ERAInt_grb_image_1d():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "ERA-Interim", "grib", "2000", "001",
+                         "ecmwf_models-test-data", "eraint", "grb", "2000", "001",
                          'ERAINT_AN_20000101_0000.grb')
 
     dset = ERAIntGrbImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True,
@@ -188,7 +188,7 @@ def test_ERAInt_grb_image_1d():
 
 def test_ERAInt_nc_ds():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data",  "ERA-Interim", "netcdf")
+                         "ecmwf_models-test-data",  "eraint", "nc")
 
     tstamps_should = [datetime(2000, 1, 1),
                       datetime(2000, 1, 1, 12)]
@@ -196,9 +196,7 @@ def test_ERAInt_nc_ds():
     ds = ERAIntNcDs(root_path, parameter=['swvl1', 'swvl2'], array_1D=True,
                   mask_seapoints=True, h_steps=[0, 12])
 
-    for data, tstamp_should in zip(ds.iter_images(datetime(2000, 1, 1),
-                                                  datetime(2000, 1, 1)),
-                                   tstamps_should):
+    for data, tstamp_should in zip(ds.iter_images(datetime(2000, 1, 1), datetime(2000, 1, 1)), tstamps_should):
         assert data.data['swvl1'].shape == (241 * 480, )
         assert data.data['swvl2'].shape == (241 * 480, )
         assert data.lon.shape == (241 * 480, )
@@ -221,7 +219,7 @@ def test_ERAInt_nc_ds():
 
 def test_ERAInt_grb_ds():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                         "ecmwf_models-test-data", "ERA-Interim", "grib")
+                         "ecmwf_models-test-data", "eraint", "grb")
 
     tstamps_should = [datetime(2000, 1, 1),
                       datetime(2000, 1, 1, 12)]
