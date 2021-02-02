@@ -29,6 +29,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: false
+      - name: Clone Testdata
+        shell: bash -l {0}
+        run : |
+          - git clone https://www.geo.tuwien.ac.at/downloads/gittd/ecmwf_models-test-data.git/ tests/ecmwf-models-test-data
+          - ls tests/ecmwf-models-test-data
       - uses: conda-incubator/setup-miniconda@v2.0.1
         with:
           miniconda-version: "latest"
@@ -40,7 +45,6 @@ jobs:
       - name: Print Infos
         shell: bash -l {0}
         run: |
-          git clone https://www.geo.tuwien.ac.at/downloads/gittd/ecmwf_models-test-data.git/ tests/ecmwf-models-test-data
           conda info -a
           conda list
           pip list
