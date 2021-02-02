@@ -7,7 +7,6 @@ evaporation_from_bare_soil,Evaporation from bare soil,evabs,1
 evaporation_from_open_water_surfaces_excluding_oceans,Evaporation from open water surfaces excluding oceans,evaow,1
 evaporation_from_the_top_of_canopy,Evaporation from the top of canopy,evatc,1
 evaporation_from_vegetation_transpiration,Evaporation from vegetation transpiration,evavt,1
-evapotranspiration,Evapotranspiration,et,1
 forecast_albedo,Forecast albedo,fal,1
 lake_bottom_temperature,Lake bottom temperature,lblt,0
 lake_ice_depth,Lake ice depth,licd,0
