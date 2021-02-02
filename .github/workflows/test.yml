@@ -34,7 +34,7 @@ jobs:
         run : |
           git submodule init
           git submodule update
-          ls tests/ecmwf-models-test-data
+          ls tests/ecmwf_models-test-data
       - uses: conda-incubator/setup-miniconda@v2.0.1
         with:
           miniconda-version: "latest"
