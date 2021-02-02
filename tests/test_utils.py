@@ -33,9 +33,9 @@ def test_load_var_table():
     assert table.loc[100].short_name == 'msdrswrf'
 
     table = load_var_table('era5-land')
-    assert table.index.size == 50
-    assert table.loc[46].dl_name == 'volumetric_soil_water_layer_1'
-    assert table.loc[46].short_name == 'swvl1'
+    assert table.index.size == 49
+    assert table.loc[45].dl_name == 'volumetric_soil_water_layer_1'
+    assert table.loc[45].short_name == 'swvl1'
 
     table = load_var_table('eraint')
     assert table.index.size == 79
