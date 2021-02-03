@@ -43,3 +43,4 @@ MANIFEST
 #others
 src/ecmwf_models/bin/*
 */local_scripts/*
+.artifacts

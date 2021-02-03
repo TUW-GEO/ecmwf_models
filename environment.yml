@@ -1,4 +1,4 @@
-name: ecmwf-models
+name: ecmwf_models
 channels:
 - conda-forge
 dependencies:
@@ -8,7 +8,6 @@ dependencies:
 - pygrib>=2.0.1
 - hdf5
 - netcdf4>=1.4.2
-- scipy
 - pyresample
 - xarray
 - pip
@@ -22,3 +21,5 @@ dependencies:
     - datedown>=0.3
     - requests
     - more_itertools
+    - pytest
+    - pytest-cov

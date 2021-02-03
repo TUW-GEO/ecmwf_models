@@ -20,7 +20,7 @@ jobs:
         ymlfile: ['environment.yml']
         include: # test with environment_pinned.yml
           - os: ubuntu-latest
-            python-version: '3.6'
+            python-version: '3.6' # will be overridden with python from yml
             ymlfile: environment_pinned.yml
     name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}🐍
     runs-on: ${{ matrix.os }}
@@ -28,8 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: false
-      - name: Clone Testdata
+          submodules: false # does not work with self-hosted testdata
+      - name: Checkout Testdata
         shell: bash -l {0}
         run : |
           git submodule init
@@ -41,7 +41,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           environment-file: ${{ matrix.ymlfile }}
-          activate-environment: ecmwf-models # todo: must match with name in environment.yml
+          activate-environment: ecmwf_models # todo: must match with name in environment.yml
           auto-activate-base: false
       - name: Print Infos
         shell: bash -l {0}
@@ -54,17 +54,12 @@ jobs:
       - name: Export Environment
         shell: bash -l {0}
         run: |
+          mkdir -p .artifacts
           if [ ${{ matrix.ymlfile }} == "environment.yml" ]
           then
-              mkdir -p .artifacts
               filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
               conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
           fi
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: os_py_environments
-          path: .artifacts/*
       - name: Install package and test
         shell: bash -l {0}
         run: |
@@ -78,6 +73,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
           COVERALLS_PARALLEL: true
+      - name: Create wheel package
+        shell: bash -l {0}
+        run: |
+          pip install wheel
+          python setup.py sdist --dist-dir .artifacts
+          python setup.py bdist_wheel --dist-dir .artifacts
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: os_py_environments
+          path: .artifacts/*
   coveralls:
     name: Submit Coveralls 👚
     needs: build

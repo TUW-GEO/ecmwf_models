@@ -1,4 +1,4 @@
-name: ecmwf-models
+name: ecmwf_models
 channels:
   - conda-forge
   - defaults
