@@ -192,3 +192,8 @@ def main(args):
 
 def run():
     main(sys.argv[1:])
+
+
+if __name__ == '__main__':
+    reshuffle(r"C:\Temp\era5\in", r"C:\Temp\era5\out", startdate=datetime(2020,11,30),
+              enddate=datetime(2020,12,1), land_points=True, product='era5',variables=['swvl1', 'stl1'])

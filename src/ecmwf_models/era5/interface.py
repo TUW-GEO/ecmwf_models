@@ -29,9 +29,6 @@ base classes, that are used for reading all ecmwf products.
 
 from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
 
-#import matplotlib as mpl
-#mpl.use("Qt5Agg")
-
 class ERA5NcImg(ERANcImg):
     def __init__(self, filename, parameter=['swvl1', 'swvl2'], product='era5',
                  subgrid=None, mask_seapoints=False, array_1D=False):

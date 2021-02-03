@@ -83,6 +83,10 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
 
     nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
 
+    if 'expver' in nc_in.dims:
+        warnings.warn(f'File {input_nc} contains experimental versions of variables.')
+        filename_templ = 'exp'+ filename_templ
+
     filename_templ = filename_templ.format(product=product_name)
 
     for time in nc_in.time.values:

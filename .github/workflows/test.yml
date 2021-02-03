@@ -15,7 +15,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
+        os: ["ubuntu-latest"] # currently windows is not tested
         python-version: ['3.6', '3.7', '3.8']
         ymlfile: ['environment.yml']
         include: # test with environment_pinned.yml

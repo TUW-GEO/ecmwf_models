@@ -191,7 +191,7 @@ def download_and_move(target_path, startdate, enddate, product='era5',
 
         while (not finished) and (i < 5):  # try max 5 times
             try:
-                finished = download_era5(c, years=[sy], months=[sm], days=range(sd, d+1),
+                finished = download_era5(c, years=[sy], months=[sm], days=list(range(sd, d+1)),
                                          h_steps=h_steps, variables=variables, grb=grb,
                                          product=product, target=dl_file, dry_run=dry_run)
                 break

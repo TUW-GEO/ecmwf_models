@@ -32,6 +32,8 @@ from pynetcf.time_series import GriddedNcOrthoMultiTs
 from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution, ERA_IrregularImgGrid
 from datetime import datetime
 from ecmwf_models.utils import lookup
+import glob
+
 import xarray as xr
 try:
     import pygrib
@@ -123,7 +125,14 @@ class ERANcImg(ImageBase):
             if name in self.parameter:
                 variable = dataset[name]
 
-                param_data = variable.data
+                if 'expver' in variable.dims and (variable.data.ndim == 3):
+                    warnings.warn(f"Found experimental data in {self.filename}")
+                    param_data = variable.data[-1]
+                    for vers_data in variable.data:
+                        if not np.all(np.isnan(vers_data)):
+                            param_data = vers_data
+                else:
+                    param_data = variable.data
 
                 if self.mask_seapoints:
                     param_data = np.ma.array(param_data, mask=np.logical_not(sea_mask),
@@ -208,12 +217,66 @@ class ERANcDs(MultiTemporalImageBase):
                        'mask_seapoints': mask_seapoints,
                        'array_1D': array_1D}
 
+        # the goal is to use expERA5*.nc if necessary, but perfer ERA5*.nc
+        self.fn_templ_priority = ['ERA5_*_{datetime}.nc',
+                                  'expERA5_*_{datetime}.nc']
+
         super(ERANcDs, self).__init__(root_path, ERANcImg,
                                       fname_templ='*_{datetime}.nc',
                                       datetime_format="%Y%m%d_%H%M",
                                       subpath_templ=subpath_templ,
                                       exact_templ=False,
                                       ioclass_kws=ioclass_kws)
+
+    def _search_files(self, timestamp, custom_templ=None, str_param=None,
+                      custom_datetime_format=None):
+        """
+        override the original filename geneartion to allow multiple files for
+        time stamp
+        """
+        if custom_templ is not None:
+            raise NotImplementedError
+        else:
+            fname_templ = self.fname_templ
+
+        if custom_datetime_format is not None:
+            dFormat = {self.dtime_placeholder: custom_datetime_format}
+
+        else:
+            dFormat = {self.dtime_placeholder: self.datetime_format}
+
+        sub_path = ''
+        if self.subpath_templ is not None:
+            for s in self.subpath_templ:
+                sub_path = os.path.join(sub_path, timestamp.strftime(s))
+
+        fname_templ = fname_templ.format(**dFormat)
+
+        if str_param is not None:
+            fname_templ = fname_templ.format(**str_param)
+
+        search_file = os.path.join(self.path, sub_path,
+                                   timestamp.strftime(fname_templ))
+
+        if self.exact_templ:
+            raise NotImplementedError
+        else:
+            filename = glob.glob(search_file)
+            if len(filename) > 1:
+                for templ in self.fn_templ_priority:
+                    fname_templ = templ.format(**dFormat)
+                    if str_param is not None:
+                        fname_templ = fname_templ.format(**str_param)
+                    search_file = os.path.join(self.path, sub_path,
+                                               timestamp.strftime(fname_templ))
+                    filename = glob.glob(search_file)
+                    if len(filename) == 1:
+                        break
+
+        if not filename:
+            filename = []
+
+        return filename
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
@@ -508,3 +571,8 @@ class ERATs(GriddedNcOrthoMultiTs):
 
         grid = load_grid(grid_path)
         super(ERATs, self).__init__(ts_path, grid, **kwargs)
+
+if __name__ == '__main__':
+    ds = ERANcImg(r"\\project10\data-write\USERS\wpreimes\temp\era5_download\2020\346\ERA5_AN_20201211_1200.nc",
+                  product='era5')
+    ds.read()

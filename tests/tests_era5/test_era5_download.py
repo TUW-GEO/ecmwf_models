@@ -85,3 +85,6 @@ def test_dry_download_grb_era5():
 
         assert(len(os.listdir(os.path.join(dl_path, '2010', '001'))) == len(should_dlfiles))
         assert(sorted(os.listdir(os.path.join(dl_path, '2010', '001'))) == sorted(should_dlfiles))
+
+if __name__ == '__main__':
+    test_dry_download_grb_era5()
