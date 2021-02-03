@@ -20,7 +20,7 @@ jobs:
         ymlfile: ['environment.yml']
         include: # test with environment_pinned.yml
           - os: ubuntu-latest
-            python-version: '3.6' # will be overridden with python from yml
+            python-version: '3.6' # will be overridden with python from environment_pinned
             ymlfile: environment_pinned.yml
     name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}🐍
     runs-on: ${{ matrix.os }}

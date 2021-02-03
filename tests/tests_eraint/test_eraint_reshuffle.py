@@ -54,6 +54,7 @@ def test_ERAInterim_reshuffle_grb():
         nptest.assert_almost_equal(ts['swvl1'].values, swvl1_should, decimal=5)
         swvl2_should = np.array([0.178139,  0.178200], dtype=np.float32)
         nptest.assert_almost_equal(ts['swvl2'].values, swvl2_should, decimal=5)
+        ds.close()
 
 def test_ERAInterim_reshuffle_nc():
     # test reshuffling era interim grib images to time series
@@ -74,3 +75,4 @@ def test_ERAInterim_reshuffle_nc():
         nptest.assert_array_almost_equal(ts['swvl1'].values, swvl1_should, decimal=5)
         swvl2_should = np.array([0.179816, 0.179860], dtype=np.float32)
         nptest.assert_array_almost_equal(ts['swvl2'].values, swvl2_should, decimal=5)
+        ds.close()

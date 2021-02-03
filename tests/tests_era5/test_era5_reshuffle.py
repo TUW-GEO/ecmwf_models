@@ -33,7 +33,6 @@ import numpy.testing as nptest
 
 from ecmwf_models.era5.reshuffle import main
 from ecmwf_models import ERATs
-import shutil
 
 def test_ERA5_reshuffle_nc():
     # test reshuffling era5 netcdf images to time series
@@ -47,7 +46,6 @@ def test_ERA5_reshuffle_nc():
     h_steps = ['--h_steps', '0', '12']
     landpoints = ['--land_points', 'True']
 
-
     with TemporaryDirectory() as ts_path:
         args = [inpath, ts_path, startdate, enddate] + parameters + h_steps + landpoints
         main(args)
@@ -58,6 +56,7 @@ def test_ERA5_reshuffle_nc():
         nptest.assert_array_almost_equal(ts['swvl1'].values, swvl1_values_should, decimal=5)
         swvl2_values_should = np.array([0.390512,  0.390981], dtype=np.float32)
         nptest.assert_array_almost_equal(ts['swvl2'].values, swvl2_values_should, decimal=5)
+        ds.close()
 
 def test_ERA5_reshuffle_grb():
     # test reshuffling era5 netcdf images to time series
@@ -81,6 +80,8 @@ def test_ERA5_reshuffle_grb():
         nptest.assert_almost_equal(ts['swvl1'].values, swvl1_values_should, decimal=5)
         swvl2_values_should = np.array([0.390514,  0.390980], dtype=np.float32)
         nptest.assert_almost_equal(ts['swvl2'].values, swvl2_values_should, decimal=5)
+        ds.close()
+
 
 if __name__ == '__main__':
     test_ERA5_reshuffle_nc()
