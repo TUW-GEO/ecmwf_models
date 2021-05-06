@@ -43,6 +43,7 @@ surface_sensible_heat_flux,Surface sensible heat flux,sshf,1
 surface_solar_radiation_downwards,Surface solar radiation downwards,ssrd,1
 surface_thermal_radiation_downwards,Surface thermal radiation downwards,strd,1
 temperature_of_snow_layer,Temperature of snow layer,tsn,1
+total_evaporation,Total evaporation,te,1
 total_precipitation,Total precipitation,tp,1
 volumetric_soil_water_layer_1,Volumetric soil water layer 1,swvl1,1
 volumetric_soil_water_layer_2,Volumetric soil water layer 2,swvl2,1
