@@ -33,6 +33,7 @@ from datetime import datetime, timedelta, time
 import shutil
 import cdsapi
 import calendar
+import multiprocessing
 
 def default_variables(product='era5'):
     """
@@ -120,7 +121,7 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
 
 def download_and_move(target_path, startdate, enddate, product='era5',
                       variables=None, keep_original=False, h_steps=[0, 6, 12, 18],
-                      grb=False, dry_run=False):
+                      grb=False, dry_run=False, grid=None, remap_method="bil"):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 day increments between start and end date.
@@ -148,6 +149,30 @@ def download_and_move(target_path, startdate, enddate, product='era5',
         Download data as grib files
     dry_run: bool
         Do not download anything, this is just used for testing the functions
+    grid : dict, optional
+        A grid on which to remap the data using CDO. This must be a dictionary
+        using CDO's grid description format, e.g.::
+
+            grid = {
+                "gridtype": "lonlat",
+                "xsize": 720,
+                "ysize": 360,
+                "xfirst": -179.75,
+                "yfirst": 89.75,
+                "xinc": 0.5,
+                "yinc": -0.5,
+            }
+
+        Default is to use no regridding.
+    remap_method : str, optional
+        Method to be used for regridding. Available methods are:
+        - "bil": bilinear (default)
+        - "bic": bicubic
+        - "nn": nearest neighbour
+        - "dis": distance weighted
+        - "con": 1st order conservative remapping
+        - "con2": 2nd order conservative remapping
+        - "laf": largest area fraction remapping
     """
     product = product.lower()
 
@@ -166,6 +191,8 @@ def download_and_move(target_path, startdate, enddate, product='era5',
     else:
         c = cdsapi.Client()
 
+
+    pool = multiprocessing.Pool(1)
     while curr_start <= enddate:
         sy, sm, sd = curr_start.year, curr_start.month, curr_start.day
         sm_days = calendar.monthrange(sy, sm)[1]  # days in the current month
@@ -205,14 +232,43 @@ def download_and_move(target_path, startdate, enddate, product='era5',
                 continue
 
         if grb:
-            save_gribs_from_grib(dl_file, target_path, product_name=product.upper())
+            pool.apply_async(
+                save_gribs_from_grib,
+                args=(dl_file, target_path),
+                kwds=dict(
+                    product_name=product.upper(),
+                    keep_original=keep_original
+                )
+            )
         else:
-            save_ncs_from_nc(dl_file, target_path, product_name=product.upper())
-
-        if not keep_original:
-            shutil.rmtree(downloaded_data_path)
+            pool.apply_async(
+                save_ncs_from_nc,
+                args=(
+                    dl_file,
+                    target_path,
+                ),
+                kwds=dict(
+                    product_name=product.upper(),
+                    grid=grid,
+                    remap_method=remap_method,
+                    keep_original=keep_original
+                )
+            )
 
         curr_start = curr_end + timedelta(days=1)
+    pool.close()
+    pool.join()
+
+    # remove temporary files
+    if not keep_original:
+        shutil.rmtree(downloaded_data_path)
+    if grid is not None:
+        gridpath = os.path.join(target_path, "grid.txt")
+        if os.path.exists(gridpath):
+            os.unlink(gridpath)
+        weightspath = os.path.join(target_path, "remap_weights.nc")
+        if os.path.exists(weightspath):
+            os.unlink(weightspath)
 
 
 def parse_args(args):

@@ -35,6 +35,7 @@ import argparse
 import numpy as np
 from netCDF4 import Dataset
 from collections import OrderedDict
+from cdo import Cdo
 try:
     import pygrib
 except ImportError:
@@ -63,10 +64,11 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def save_ncs_from_nc(input_nc, output_path, product_name,
-                     filename_templ='{product}_AN_%Y%m%d_%H%M.nc'):
+                     filename_templ='{product}_AN_%Y%m%d_%H%M.nc',
+                     grid=None, keep_original=True, remap_method="bil"):
     """
-    Split the downloaded netcdf file into daily files and add to folder structure
-    necessary for reshuffling.
+    Split the downloaded netcdf file into daily files and add to folder
+    structure necessary for reshuffling.
 
     Parameters
     ----------
@@ -78,12 +80,24 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
         Name of the ECMWF model (only for filename generation)
     filename_templ : str, optional (default: product_grid_date_time)
         Template for naming each separated nc file
+
+    keep_original: bool
+        keep the original downloaded data
     """
     localsubdirs = ['%Y', '%j']
 
     nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
 
     filename_templ = filename_templ.format(product=product_name)
+
+    if grid is not None:
+        cdo = Cdo()
+        gridpath = os.path.join(output_path, "grid.txt")
+        weightspath = os.path.join(output_path, "remap_weights.nc")
+        if not os.path.exists(gridpath):
+            with open(gridpath, "w") as f:
+                for k, v in grid.items():
+                    f.write(f"{k} = {v}\n")
 
     for time in nc_in.time.values:
         subset = nc_in.sel(time=time)
@@ -95,14 +109,26 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
         if not os.path.exists(os.path.dirname(filepath)):
             os.makedirs(os.path.dirname(filepath))
 
+        if grid is not None:
+            if not os.path.exists(weightspath):
+                # create weights file
+                getattr(cdo, "gen" + remap_method)(gridpath, input=subset, output=weightspath)
+            subset = cdo.remap(
+                ",".join([gridpath, weightspath]),
+                input=subset, returnXDataset=True
+            )
+
         # same compression for all variables
         var_encode = {'zlib': True, 'complevel': 6}
         subset.to_netcdf(filepath, encoding={
                          var: var_encode for var in subset.variables})
     nc_in.close()
+    if not keep_original:
+        os.remove(input_nc)
 
 def save_gribs_from_grib(input_grib, output_path, product_name,
-                         filename_templ="{product}_AN_%Y%m%d_%H%M.grb"):
+                         filename_templ="{product}_AN_%Y%m%d_%H%M.grb",
+                         keep_original=True):
     """
     Split the downloaded grib file into daily files and add to folder structure
     necessary for reshuffling.
@@ -141,6 +167,8 @@ def save_gribs_from_grib(input_grib, output_path, product_name,
         grb_out.write(grb.tostring())
         grb_out.close()
     grib_in.close()
+    if not keep_original:
+        os.remove(input_grib)
 
 def mkdate(datestring):
     '''

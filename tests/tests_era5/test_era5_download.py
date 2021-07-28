@@ -30,6 +30,8 @@ import os
 import tempfile
 import shutil
 from datetime import datetime
+import numpy as np
+import xarray as xr
 
 def test_dry_download_nc_era5():
 
@@ -86,5 +88,47 @@ def test_dry_download_grb_era5():
                       'ERA5_AN_20100101_1200.grb']
 
     assert(sorted(os.listdir(os.path.join(dl_path, '2010', '001'))) == sorted(should_dlfiles))
+
+    shutil.rmtree(dl_path)
+
+def test_download_nc_era5_regridding():
+    grid = {
+        "gridtype": "lonlat",
+        "xsize": 720,
+        "ysize": 360,
+        "xfirst": -179.75,
+        "yfirst": 89.75,
+        "xinc": 0.5,
+        "yinc": -0.5
+    }
+
+    dl_path = tempfile.mkdtemp()
+    dl_path = os.path.join(dl_path, 'era5')
+    os.mkdir(dl_path)
+    os.mkdir(os.path.join(dl_path, 'temp_downloaded'))
+
+    thefile = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
+              "ecmwf_models-test-data", "download", "era5_example_downloaded_raw.nc")
+    shutil.copyfile(thefile, os.path.join(dl_path, 'temp_downloaded', '20100101_20100101.nc'))
+
+    startdate = enddate = datetime(2010,1,1)
+    download_and_move(dl_path, startdate, enddate, variables=['swvl1', 'swvl2', 'lsm'],
+                      keep_original=False, h_steps=[0, 12],
+                      grb=False, dry_run=True, grid=grid)
+
+    assert(os.listdir(dl_path) == ['2010'])
+    assert(os.listdir(os.path.join(dl_path, '2010')) == ['001'])
+    assert(len(os.listdir(os.path.join(dl_path, '2010', '001'))) == 2)
+
+    should_dlfiles = ['ERA5_AN_20100101_0000.nc',
+                      'ERA5_AN_20100101_1200.nc']
+
+    assert(sorted(os.listdir(os.path.join(dl_path, '2010', '001'))) == sorted(should_dlfiles))
+
+    for f in os.listdir(os.path.join(dl_path, "2010", "001")):
+        ds = xr.open_dataset(os.path.join(dl_path, "2010", "001", f))
+        assert dict(ds.dims) == {"lon": 720, "lat": 360}
+        assert np.all(np.arange(89.75, -90, -0.5) == ds.lat)
+        assert np.all(np.arange(-179.75, 180, 0.5) == ds.lon)
 
     shutil.rmtree(dl_path)
