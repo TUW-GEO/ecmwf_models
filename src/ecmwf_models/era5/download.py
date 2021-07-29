@@ -50,7 +50,7 @@ def default_variables(product='era5'):
     return defaults.tolist()
 
 def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
-                  product='era5', dry_run=False):
+                  product='era5', dry_run=False, cds_kwds={}):
     '''
     Download era5 reanalysis data for single levels of a defined time span
 
@@ -77,6 +77,8 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
         ERA5 data product to download, either era5 or era5-land
     dry_run: bool, optional (default: False)
         Do not download anything, this is just used for testing the functionality
+    cds_kwds: dict, optional
+        Additional arguments to be passed to the CDS API retrieve request.
 
     Returns
     ---------
@@ -87,31 +89,26 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
     if dry_run:
         return
 
+    request = {
+        'format': 'grib' if grb else 'netcdf',
+        'variable': variables,
+        'year': [str(y) for y in years],
+        'month': [str(m).zfill(2) for m in months],
+        'day': [str(d).zfill(2) for d in days],
+        'time': [time(h, 0).strftime('%H:%M') for h in h_steps]
+    }
+    request.update(cds_kwds)
     if product == 'era5':
+        request["product_type"] = "reanalysis"
         c.retrieve(
             'reanalysis-era5-single-levels',
-            {
-                'product_type': 'reanalysis',
-                'format': 'grib' if grb else 'netcdf',
-                'variable': variables,
-                'year': [str(y) for y in years],
-                'month': [str(m).zfill(2) for m in months],
-                'day': [str(d).zfill(2) for d in days],
-                'time': [time(h, 0).strftime('%H:%M') for h in h_steps]
-            },
-            target)
+            request, target
+        )
     elif product == 'era5-land':
         c.retrieve(
             'reanalysis-era5-land',
-            {
-                'format': 'grib' if grb else 'netcdf',
-                'variable': variables,
-                'year': [str(y) for y in years],
-                'month': [str(m).zfill(2) for m in months],
-                'day': [str(d).zfill(2) for d in days],
-                'time': [time(h, 0).strftime('%H:%M') for h in h_steps]
-            },
-            target)
+            request, target
+        )
     else:
         raise ValueError(product, "Unknown product, choose either 'era5' or 'era5-land'")
 
@@ -121,7 +118,8 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
 
 def download_and_move(target_path, startdate, enddate, product='era5',
                       variables=None, keep_original=False, h_steps=[0, 6, 12, 18],
-                      grb=False, dry_run=False, grid=None, remap_method="bil"):
+                      grb=False, dry_run=False, grid=None, remap_method="bil",
+                      cds_kwds={}):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 day increments between start and end date.
@@ -173,6 +171,8 @@ def download_and_move(target_path, startdate, enddate, product='era5',
         - "con": 1st order conservative remapping
         - "con2": 2nd order conservative remapping
         - "laf": largest area fraction remapping
+    cds_kwds: dict, optional
+        Additional arguments to be passed to the CDS API retrieve request.
     """
     product = product.lower()
 
@@ -220,7 +220,8 @@ def download_and_move(target_path, startdate, enddate, product='era5',
             try:
                 finished = download_era5(c, years=[sy], months=[sm], days=range(sd, d+1),
                                          h_steps=h_steps, variables=variables, grb=grb,
-                                         product=product, target=dl_file, dry_run=dry_run)
+                                         product=product, target=dl_file, dry_run=dry_run,
+                                         cds_kwds=cds_kwds)
                 break
 
             except:
