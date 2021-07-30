@@ -76,4 +76,5 @@ dependencies:
     - pytesmo==0.7.0
     - repurpose==0.6
     - requests==2.22.0
+    - cdo==1.5.5
 
