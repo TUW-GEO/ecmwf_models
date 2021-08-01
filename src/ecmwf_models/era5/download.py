@@ -119,7 +119,7 @@ def download_era5(c, years, months, days, h_steps, variables, target, grb=False,
 def download_and_move(target_path, startdate, enddate, product='era5',
                       variables=None, keep_original=False, h_steps=[0, 6, 12, 18],
                       grb=False, dry_run=False, grid=None, remap_method="bil",
-                      cds_kwds={}):
+                      cds_kwds={}, stepsize="month"):
     """
     Downloads the data from the ECMWF servers and moves them to the target path.
     This is done in 30 day increments between start and end date.
@@ -173,6 +173,8 @@ def download_and_move(target_path, startdate, enddate, product='era5',
         - "laf": largest area fraction remapping
     cds_kwds: dict, optional
         Additional arguments to be passed to the CDS API retrieve request.
+    stepsize : str, optional
+        Size of steps for requests, can be "month" or "day".
     """
     product = product.lower()
 
@@ -195,13 +197,17 @@ def download_and_move(target_path, startdate, enddate, product='era5',
     pool = multiprocessing.Pool(1)
     while curr_start <= enddate:
         sy, sm, sd = curr_start.year, curr_start.month, curr_start.day
-        sm_days = calendar.monthrange(sy, sm)[1]  # days in the current month
         y, m = sy, sm
-
-        if (enddate.year == y) and (enddate.month == m):
-            d = enddate.day
+        if stepsize == "month":
+            sm_days = calendar.monthrange(sy, sm)[1]  # days in the current month
+            if (enddate.year == y) and (enddate.month == m):
+                d = enddate.day
+            else:
+                d = sm_days
+        elif stepsize == "day":
+            d = sd
         else:
-            d = sm_days
+            raise ValueError(f"Invalid stepsize: {stepsize}")
 
         curr_end = datetime(y, m, d)
 
