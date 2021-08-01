@@ -125,6 +125,8 @@ def save_ncs_from_nc(input_nc, output_path, product_name,
     nc_in.close()
     if not keep_original:
         os.remove(input_nc)
+    if grid is not None:
+        cdo.cleanTempDir()
 
 def save_gribs_from_grib(input_grib, output_path, product_name,
                          filename_templ="{product}_AN_%Y%m%d_%H%M.grb",
