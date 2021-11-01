@@ -25,7 +25,14 @@
 Module to download ERA5 from terminal in netcdf and grib format.
 '''
 
-from ecmwf_models.utils import *
+from ecmwf_models.utils import (load_var_table,
+                                lookup,
+                                save_gribs_from_grib,
+                                save_ncs_from_nc,
+                                mkdate,
+                                str2bool,
+                                )
+import warnings
 import argparse
 import sys
 import os
