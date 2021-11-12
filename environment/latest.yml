@@ -12,6 +12,8 @@ dependencies:
 - scipy
 - pyresample
 - xarray
+- cdo
+- python-cdo
 - pip
 - pip:
     - pygeobase
