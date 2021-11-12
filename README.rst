@@ -2,8 +2,9 @@
 ecmwf_models
 ============
 
-.. image:: https://travis-ci.org/TUW-GEO/ecmwf_models.svg?branch=master
-    :target: https://travis-ci.org/TUW-GEO/ecmwf_models
+
+.. image:: https://github.com/TUW-GEO/ecmwf_models/workflows/Automated%20Tests/badge.svg?branch=master
+   :target: https://github.com/TUW-GEO/ecmwf_models/actions
 
 .. image:: https://coveralls.io/repos/github/TUW-GEO/ecmwf_models/badge.svg?branch=master
    :target: https://coveralls.io/github/TUW-GEO/ecmwf_models?branch=master
@@ -75,7 +76,7 @@ At the moment this package supports
 
 - **ERA Interim** (deprecated)
 - **ERA5**
-- **ERA5-Land** 
+- **ERA5-Land**
 
 reanalysis data in **grib** and **netcdf** format (download, reading, time series creation) with a default spatial
 sampling of 0.75 degrees (ERA Interim), 0.25 degrees (ERA5), resp. 0.1 degrees (ERA5-Land).
