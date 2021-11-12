@@ -234,6 +234,7 @@ def download_and_move(
     if dry_run:
         warnings.warn("Dry run does not create connection to CDS")
         c = None
+        cds_status_tracker = None
     else:
         cds_status_tracker = CDSStatusTracker()
         c = cdsapi.Client(
