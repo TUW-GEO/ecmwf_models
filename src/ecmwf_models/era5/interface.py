@@ -6,7 +6,8 @@ and grib base classes, that are used for reading all ecmwf products.
 """
 
 from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
-from typing import Tuple, Literal, Optional
+from typing import Tuple, Optional
+from typing_extensions import Literal
 from pygeogrids.grids import CellGrid
 
 # ERA5 products supported by the reader.

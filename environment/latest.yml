@@ -25,6 +25,7 @@ dependencies:
     - datedown>=0.3
     - requests
     - more_itertools
+    - typing_extensions
     - pre-commit
     - pytest
     - pytest-cov
