@@ -29,10 +29,14 @@ from datetime import timedelta
 
 from pygeogrids.netcdf import load_grid
 from pynetcf.time_series import GriddedNcOrthoMultiTs
-from ecmwf_models.grid import ERA_RegularImgGrid, get_grid_resolution, ERA_IrregularImgGrid
-from datetime import datetime
+from ecmwf_models.grid import (
+    ERA_RegularImgGrid,
+    get_grid_resolution,
+    ERA_IrregularImgGrid,
+)
 from ecmwf_models.utils import lookup
 import xarray as xr
+
 try:
     import pygrib
 except ImportError:
@@ -67,8 +71,17 @@ class ERANcImg(ImageBase):
         This argument should not be changed!
 
     """
-    def __init__(self, filename, product, parameter=['swvl1', 'swvl2'],
-                 subgrid=None, mask_seapoints=False, array_1D=False, mode='r'):
+
+    def __init__(
+        self,
+        filename,
+        product,
+        parameter=["swvl1", "swvl2"],
+        subgrid=None,
+        mask_seapoints=False,
+        array_1D=False,
+        mode="r",
+    ):
 
         super(ERANcImg, self).__init__(filename, mode=mode)
 
@@ -76,15 +89,17 @@ class ERANcImg(ImageBase):
             parameter = [parameter]
 
         # look up short names
-        self.parameter = lookup(product, parameter)['short_name'].values
+        self.parameter = lookup(product, parameter)["short_name"].values
 
         self.mask_seapoints = mask_seapoints
         self.array_1D = array_1D
         self.subgrid = subgrid
 
         if self.subgrid and not self.array_1D:
-            warnings.warn("Reading spatial subsets as 2D arrays ony works if there is an "
-                          "equal number of points in each line")
+            warnings.warn(
+                "Reading spatial subsets as 2D arrays ony works if there "
+                "is an equal number of points in each line"
+            )
 
     def read(self, timestamp=None):
         """
@@ -99,25 +114,32 @@ class ERANcImg(ImageBase):
         return_metadata = {}
 
         try:
-            dataset = xr.open_dataset(self.filename, engine='netcdf4',
-                                      mask_and_scale=True)
+            dataset = xr.open_dataset(
+                self.filename, engine="netcdf4", mask_and_scale=True
+            )
         except IOError as e:
             print(e)
             print(" ".join([self.filename, "can not be opened"]))
             raise e
 
-        res_lat, res_lon = get_grid_resolution(dataset.variables['latitude'][:],
-                                               dataset.variables['longitude'][:])
+        res_lat, res_lon = get_grid_resolution(
+            dataset.variables["latitude"][:], dataset.variables["longitude"][:]
+        )
 
-        grid = ERA_RegularImgGrid(
-            res_lat, res_lon) if not self.subgrid else self.subgrid
+        grid = (
+            ERA_RegularImgGrid(res_lat, res_lon)
+            if not self.subgrid
+            else self.subgrid
+        )
 
         if self.mask_seapoints:
-            if 'lsm' not in dataset.variables.keys():
+            if "lsm" not in dataset.variables.keys():
                 raise IOError(
-                    'No land sea mask parameter (lsm) in passed image for masking.')
+                    "No land sea mask parameter (lsm) in"
+                    " passed image for masking."
+                )
             else:
-                sea_mask = dataset.variables['lsm'].values
+                sea_mask = dataset.variables["lsm"].values
 
         for name in dataset.variables:
             if name in self.parameter:
@@ -126,30 +148,44 @@ class ERANcImg(ImageBase):
                 param_data = variable.data
 
                 if self.mask_seapoints:
-                    param_data = np.ma.array(param_data, mask=np.logical_not(sea_mask),
-                                             fill_value=np.nan)
+                    param_data = np.ma.array(
+                        param_data,
+                        mask=np.logical_not(sea_mask),
+                        fill_value=np.nan,
+                    )
                     param_data = param_data.filled()
 
                 param_data = param_data.flatten()
 
                 return_metadata[name] = variable.attrs
                 return_img.update(
-                    dict([(str(name), param_data[grid.activegpis])]))
+                    dict([(str(name), param_data[grid.activegpis])])
+                )
 
                 try:
                     return_img[name]
                 except KeyError:
                     path, thefile = os.path.split(self.filename)
-                    warnings.warn('Cannot load variable {var} from file {thefile}. '
-                                  'Filling image with NaNs.'.format(var=name, thefile=thefile))
-                    return_img[name] = np.empty(
-                        grid.activegpis.size).fill(np.nan)
+                    warnings.warn(
+                        "Cannot load variable {var} from file {thefile}. "
+                        "Filling image with NaNs.".format(
+                            var=name, thefile=thefile
+                        )
+                    )
+                    return_img[name] = np.empty(grid.activegpis.size).fill(
+                        np.nan
+                    )
 
         dataset.close()
 
         if self.array_1D:
-            return Image(grid.activearrlon, grid.activearrlat,
-                         return_img, return_metadata, timestamp)
+            return Image(
+                grid.activearrlon,
+                grid.activearrlat,
+                return_img,
+                return_metadata,
+                timestamp,
+            )
         else:
             nlat = np.unique(grid.activearrlat).size
             nlon = np.unique(grid.activearrlon).size
@@ -157,11 +193,13 @@ class ERANcImg(ImageBase):
             for key in return_img:
                 return_img[key] = return_img[key].reshape((nlat, nlon))
 
-            return Image(grid.activearrlon.reshape(nlat, nlon),
-                         grid.activearrlat.reshape(nlat, nlon),
-                         return_img,
-                         return_metadata,
-                         timestamp)
+            return Image(
+                grid.activearrlon.reshape(nlat, nlon),
+                grid.activearrlat.reshape(nlat, nlon),
+                return_img,
+                return_metadata,
+                timestamp,
+            )
 
     def write(self, data):
         raise NotImplementedError()
@@ -192,9 +230,17 @@ class ERANcDs(MultiTemporalImageBase):
     array_1D: bool, optional (default: False)
         Read data as list, instead of 2D array, used for reshuffling.
     """
-    def __init__(self, root_path, product, parameter=('swvl1', 'swvl2'),
-                 subgrid=None, mask_seapoints=False, h_steps=(0, 6, 12, 18),
-                 array_1D=False):
+
+    def __init__(
+        self,
+        root_path,
+        product,
+        parameter=("swvl1", "swvl2"),
+        subgrid=None,
+        mask_seapoints=False,
+        h_steps=(0, 6, 12, 18),
+        array_1D=False,
+    ):
 
         self.h_steps = h_steps
         subpath_templ = ["%Y", "%j"]
@@ -202,18 +248,23 @@ class ERANcDs(MultiTemporalImageBase):
         if type(parameter) == str:
             parameter = [parameter]
 
-        ioclass_kws = {'product': product,
-                       'parameter': parameter,
-                       'subgrid': subgrid,
-                       'mask_seapoints': mask_seapoints,
-                       'array_1D': array_1D}
+        ioclass_kws = {
+            "product": product,
+            "parameter": parameter,
+            "subgrid": subgrid,
+            "mask_seapoints": mask_seapoints,
+            "array_1D": array_1D,
+        }
 
-        super(ERANcDs, self).__init__(root_path, ERANcImg,
-                                      fname_templ='*_{datetime}.nc',
-                                      datetime_format="%Y%m%d_%H%M",
-                                      subpath_templ=subpath_templ,
-                                      exact_templ=False,
-                                      ioclass_kws=ioclass_kws)
+        super(ERANcDs, self).__init__(
+            root_path,
+            ERANcImg,
+            fname_templ="*_{datetime}.nc",
+            datetime_format="%Y%m%d_%H%M",
+            subpath_templ=subpath_templ,
+            exact_templ=False,
+            ioclass_kws=ioclass_kws,
+        )
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
@@ -266,8 +317,17 @@ class ERAGrbImg(ImageBase):
         Mode in which to open the file, changing this can cause data loss.
         This argument should not be changed!
     """
-    def __init__(self, filename, product, parameter=('swvl1', 'swvl2'),
-                 subgrid=None, mask_seapoints=False, array_1D=True, mode='r'):
+
+    def __init__(
+        self,
+        filename,
+        product,
+        parameter=("swvl1", "swvl2"),
+        subgrid=None,
+        mask_seapoints=False,
+        array_1D=True,
+        mode="r",
+    ):
 
         super(ERAGrbImg, self).__init__(filename, mode=mode)
 
@@ -275,7 +335,8 @@ class ERAGrbImg(ImageBase):
             parameter = [parameter]
 
         self.parameter = lookup(product, parameter)[
-            'short_name'].values  # look up short names
+            "short_name"
+        ].values  # look up short names
         self.product = product
 
         self.mask_seapoints = mask_seapoints
@@ -298,15 +359,14 @@ class ERAGrbImg(ImageBase):
         return_img = {}
         return_metadata = {}
 
-
-        var_msg_lut = {p : None for p in self.parameter}
+        var_msg_lut = {p: None for p in self.parameter}
         sea_mask = None
         for N in range(grbs.messages):
-            n = N+1
+            n = N + 1
             message = grbs.message(n)
             param_name = str(message.cfVarNameECMF)
 
-            if param_name == 'lsm':
+            if param_name == "lsm":
                 if self.mask_seapoints and sea_mask is None:
                     sea_mask = message.values.flatten()
 
@@ -327,7 +387,7 @@ class ERAGrbImg(ImageBase):
 
             param_data = message.values.flatten()
             if not shape:
-                shape  = param_data.shape
+                shape = param_data.shape
             return_img[param_name] = param_data
 
             if grid is None:
@@ -340,23 +400,30 @@ class ERAGrbImg(ImageBase):
                     lons[lons_gt_180] = lons[lons_gt_180] - 360
                     grid = ERA_IrregularImgGrid(lons, lats)
 
-            return_metadata[param_name]['units'] = message['units']
-            return_metadata[param_name]['long_name'] = message['parameterName']
+            return_metadata[param_name]["units"] = message["units"]
+            return_metadata[param_name]["long_name"] = \
+                message["parameterName"]
 
-            if 'levels' in message.keys():
-                return_metadata[param_name]['depth'] = '{:} cm'.format(
-                    message['levels'])
+            if "levels" in message.keys():
+                return_metadata[param_name]["depth"] = "{:} cm".format(
+                    message["levels"]
+                )
 
         if self.mask_seapoints:
             if sea_mask is None:
                 raise IOError(
-                    'No land sea mask parameter (lsm) in passed image for masking.')
+                    "No land sea mask parameter (lsm) in passed image"
+                    " for masking."
+                )
             else:
                 # mask the loaded data
                 for name in return_img.keys():
                     param_data = return_img[name]
-                    param_data = np.ma.array(param_data, mask=np.logical_not(sea_mask),
-                                             fill_value=np.nan)
+                    param_data = np.ma.array(
+                        param_data,
+                        mask=np.logical_not(sea_mask),
+                        fill_value=np.nan,
+                    )
                     param_data = param_data.filled()
                     return_img[name] = param_data
 
@@ -366,17 +433,27 @@ class ERAGrbImg(ImageBase):
         for param_name, n in var_msg_lut.items():
             if n is not None:
                 continue
-            param_data= np.full(shape, np.nan)
-            warnings.warn('Cannot load variable {var} from file {thefile}. '
-                          'Filling image with NaNs.'.format(var=param_name, thefile=self.filename))
+            param_data = np.full(shape, np.nan)
+            warnings.warn(
+                "Cannot load variable {var} from file {thefile}. "
+                "Filling image with NaNs.".format(
+                    var=param_name, thefile=self.filename
+                )
+            )
             return_img[param_name] = param_data
             return_metadata[param_name] = {}
-            return_metadata[param_name]['long_name'] = \
-                lookup(self.product, [param_name]).iloc[0]['long_name']
+            return_metadata[param_name]["long_name"] = lookup(
+                self.product, [param_name]
+            ).iloc[0]["long_name"]
 
         if self.array_1D:
-            return Image(grid.activearrlon, grid.activearrlat,
-                         return_img, return_metadata, timestamp)
+            return Image(
+                grid.activearrlon,
+                grid.activearrlat,
+                return_img,
+                return_metadata,
+                timestamp,
+            )
         else:
             nlat = np.unique(grid.activearrlat).size
             nlon = np.unique(grid.activearrlon).size
@@ -384,11 +461,13 @@ class ERAGrbImg(ImageBase):
             for key in return_img:
                 return_img[key] = return_img[key].reshape((nlat, nlon))
 
-            return Image(grid.activearrlon.reshape(nlat, nlon),
-                         grid.activearrlat.reshape(nlat, nlon),
-                         return_img,
-                         return_metadata,
-                         timestamp)
+            return Image(
+                grid.activearrlon.reshape(nlat, nlon),
+                grid.activearrlat.reshape(nlat, nlon),
+                return_img,
+                return_metadata,
+                timestamp,
+            )
 
     def write(self, data):
         raise NotImplementedError()
@@ -413,11 +492,20 @@ class ERAGrbDs(MultiTemporalImageBase):
     parameter: list or str, optional (default: ['swvl1', 'swvl2'])
         Parameter or list of parameters to read
     expand_grid: bool, optional (default: True)
-        If the reduced gaussian grid should be expanded to a full gaussian grid.
+        If the reduced gaussian grid should be expanded to a full
+        gaussian grid.
     """
-    def __init__(self, root_path, product, parameter=('swvl1', 'swvl2'),
-                 subgrid=None, mask_seapoints=False, h_steps=(0, 6, 12, 18),
-                 array_1D=True):
+
+    def __init__(
+        self,
+        root_path,
+        product,
+        parameter=("swvl1", "swvl2"),
+        subgrid=None,
+        mask_seapoints=False,
+        h_steps=(0, 6, 12, 18),
+        array_1D=True,
+    ):
 
         self.h_steps = h_steps
 
@@ -426,18 +514,23 @@ class ERAGrbDs(MultiTemporalImageBase):
         if type(parameter) == str:
             parameter = [parameter]
 
-        ioclass_kws = {'product': product,
-                       'parameter': parameter,
-                       'subgrid': subgrid,
-                       'mask_seapoints': mask_seapoints,
-                       'array_1D': array_1D}
+        ioclass_kws = {
+            "product": product,
+            "parameter": parameter,
+            "subgrid": subgrid,
+            "mask_seapoints": mask_seapoints,
+            "array_1D": array_1D,
+        }
 
-        super(ERAGrbDs, self).__init__(root_path, ERAGrbImg,
-                                       fname_templ='*_{datetime}.grb',
-                                       datetime_format="%Y%m%d_%H%M",
-                                       subpath_templ=subpath_templ,
-                                       exact_templ=False,
-                                       ioclass_kws=ioclass_kws)
+        super(ERAGrbDs, self).__init__(
+            root_path,
+            ERAGrbImg,
+            fname_templ="*_{datetime}.grb",
+            datetime_format="%Y%m%d_%H%M",
+            subpath_templ=subpath_templ,
+            exact_templ=False,
+            ioclass_kws=ioclass_kws,
+        )
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
@@ -465,6 +558,7 @@ class ERAGrbDs(MultiTemporalImageBase):
 
         return timestamps
 
+
 class ERATs(GriddedNcOrthoMultiTs):
     """
     Time series reader for all reshuffled ERA reanalysis products in time
@@ -481,26 +575,29 @@ class ERATs(GriddedNcOrthoMultiTs):
         series to read. If None is passed, grid.nc is searched for in the
         ts_path.
 
-    Optional keyword arguments that are passed to the Gridded Base when used:
+    Optional keyword arguments that are passed to the Gridded Base when used
     ------------------------------------------------------------------------
         parameters : list, optional (default: None)
-            Specific variable names to read, if None are selected, all are read.
+            Specific variable names to read, if None are selected,
+            all are read.
         offsets : dict, optional (default: None)
             Offsets (values) that are added to the parameters (keys)
         scale_factors : dict, optional (default: None)
             Offset (value) that the parameters (key) is multiplied with
         ioclass_kws: dict, (optional)
-            Optional keyword arguments, passed to the OrthoMultiTs class when used:
-            -----------------------------------------------------------------------
-                read_bulk : boolean, optional (default: False)
-                    If set to True, the data of all locations is read into memory,
-                    and subsequent calls to read_ts then read from cache and
-                    not from disk. This makes reading complete files faster.
-                read_dates : boolean, optional (default: False)
-                    If false, dates will not be read automatically but only on
-                    specific request useable for bulk reading because currently
-                    the netCDF num2date routine is very slow for big datasets.
+
+        Optional keyword arguments, passed to the OrthoMultiTs class when used
+        ----------------------------------------------------------------------
+            read_bulk : boolean, optional (default: False)
+                If set to True, the data of all locations is read into memory,
+                and subsequent calls to read_ts then read from cache and
+                not from disk. This makes reading complete files faster.
+            read_dates : boolean, optional (default: False)
+                If false, dates will not be read automatically but only on
+                specific request useable for bulk reading because currently
+                the netCDF num2date routine is very slow for big datasets.
     """
+
     def __init__(self, ts_path, grid_path=None, **kwargs):
 
         if grid_path is None:
