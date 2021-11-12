@@ -107,8 +107,6 @@ Clone the repository
 
    to be able run ``putup --help``.
 
-   .. todo:: if you are not using pre-commit, please remove the following item:
-
 #. Install |pre-commit|_::
 
     pip install pre-commit
@@ -139,7 +137,8 @@ Implement your changes
    to record your changes in git_.
 
    Please make sure to see the validation messages from |pre-commit|_ and fix
-   any eventual issues with the code styling.
+   any eventual issues with the code styling. Note that you can use in line
+   commands like `# noqa: E722` to exclude lines under certain conditions.
 
    .. important:: Don't forget to add unit tests and documentation in case your
       contribution adds an additional feature and is not just a bugfix.
@@ -173,7 +172,7 @@ black with::
 
     pip install black
 
-and run the folling command on a file to apply the correct styling::
+and run the following command on a file to apply the correct styling::
 
     black -l 79 file.py
 
@@ -219,16 +218,11 @@ Maintainer tasks
 Releases
 --------
 
-.. todo:: This section assumes you are using PyPI to publicly release your package.
-
-   If instead you are using a different/private package index, please update
-   the instructions accordingly.
-
 If you are part of the group of maintainers you can release a new version of this package.
-Make sure all tests are passing on the master branch and the CHANGELOG.rst is up-to-date,
-with changes for the new version at the top.
+Make sure all tests are passing on the master branch and the `CHANGELOG.rst` file
+is up-to-date, with changes for the new version at the top.
 
-Then draft a new release on GitHub. Create a version tag following the
+Then draft a new release_ on GitHub. Create a version tag following the
 `v{MAJOR}.{MINOR}.{PATCH}` pattern.
 This will trigger a new build on GitHub and should push the packages to pypi
 after all tests have passed.
@@ -249,6 +243,7 @@ e.g. using twine (you need to be a package maintainer on pypi for that).
 .. |contribute button| replace:: "Create pull request"
 
 .. _repository: https://github.com/TUW-GEO/ecmwf_models
+.. _release: https://github.com/TUW-GEO/ecmwf_models/releases
 .. _issue tracker: https://github.com/TUW-GEO/ecmwf_models/issues
 
 
