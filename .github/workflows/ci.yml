@@ -17,8 +17,8 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest"]
         python-version: ['3.6', '3.7', '3.8', '3.9']
-        ymlfile: ['environment.yml']
-    name: Py${{ matrix.python-version }}@${{ matrix.os }}🐍
+        ymlfile: ['latest.yml']
+    name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -31,8 +31,8 @@ jobs:
           miniconda-version: "latest"
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          environment-file: ${{ matrix.ymlfile }}
-          activate-environment: ecmwf_models # todo: must match with name in environment.yml
+          environment-file: environment/${{ matrix.ymlfile }}
+          activate-environment: ecmwf_models # todo: must match with name in latest.yml
           auto-activate-base: false
       - name: Print Infos
         shell: bash -l {0}
@@ -46,9 +46,9 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir -p .artifacts
-          if [ ${{ matrix.ymlfile }} == "environment.yml" ]
+          if [ ${{ matrix.ymlfile }} == "latest.yml" ]
           then
-              filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
+              filename=pinned_${{ matrix.python-version }}_${{ matrix.os }}.yml
               conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
           fi
       - name: Install package and test

@@ -54,20 +54,19 @@ as the ecmwf-model package itself.
 
     pip install ecmwf_models
 
-To create a full development environment with conda, the environment.yml file
-in this repository can be used.
+To create a full development environment with conda, the `yml` files inside
+the folder `environment/` in this repository can be used. Both environements
+should work. The file `latest` should install the newest version of most
+dependencies. The file `pinned` is a fallback option and should always work.
 
 .. code::
 
     git clone git@github.com:TUW-GEO/ecmwf_models.git ecmwf_models
     cd ecmwf_models
-    conda create -n ecmwf-models python=3.6 # or any other supported version
+    conda env create -f environment/latest.yml
     source activate ecmwf-models
-    conda env update -f environment.yml
     python setup.py develop
 
-This script should work on Linux or OSX and uses the ``environment.yml`` file
-included in this repository.
 
 Supported Products
 ==================

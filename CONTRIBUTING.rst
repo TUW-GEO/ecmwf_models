@@ -87,7 +87,7 @@ Before you start coding, we recommend creating an isolated `virtual
 environment`_ to avoid any problems with your installed Python packages.
 This can easily be done via Miniconda_::
 
-    conda env create -f environment.yml
+    conda env create -f environment/latest.yml
     conda activate ecmwf_models
 
 Clone the repository
