@@ -38,7 +38,7 @@ from ecmwf_models.utils import mkdate, parse_filetype, parse_product, str2bool
 from datetime import time, datetime
 
 def reshuffle(input_root, outputpath, startdate, enddate, variables, product=None,
-              h_steps=[0,6,12,18], land_points=False, imgbuffer=50):
+              bbox=None, h_steps=[0,6,12,18], land_points=False, imgbuffer=50):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
     series format.
@@ -58,6 +58,9 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables, product=Non
     product : str, optional (default: None)
         Either era5 or era5-land, if None is passed we guess the product from the
         downloaded image files.
+    bbox: tuple optional (default: None)
+        (min_lon, min_lat, max_lon, max_lat) - wgs84.
+        To load only a subset of the global grid / file.
     h_steps : list, optional (default: [0, 6, 12, 18]
         Hours at which images are read for each day and used for reshuffling,
         therefore this defines the sub-daily temporal resolution of the time series that
@@ -72,39 +75,38 @@ def reshuffle(input_root, outputpath, startdate, enddate, variables, product=Non
     """
 
     if h_steps is None:
-        h_steps = [0,6,12,18]
+        h_steps = [0, 6, 12, 18]
 
     filetype = parse_filetype(input_root)
     product = parse_product(input_root) if not product else product
 
-
     if land_points:
         if product == 'era5':
-            grid = ERA5_RegularImgLandGrid(res_lat=0.25, res_lon=0.25)
+            grid = ERA5_RegularImgLandGrid(res_lat=0.25, res_lon=0.25, bbox=bbox)
         elif product == 'era5-land':
-            grid = ERA5_RegularImgLandGrid(res_lat=0.1, res_lon=0.1)
+            grid = ERA5_RegularImgLandGrid(res_lat=0.1, res_lon=0.1, bbox=bbox)
         else:
             raise NotImplementedError(product, 'Land grid not implemented for product.')
-        subgrid = grid
+        #subgrid = grid
     else:
         if product == 'era5':
-            grid = ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25)
+            grid = ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25, bbox=bbox)
         elif product == 'era5-land':
-            grid = ERA_RegularImgGrid(res_lat=0.1, res_lon=0.1)
+            grid = ERA_RegularImgGrid(res_lat=0.1, res_lon=0.1, bbox=bbox)
         else:
             raise NotImplementedError(product, 'Grid not implemented for product.')
-        subgrid = None
+        #subgrid = None
 
     if filetype == 'grib':
         if land_points:
             raise NotImplementedError('Reshuffling land points only implemented for netcdf files')
 
         input_dataset = ERA5GrbDs(root_path=input_root, parameter=variables,
-                                  subgrid=subgrid, array_1D=True, h_steps=h_steps,
+                                  subgrid=grid, array_1D=True, h_steps=h_steps,
                                   product=product, mask_seapoints=False)
     elif filetype == 'netcdf':
         input_dataset = ERA5NcDs(root_path=input_root, parameter=variables,
-                                 subgrid=subgrid, array_1D=True, h_steps=h_steps,
+                                 subgrid=grid, array_1D=True, h_steps=h_steps,
                                  product=product, mask_seapoints=False)
     else:
         raise Exception('Unknown file format')
@@ -162,6 +164,10 @@ def parse_args(args):
                               "for more information on variable names of the product. "))
     parser.add_argument("--land_points", type=str2bool, default='False',
                         help=("Store only time series for points that are over land. Default is False."))
+    parser.add_argument("--bbox", type=float, default=None, nargs=4,
+                    help=("min_lon min_lat max_lon max_lat. "
+                          "Bounding Box (lower left and upper right corner) "
+                          "of area to reshuffle (WGS84). By default all data is loaded."))
     parser.add_argument("--h_steps", type=int, default=None, nargs='+',
                         help=("Time steps (full hours) of images that will be reshuffled (must be in the images). "
                               "By default 6H images (starting at 0:00 UTC) will be reshuffled: 0 6 12 18"))
@@ -185,7 +191,7 @@ def main(args):
               startdate=args.start,
               enddate=args.end,
               variables=args.variables,
-              land_points=args.land_points,
+              bbox=args.bbox,
               h_steps=args.h_steps,
               imgbuffer=args.imgbuffer)
 

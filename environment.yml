@@ -1,4 +1,4 @@
-name: ecmwf-models
+name: ecmwf_models
 channels:
 - conda-forge
 dependencies:
@@ -11,6 +11,8 @@ dependencies:
 - scipy
 - pyresample
 - xarray
+- cdo
+- python-cdo
 - pip
 - pip:
     - pygeobase
@@ -22,3 +24,5 @@ dependencies:
     - datedown>=0.3
     - requests
     - more_itertools
+    - pytest
+    - pytest-cov
