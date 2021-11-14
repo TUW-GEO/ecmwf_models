@@ -35,12 +35,24 @@ import argparse
 import numpy as np
 from netCDF4 import Dataset
 from collections import OrderedDict
-from cdo import Cdo
+try:
+    from cdo import Cdo
+    cdo_available = True
+except ImportError:
+    cdo_available = False
 
 try:
     import pygrib
+    pygrib_available = True
 except ImportError:
-    warnings.warn("pygrib has not been imported")
+    pygrib_available = False
+
+
+class CdoNotFoundError(ModuleNotFoundError):
+    def __init__(self, msg=None):
+        _default_msg = "cdo and/or python-cdo not installed. " \
+                       "Use conda to install it them under Linux."
+        self.msg = _default_msg if msg is None else msg
 
 
 def str2bool(v):
@@ -99,6 +111,9 @@ def save_ncs_from_nc(
     filename_templ = filename_templ.format(product=product_name)
 
     if grid is not None:
+        if not cdo_available:
+            raise CdoNotFoundError()
+
         cdo = Cdo()
         gridpath = os.path.join(output_path, "grid.txt")
         weightspath = os.path.join(output_path, "remap_weights.nc")
@@ -120,6 +135,7 @@ def save_ncs_from_nc(
             os.makedirs(os.path.dirname(filepath))
 
         if grid is not None:
+
             if not os.path.exists(weightspath):
                 # create weights file
                 getattr(cdo, "gen" + remap_method)(
