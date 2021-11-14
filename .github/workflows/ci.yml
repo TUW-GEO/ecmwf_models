@@ -15,7 +15,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: ["ubuntu-latest"]  #  "windows-latest" todo fix CDO stuff
+        os: ["ubuntu-latest", "windows-latest"]
         python-version: ['3.6', '3.7', '3.8', '3.9']
         ymlfile: ['latest.yml']
     name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}
@@ -116,4 +116,4 @@ jobs:
           verify_metadata: true
           packages_dir: Artifacts/dist/
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets
+          password: ${{ secrets.PYPI_API_TOKEN }}  # todo: add pypi token to GHA
