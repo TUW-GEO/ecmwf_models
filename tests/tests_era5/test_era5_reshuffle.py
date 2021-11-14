@@ -53,6 +53,7 @@ def test_ERA5_reshuffle_nc():
         assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5  # less files because only land points and bbox
         ds = ERATs(ts_path, ioclass_kws={'read_bulk': True})
         ts = ds.read(15, 48)
+        ds.close()
         swvl1_values_should = np.array([0.402825,  0.390983], dtype=np.float32)
         nptest.assert_allclose(ts['swvl1'].values, swvl1_values_should, rtol=1e-5)
         swvl2_values_should = np.array([0.390512,  0.390981], dtype=np.float32)
@@ -80,6 +81,7 @@ def test_ERA5_reshuffle_grb():
         assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5
         ds = ERATs(ts_path, ioclass_kws={'read_bulk': True})
         ts = ds.read(15, 48)
+        ds.close()
         swvl1_values_should = np.array([0.402824,  0.390979], dtype=np.float32)
         nptest.assert_allclose(ts['swvl1'].values, swvl1_values_should, rtol=1e-5)
         swvl2_values_should = np.array([0.390514,  0.390980], dtype=np.float32)

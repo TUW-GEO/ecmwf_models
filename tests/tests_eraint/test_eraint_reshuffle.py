@@ -51,6 +51,7 @@ def test_ERAInterim_reshuffle_grb():
         assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 2593
         ds = ERATs(ts_path, ioclass_kws={'read_bulk':True})
         ts = ds.read(48, 15)
+        ds.close()
         swvl1_should = np.array([0.171761,  0.171738], dtype=np.float32)
         nptest.assert_allclose(ts['swvl1'].values, swvl1_should, rtol=1e-5)
         swvl2_should = np.array([0.178139,  0.178200], dtype=np.float32)
@@ -71,6 +72,7 @@ def test_ERAInterim_reshuffle_nc():
         assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 2593
         ds = ERATs(ts_path, ioclass_kws={'read_bulk': True})
         ts = ds.read(48, 15)
+        ds.close()
         swvl1_should = np.array([0.171854, 0.171738], dtype=np.float32)
         nptest.assert_allclose(ts['swvl1'].values, swvl1_should, rtol=1e-5)
         swvl2_should = np.array([0.179816, 0.179860], dtype=np.float32)
