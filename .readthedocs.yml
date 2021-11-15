@@ -10,7 +10,7 @@ submodules:
   include: all
 
 conda:
-  environment: environment.yml
+  environment: environment/latest.yml
 
 python:
   version: 3.7
