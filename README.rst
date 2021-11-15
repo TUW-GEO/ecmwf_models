@@ -88,4 +88,4 @@ Contribute
 
 We are happy if you want to contribute. Please raise an issue explaining what
 is missing or if you find a bug.
-Please take a look at the `developers guide <https://github.com/TUW-GEO/ecmwf_models/blob/new-ci-and-reshuffle-bbox/CONTRIBUTING.rst>`_.
+Please take a look at the `developers guide <https://github.com/TUW-GEO/ecmwf_models/blob/master/CONTRIBUTING.rst>`_.
