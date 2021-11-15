@@ -2,8 +2,9 @@
 ecmwf_models
 ============
 
-.. image:: https://travis-ci.org/TUW-GEO/ecmwf_models.svg?branch=master
-    :target: https://travis-ci.org/TUW-GEO/ecmwf_models
+
+.. image:: https://github.com/TUW-GEO/ecmwf_models/workflows/Automated%20Tests/badge.svg?branch=master
+   :target: https://github.com/TUW-GEO/ecmwf_models/actions
 
 .. image:: https://coveralls.io/repos/github/TUW-GEO/ecmwf_models/badge.svg?branch=master
    :target: https://coveralls.io/github/TUW-GEO/ecmwf_models?branch=master
@@ -44,7 +45,7 @@ command in your shell you can continue:
 
 .. code::
 
-    conda install -c conda-forge pandas pygrib netcdf4 scipy pyresample xarray
+    conda install -c conda-forge pandas pygrib netcdf4 pyresample xarray
 
 The following command will download and install all the needed pip packages as well
 as the ecmwf-model package itself.
@@ -53,20 +54,20 @@ as the ecmwf-model package itself.
 
     pip install ecmwf_models
 
-To create a full development environment with conda, the environment.yml file
-in this repository can be used.
+To create a full development environment with conda, the `yml` files inside
+the folder `environment/` in this repository can be used. Both environements
+should work. The file `latest` should install the newest version of most
+dependencies. The file `pinned` is a fallback option and should always work.
 
 .. code::
 
-    git clone git@github.com:TUW-GEO/ecmwf_models.git ecmwf_models
+    git clone --recursive git@github.com:TUW-GEO/ecmwf_models.git ecmwf_models
     cd ecmwf_models
-    conda create -n ecmwf-models python=3.6 # or any other supported version
-    source activate ecmwf-models
-    conda env update -f environment.yml
+    conda env create -f environment/latest.yml
+    source activate ecmwf_models
     python setup.py develop
+    pytest
 
-This script should work on Linux or OSX and uses the ``environment.yml`` file
-included in this repository.
 
 Supported Products
 ==================
@@ -75,7 +76,7 @@ At the moment this package supports
 
 - **ERA Interim** (deprecated)
 - **ERA5**
-- **ERA5-Land** 
+- **ERA5-Land**
 
 reanalysis data in **grib** and **netcdf** format (download, reading, time series creation) with a default spatial
 sampling of 0.75 degrees (ERA Interim), 0.25 degrees (ERA5), resp. 0.1 degrees (ERA5-Land).
@@ -86,23 +87,5 @@ Contribute
 ==========
 
 We are happy if you want to contribute. Please raise an issue explaining what
-is missing or if you find a bug. We will also gladly accept pull requests
-against our master branch for new features or bug fixes.
-
-Development setup
------------------
-
-For Development we also recommend the ``conda`` environment from the
-installation part.
-
-Guidelines
-----------
-
-If you want to contribute please follow these steps:
-
-- Fork the ecmwf_models repository to your account
-- make a new feature branch from the ecmwf_models master branch
-- Add your feature
-- please include tests for your contributions in one of the test directories
-  We use py.test so a simple function called test_my_feature is enough
-- submit a pull request to our master branch
+is missing or if you find a bug.
+Please take a look at the `developers guide <https://github.com/TUW-GEO/ecmwf_models/blob/new-ci-and-reshuffle-bbox/CONTRIBUTING.rst>`_.

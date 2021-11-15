@@ -217,8 +217,6 @@ def test_ERAInt_nc_ds():
         nptest.assert_allclose(data.lon[0], 0.0)
         nptest.assert_allclose(data.lon[240], 180.0)  # middle of image
 
-
-
 def test_ERAInt_grb_ds():
     root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
                          "ecmwf_models-test-data", "ERA-Interim", "grib")

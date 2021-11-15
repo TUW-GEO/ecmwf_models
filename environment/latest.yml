@@ -1,7 +1,8 @@
-name: ecmwf-models
+name: ecmwf_models
 channels:
 - conda-forge
 dependencies:
+- python>=3
 - numpy
 - pandas
 - configobj
@@ -22,3 +23,8 @@ dependencies:
     - datedown>=0.3
     - requests
     - more_itertools
+    - typing_extensions
+    - pre-commit
+    - sphinx_rtd_theme
+    - pytest
+    - pytest-cov
