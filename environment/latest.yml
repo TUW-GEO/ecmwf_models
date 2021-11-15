@@ -27,5 +27,6 @@ dependencies:
     - more_itertools
     - typing_extensions
     - pre-commit
+    - sphinx_rtd_theme
     - pytest
     - pytest-cov

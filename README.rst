@@ -45,7 +45,7 @@ command in your shell you can continue:
 
 .. code::
 
-    conda install -c conda-forge pandas pygrib netcdf4 scipy pyresample xarray
+    conda install -c conda-forge pandas pygrib netcdf4 pyresample xarray
 
 The following command will download and install all the needed pip packages as well
 as the ecmwf-model package itself.
@@ -61,11 +61,12 @@ dependencies. The file `pinned` is a fallback option and should always work.
 
 .. code::
 
-    git clone git@github.com:TUW-GEO/ecmwf_models.git ecmwf_models
+    git clone --recursive git@github.com:TUW-GEO/ecmwf_models.git ecmwf_models
     cd ecmwf_models
     conda env create -f environment/latest.yml
-    source activate ecmwf-models
+    source activate ecmwf_models
     python setup.py develop
+    pytest
 
 
 Supported Products
@@ -86,23 +87,5 @@ Contribute
 ==========
 
 We are happy if you want to contribute. Please raise an issue explaining what
-is missing or if you find a bug. We will also gladly accept pull requests
-against our master branch for new features or bug fixes.
-
-Development setup
------------------
-
-For Development we also recommend the ``conda`` environment from the
-installation part.
-
-Guidelines
-----------
-
-If you want to contribute please follow these steps:
-
-- Fork the ecmwf_models repository to your account
-- make a new feature branch from the ecmwf_models master branch
-- Add your feature
-- please include tests for your contributions in one of the test directories
-  We use py.test so a simple function called test_my_feature is enough
-- submit a pull request to our master branch
+is missing or if you find a bug.
+Please take a look at the `developers guide <https://github.com/TUW-GEO/ecmwf_models/blob/new-ci-and-reshuffle-bbox/CONTRIBUTING.rst>`_.
