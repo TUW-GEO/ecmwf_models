@@ -262,6 +262,7 @@ def main(args):
         variables=args.variables,
         bbox=args.bbox,
         h_steps=args.h_steps,
+        land_points=args.land_points,
         imgbuffer=args.imgbuffer,
     )
 
