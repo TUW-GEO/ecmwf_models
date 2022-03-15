@@ -287,7 +287,7 @@ def download_and_move(
                 status_code = 0
                 break
 
-            except:  # noqa: E722
+            except Exception:  # noqa: E722
                 # If no data is available we don't need to retry
                 if (cds_status_tracker.download_statuscode ==
                         CDSStatusTracker.statuscode_unavailable):

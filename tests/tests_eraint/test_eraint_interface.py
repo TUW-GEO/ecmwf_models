@@ -11,7 +11,7 @@ from datetime import datetime
 def test_ERAInt_nc_image():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "eraint", "nc", "2000", "001",
+        "ecmwf_models-test-data", "ERA-Interim", "netcdf", "2000", "001",
         'ERAINT_AN_20000101_0000.nc')
 
     dset = ERAIntNcImg(
@@ -56,7 +56,7 @@ def test_ERAInt_nc_image():
 def test_ERAInt_nc_image_1d():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "eraint", "nc", "2000", "001",
+        "ecmwf_models-test-data", "ERA-Interim", "netcdf", "2000", "001",
         'ERAINT_AN_20000101_0000.nc')
 
     dset = ERAIntNcImg(
@@ -107,7 +107,7 @@ def test_ERAInt_nc_image_1d():
 def test_ERAInt_grb_image():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "eraint", "grb", "2000", "001",
+        "ecmwf_models-test-data", "ERA-Interim", "grib", "2000", "001",
         'ERAINT_AN_20000101_0000.grb')
 
     dset = ERAIntGrbImg(
@@ -156,7 +156,7 @@ def test_ERAInt_grb_image():
 def test_ERAInt_grb_image_1d():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "eraint", "grb", "2000", "001",
+        "ecmwf_models-test-data", "ERA-Interim", "grib", "2000", "001",
         'ERAINT_AN_20000101_0000.grb')
 
     dset = ERAIntGrbImg(
@@ -206,7 +206,7 @@ def test_ERAInt_grb_image_1d():
 def test_ERAInt_nc_ds():
     root_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "eraint", "nc")
+        "ecmwf_models-test-data", "ERA-Interim", "netcdf")
 
     tstamps_should = [datetime(2000, 1, 1), datetime(2000, 1, 1, 12)]
 
@@ -249,7 +249,7 @@ def test_ERAInt_nc_ds():
 def test_ERAInt_grb_ds():
     root_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "eraint", "grb")
+        "ecmwf_models-test-data", "ERA-Interim", "grib")
 
     tstamps_should = [datetime(2000, 1, 1), datetime(2000, 1, 1, 12)]
 

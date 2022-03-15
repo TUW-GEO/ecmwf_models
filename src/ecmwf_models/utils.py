@@ -20,6 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
 """
 Utility functions for all data products in this package.
 """
@@ -34,6 +35,7 @@ import argparse
 import numpy as np
 from netCDF4 import Dataset
 from collections import OrderedDict
+
 try:
     from cdo import Cdo
     cdo_available = True
@@ -82,7 +84,8 @@ def save_ncs_from_nc(
     output_path,
     product_name,
     filename_templ="{product}_AN_%Y%m%d_%H%M.nc",
-    expver_template="expver_{product}_AN_%Y%m%d_%H%M.nc",
+    expver_template="{product}T_AN_%Y%m%d_%H%M.nc",
+    omit_expver_data=False,
     grid=None,
     keep_original=True,
     remap_method="bil",
@@ -99,22 +102,23 @@ def save_ncs_from_nc(
         Where to save the resulting netcdf files
     product_name : str
         Name of the ECMWF model (only for filename generation)
-    filename_templ : str, optional (default: product_grid_date_time)
+    filename_templ : str, optional (default: "{product}_AN_%Y%m%d_%H%M.nc")
         Template for naming each separated nc file
-
+    expver_template: str, optional (default: "{product}T_AN_%Y%m%d_%H%M.nc")
+        Template for naming each separate nc file when an experiment version
+        dimension is present (indicating that not all variables are final).
+        By default, we assume that the ERA5T data is present.
+    omit_expver_data: bool, optional (default: False)
+        Days where experimental data (ERA5T) is present will be ignored.
+        This means that for 1-2 months before present, data will be downloaded
+        and checked for experiments. If any are found, no images will be
+        stored for those dates.
     keep_original: bool
         keep the original downloaded data
     """
     localsubdirs = ["%Y", "%j"]
 
     nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
-
-    if 'expver' in nc_in.dims:
-        warnings.warn(
-            f'File {input_nc} contains experimental versions of variables.')
-        filename_templ = expver_template
-
-    filename_templ = filename_templ.format(product=product_name)
 
     if grid is not None:
         if not cdo_available:
@@ -130,6 +134,26 @@ def save_ncs_from_nc(
 
     for time in nc_in.time.values:
         subset = nc_in.sel(time=time)
+        if 'expver' in subset.dims:
+            if omit_expver_data:
+                warnings.warn(
+                    f'Data for {time} contains experimental versions of '
+                    f'variables. `omit_expver_data` is set to True, '
+                    f'therefore continue with next date.'
+                    )
+                continue
+            warnings.warn(
+                f'Data for {time} contains experimental versions of '
+                f'variables. Will use a different file name template.')
+
+            filename_templ = expver_template.format(product=product_name)
+            subset_merge = subset.sel(expver=subset['expver'].values[0])
+            for e in subset['expver'].values[1:]:
+                subset_merge = subset_merge.combine_first(subset.sel(expver=e))
+            subset = subset_merge
+        else:
+            filename_templ = filename_templ.format(product=product_name)
+
         timestamp = pd.Timestamp(time).to_pydatetime()
         filepath = create_dt_fpath(
             timestamp,
@@ -141,7 +165,6 @@ def save_ncs_from_nc(
             os.makedirs(os.path.dirname(filepath))
 
         if grid is not None:
-
             if not os.path.exists(weightspath):
                 # create weights file
                 getattr(cdo, "gen" + remap_method)(
@@ -156,7 +179,9 @@ def save_ncs_from_nc(
         var_encode = {"zlib": True, "complevel": 6}
         subset.to_netcdf(
             filepath, encoding={var: var_encode for var in subset.variables})
+
     nc_in.close()
+
     if not keep_original:
         os.remove(input_nc)
     if grid is not None:

@@ -275,7 +275,7 @@ class ERANcDs(MultiTemporalImageBase):
                       str_param=None,
                       custom_datetime_format=None):
         """
-        override the original filename geneartion to allow multiple files for
+        override the original filename generation to allow multiple files for
         time stamp
         """
         if custom_templ is not None:

@@ -12,7 +12,7 @@ from ecmwf_models.grid import ERA5_RegularImgLandGrid
 def test_ERA5_nc_image_landpoints():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "era5", "nc", "2010", "001",
+        "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
         'ERA5_AN_20100101_0000.nc')
     subgrid = ERA5_RegularImgLandGrid(0.25, 0.25)
     dset = ERA5NcImg(
@@ -53,7 +53,7 @@ def test_ERA5_nc_image_landpoints():
 def test_ERA5_nc_image():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "era5", "nc", "2010", "001",
+        "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
         'ERA5_AN_20100101_0000.nc')
 
     dset = ERA5NcImg(fname, parameter=['swvl1', 'swvl2'], mask_seapoints=True)
@@ -97,7 +97,7 @@ def test_ERA5_nc_image():
 def test_ERA5_nc_image_1d():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "era5", "nc", "2010", "001",
+        "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
         'ERA5_AN_20100101_0000.nc')
 
     dset = ERA5NcImg(
@@ -148,7 +148,7 @@ def test_ERA5_nc_image_1d():
 def test_ERA5_grb_image():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "era5", "grb", "2010", "001",
+        "ecmwf_models-test-data", "ERA5", "grib", "2010", "001",
         'ERA5_AN_20100101_0000.grb')
 
     dset = ERA5GrbImg(
@@ -196,7 +196,7 @@ def test_ERA5_grb_image():
 def test_ERA5_grb_image_1d():
     fname = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "era5", "grb", "2010", "001",
+        "ecmwf_models-test-data", "ERA5", "grib", "2010", "001",
         'ERA5_AN_20100101_0000.grb')
 
     dset = ERA5GrbImg(
@@ -247,7 +247,7 @@ def test_ERA5_grb_image_1d():
 def test_ERA5_nc_ds():
     root_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "era5", "nc")
+        "ecmwf_models-test-data", "ERA5", "netcdf")
 
     tstamps_should = [datetime(2010, 1, 1), datetime(2010, 1, 1, 12)]
 
@@ -290,7 +290,7 @@ def test_ERA5_nc_ds():
 def test_ERA5_grb_ds():
     root_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..',
-        "ecmwf_models-test-data", "era5", "grb")
+        "ecmwf_models-test-data", "ERA5", "grib")
 
     tstamps_should = [datetime(2010, 1, 1), datetime(2010, 1, 1, 12)]
 
