@@ -1,6 +1,7 @@
 name: ecmwf_models
 channels:
 - conda-forge
+- defaults
 dependencies:
 - python>=3
 - numpy
