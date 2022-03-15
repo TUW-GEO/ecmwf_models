@@ -6,12 +6,21 @@ Unreleased
 ==========
 -
 
+Version 0.8
+===========
+
+- Program `era5_download` returns exit code now (PR `#27 <https://github.com/TUW-GEO/ecmwf_models/pull/27>`_);
+- Program `era5_reshuffle` can now take a bounding box to reshuffle spatial subsets;
+- TravisCI was replaced by Github Actions;
+- Pyscaffold 4 is used; contributing guide added; pre-commit added;
+- Code formatting with black (line length 79);
+
 Version 0.7
 ===========
 
 - Update pyscaffold structure
 - Drop support for python2
-- Travis deoploy to pypi
+- Travis deploy to pypi
 
 Version 0.6.1
 =============
@@ -47,7 +56,7 @@ Version 0.4
 - Add ERA5 support (download, reading, TS conversion)
 - Add netcdf support for ERA5 and ERA-Interim download (regular grid)
 - Add new grid defintions: netcdf download in regular grid, grib in gaussian grid
-- Add Download with spatial resampling (grib and nc) 
+- Add Download with spatial resampling (grib and nc)
 - Update GRIB message storing (per day instead of per message)
 - Add tests for splitting downloaded files, ERA5 reading, ERA5 reshuffling, generated grids
 - Add new test data

@@ -11,9 +11,10 @@ can be passed as well:
 .. code-block:: python
 
     from ecmwf_models import ERATs
-    ds = ERATs(ts_path, ioclass_kws={'read_bulk':True}) # read_bulk reads full files into memory
+    # read_bulk reads full files into memory
     # read_ts takes either lon, lat coordinates to perform a nearest neighbour search
     # or a grid point index (from the grid.nc file) and returns a pandas.DataFrame.
+    ds = ERATs(ts_path, ioclass_kws={'read_bulk': True})
     ts = ds.read_ts(45, 15)
 
 Bulk reading speeds up reading multiple points from a cell file by storing the

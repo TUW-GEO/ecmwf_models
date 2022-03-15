@@ -1,0 +1,37 @@
+# This is the developers environment for the `ecmwf_models` package.
+# Most packages here are UNPINNED, which means that the following commands
+# will try to install the latest available versions of the dependencies.
+#
+#   conda install mamba
+#   mamba env create -f ./latest.yml -n ecmwf_models --yes
+#   conda activate ecmwf_models
+
+name: ecmwf_models
+channels:
+- conda-forge
+dependencies:
+- python>=3
+- numpy
+- pandas
+- configobj
+- pygrib>=2.0.1
+- hdf5
+- netcdf4>=1.4.2
+- pyresample
+- xarray
+- pip
+- pip:
+    - pygeobase
+    - pynetcf
+    - repurpose
+    - pygeogrids
+    - cdsapi
+    - ecmwf-api-client
+    - datedown>=0.3
+    - requests
+    - more_itertools
+    - typing_extensions
+    - pre-commit
+    - sphinx_rtd_theme
+    - pytest
+    - pytest-cov
