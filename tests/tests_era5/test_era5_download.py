@@ -95,6 +95,10 @@ def test_dry_download_nc_era5():
         assert (sorted(os.listdir(os.path.join(
             dl_path, '2010', '001'))) == sorted(should_dlfiles))
 
+        assert (os.listdir(dl_path) == ['2010'])
+        assert (os.listdir(os.path.join(dl_path, '2010')) == ['001'])
+        assert (len(os.listdir(os.path.join(dl_path, '2010', '001'))) == 2)
+
 
 def test_dry_download_grb_era5():
     with tempfile.TemporaryDirectory() as dl_path:
