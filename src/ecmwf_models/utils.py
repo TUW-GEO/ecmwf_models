@@ -84,8 +84,6 @@ def save_ncs_from_nc(
     output_path,
     product_name,
     filename_templ="{product}_AN_%Y%m%d_%H%M.nc",
-    expver_template="{product}T_AN_%Y%m%d_%H%M.nc",
-    omit_expver_data=False,
     grid=None,
     keep_original=True,
     remap_method="bil",
@@ -104,15 +102,6 @@ def save_ncs_from_nc(
         Name of the ECMWF model (only for filename generation)
     filename_templ : str, optional (default: "{product}_AN_%Y%m%d_%H%M.nc")
         Template for naming each separated nc file
-    expver_template: str, optional (default: "{product}T_AN_%Y%m%d_%H%M.nc")
-        Template for naming each separate nc file when an experiment version
-        dimension is present (indicating that not all variables are final).
-        By default, we assume that the ERA5T data is present.
-    omit_expver_data: bool, optional (default: False)
-        Days where experimental data (ERA5T) is present will be ignored.
-        This means that for 1-2 months before present, data will be downloaded
-        and checked for experiments. If any are found, no images will be
-        stored for those dates.
     keep_original: bool
         keep the original downloaded data
     """
@@ -134,19 +123,12 @@ def save_ncs_from_nc(
 
     for time in nc_in.time.values:
         subset = nc_in.sel(time=time)
-        if 'expver' in subset.dims:
-            if omit_expver_data:
-                warnings.warn(
-                    f'Data for {time} contains experimental versions of '
-                    f'variables. `omit_expver_data` is set to True, '
-                    f'therefore continue with next date.'
-                    )
-                continue
+        if 'expver' in subset.dims or \
+                (abs((datetime(2022, 1, 1) - datetime.now()).days) < 90):
             warnings.warn(
                 f'Data for {time} contains experimental versions of '
-                f'variables. Will use a different file name template.')
+                f'variables')
 
-            filename_templ = expver_template.format(product=product_name)
             subset_merge = subset.sel(expver=subset['expver'].values[0])
             for e in subset['expver'].values[1:]:
                 subset_merge = subset_merge.combine_first(subset.sel(expver=e))
