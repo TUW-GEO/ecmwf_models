@@ -123,12 +123,11 @@ def save_ncs_from_nc(
 
     for time in nc_in.time.values:
         subset = nc_in.sel(time=time)
-        if 'expver' in subset.dims or \
-                (abs((datetime(2022, 1, 1) - datetime.now()).days) < 90):
+        if (abs((datetime(2022, 1, 1) - datetime.now()).days) < 90):
             warnings.warn(
-                f'Data for {time} contains experimental versions of '
+                f'Data for {time} may contain experimental versions of '
                 f'variables')
-
+        if 'expver' in subset.dims:
             subset_merge = subset.sel(expver=subset['expver'].values[0])
             for e in subset['expver'].values[1:]:
                 subset_merge = subset_merge.combine_first(subset.sel(expver=e))

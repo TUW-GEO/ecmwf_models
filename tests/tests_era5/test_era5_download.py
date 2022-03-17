@@ -181,3 +181,6 @@ def test_download_nc_era5_regridding():
             assert dict(ds.dims) == {"lon": 720, "lat": 360}
             assert np.all(np.arange(89.75, -90, -0.5) == ds.lat)
             assert np.all(np.arange(-179.75, 180, 0.5) == ds.lon)
+
+if __name__ == '__main__':
+    test_dry_download_nc_era5()
