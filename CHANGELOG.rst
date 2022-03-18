@@ -5,7 +5,10 @@ Changelog
 Unreleased
 ==========
 
-- ERA5T images are now stored under a different file name
+Version 0.9
+===========
+
+- ERA5T images are downloaded and sliced correctly
 - Code formatting with yapf
 
 Version 0.8
