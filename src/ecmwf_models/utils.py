@@ -35,6 +35,7 @@ import argparse
 import numpy as np
 from netCDF4 import Dataset
 from collections import OrderedDict
+
 try:
     from cdo import Cdo
     cdo_available = True
@@ -49,6 +50,7 @@ except ImportError:
 
 
 class CdoNotFoundError(ModuleNotFoundError):
+
     def __init__(self, msg=None):
         _default_msg = "cdo and/or python-cdo not installed. " \
                        "Use conda to install it them under Linux."
@@ -98,17 +100,14 @@ def save_ncs_from_nc(
         Where to save the resulting netcdf files
     product_name : str
         Name of the ECMWF model (only for filename generation)
-    filename_templ : str, optional (default: product_grid_date_time)
+    filename_templ : str, optional (default: "{product}_AN_%Y%m%d_%H%M.nc")
         Template for naming each separated nc file
-
     keep_original: bool
         keep the original downloaded data
     """
     localsubdirs = ["%Y", "%j"]
 
     nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
-
-    filename_templ = filename_templ.format(product=product_name)
 
     if grid is not None:
         if not cdo_available:
@@ -124,6 +123,18 @@ def save_ncs_from_nc(
 
     for time in nc_in.time.values:
         subset = nc_in.sel(time=time)
+        if (abs((datetime(2022, 1, 1) - datetime.now()).days) < 90):
+            warnings.warn(
+                f'Data for {time} may contain experimental versions of '
+                f'variables')
+        if 'expver' in subset.dims:
+            subset_merge = subset.sel(expver=subset['expver'].values[0])
+            for e in subset['expver'].values[1:]:
+                subset_merge = subset_merge.combine_first(subset.sel(expver=e))
+            subset = subset_merge
+        else:
+            filename_templ = filename_templ.format(product=product_name)
+
         timestamp = pd.Timestamp(time).to_pydatetime()
         filepath = create_dt_fpath(
             timestamp,
@@ -135,12 +146,10 @@ def save_ncs_from_nc(
             os.makedirs(os.path.dirname(filepath))
 
         if grid is not None:
-
             if not os.path.exists(weightspath):
                 # create weights file
                 getattr(cdo, "gen" + remap_method)(
-                    gridpath, input=subset, output=weightspath
-                )
+                    gridpath, input=subset, output=weightspath)
             subset = cdo.remap(
                 ",".join([gridpath, weightspath]),
                 input=subset,
@@ -150,9 +159,10 @@ def save_ncs_from_nc(
         # same compression for all variables
         var_encode = {"zlib": True, "complevel": 6}
         subset.to_netcdf(
-            filepath, encoding={var: var_encode for var in subset.variables}
-        )
+            filepath, encoding={var: var_encode for var in subset.variables})
+
     nc_in.close()
+
     if not keep_original:
         os.remove(input_nc)
     if grid is not None:
@@ -192,8 +202,7 @@ def save_gribs_from_grib(
         template = template.format(product=product_name)
 
         filepath = create_dt_fpath(
-            filedate, root=output_path, fname=template, subdirs=localsubdirs
-        )
+            filedate, root=output_path, fname=template, subdirs=localsubdirs)
 
         if not os.path.exists(os.path.dirname(filepath)):
             os.makedirs(os.path.dirname(filepath))
@@ -307,8 +316,7 @@ def load_var_table(name="era5", lut=False):
     name = name.lower()
     if name == "era5":
         era_vars_csv = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "era5", "era5_lut.csv"
-        )
+            os.path.dirname(os.path.abspath(__file__)), "era5", "era5_lut.csv")
     elif name == "era5-land":
         era_vars_csv = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
@@ -351,8 +359,7 @@ def lookup(name, variables):
             continue
         else:
             raise ValueError(
-                f"Passed variable {var} is not a supported variable."
-            )
+                f"Passed variable {var} is not a supported variable.")
 
     return lut.loc[selected, :]
 
@@ -426,8 +433,7 @@ def make_era5_land_definition_file(
     if exclude_antarctica:
         cut_off_lat = -60.0
         index_thres_lat = ((180.0 / data_file_y_res) + 1) - (
-            (90.0 + cut_off_lat) / data_file_y_res
-        )
+            (90.0 + cut_off_lat) / data_file_y_res)
         land_mask[int(index_thres_lat):, :] = np.nan
     else:
         cut_off_lat = None
@@ -435,16 +441,14 @@ def make_era5_land_definition_file(
     ds_out.createVariable("land", "float32", (lat_name, lon_name), zlib=True)
     ds_out.variables["land"][:] = land_mask
 
-    land_attrs = OrderedDict(
-        [
-            ("units", "(0,1)"),
-            ("long_name", "Land-sea mask"),
-            ("based_on_variable", ref_var),
-            ("standard_name", "land_binary_mask"),
-            ("threshold_land_>=", str(threshold)),
-            ("cut_off_at", str(cut_off_lat)),
-        ]
-    )
+    land_attrs = OrderedDict([
+        ("units", "(0,1)"),
+        ("long_name", "Land-sea mask"),
+        ("based_on_variable", ref_var),
+        ("standard_name", "land_binary_mask"),
+        ("threshold_land_>=", str(threshold)),
+        ("cut_off_at", str(cut_off_lat)),
+    ])
 
     for attr, val in land_attrs.items():
         ds_out.variables["land"].setncattr(attr, val)

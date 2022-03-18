@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Common grid definitions for ECMWF model reanalysis products (regular gridded)
 """
@@ -64,31 +63,26 @@ def ERA5_RegularImgLandGrid(
                 "era5",
                 "land_definition_files",
                 f"landmask_{res_lat}_{res_lon}.nc",
-            )
-        )
+            ))
     except FileNotFoundError:
         raise FileNotFoundError(
             "Land definition for this grid resolution not yet available. "
-            "Please create and add it."
-        )
+            "Please create and add it.")
 
     global_grid = ERA_RegularImgGrid(res_lat, res_lon, bbox=None)
 
     land_mask = ds.variables["land"][:].flatten().filled(0.0) == 1.0
-    land_points = np.ma.masked_array(
-        global_grid.get_grid_points()[0], ~land_mask
-    )
+    land_points = np.ma.masked_array(global_grid.get_grid_points()[0],
+                                     ~land_mask)
 
     land_grid = global_grid.subgrid_from_gpis(
-        land_points[~land_points.mask].filled().astype("int")
-    )
+        land_points[~land_points.mask].filled().astype("int"))
 
     land_grid = land_grid.to_cell_grid(5.0, 5.0)
 
     if bbox is not None:
         gpis = land_grid.get_bbox_grid_points(
-            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3]
-        )
+            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3])
         land_grid = land_grid.subgrid_from_gpis(gpis)
 
     return land_grid
@@ -136,8 +130,7 @@ def ERA_RegularImgGrid(
 
     if bbox is not None:
         gpis = glob_cell_grid.get_bbox_grid_points(
-            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3]
-        )
+            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3])
         glob_cell_grid = glob_cell_grid.subgrid_from_gpis(gpis)
 
     return glob_cell_grid
@@ -158,8 +151,7 @@ def ERA_IrregularImgGrid(
 
     if bbox is not None:
         gpis = grid.get_bbox_grid_points(
-            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3]
-        )
+            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3])
         grid = grid.subgrid_from_gpis(gpis)
 
     return grid

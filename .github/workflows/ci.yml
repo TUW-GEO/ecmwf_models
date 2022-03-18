@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest"]
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9']
         ymlfile: ['latest.yml']
     name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}
     runs-on: ${{ matrix.os }}
@@ -24,8 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: true # does not work with self-hosted testdata
+          submodules: true
           fetch-depth: 0
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
       - uses: conda-incubator/setup-miniconda@v2.0.1
         with:
           miniconda-version: "latest"

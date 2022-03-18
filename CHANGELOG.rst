@@ -4,7 +4,9 @@ Changelog
 
 Unreleased
 ==========
--
+
+- ERA5T images are now stored under a different file name
+- Code formatting with yapf
 
 Version 0.8
 ===========

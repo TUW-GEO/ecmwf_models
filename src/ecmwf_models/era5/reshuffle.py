@@ -18,16 +18,16 @@ from datetime import time, datetime
 
 
 def reshuffle(
-    input_root,
-    outputpath,
-    startdate,
-    enddate,
-    variables,
-    product=None,
-    bbox=None,
-    h_steps=(0, 6, 12, 18),
-    land_points=False,
-    imgbuffer=50,
+        input_root,
+        outputpath,
+        startdate,
+        enddate,
+        variables,
+        product=None,
+        bbox=None,
+        h_steps=(0, 6, 12, 18),
+        land_points=False,
+        imgbuffer=50,
 ):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
@@ -76,30 +76,25 @@ def reshuffle(
     if land_points:
         if product == "era5":
             grid = ERA5_RegularImgLandGrid(
-                res_lat=0.25, res_lon=0.25, bbox=bbox
-            )
+                res_lat=0.25, res_lon=0.25, bbox=bbox)
         elif product == "era5-land":
-            grid = ERA5_RegularImgLandGrid(res_lat=0.1, res_lon=0.1,
-                                           bbox=bbox)
+            grid = ERA5_RegularImgLandGrid(res_lat=0.1, res_lon=0.1, bbox=bbox)
         else:
             raise NotImplementedError(
-                product, "Land grid not implemented for product."
-            )
+                product, "Land grid not implemented for product.")
     else:
         if product == "era5":
             grid = ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25, bbox=bbox)
         elif product == "era5-land":
             grid = ERA_RegularImgGrid(res_lat=0.1, res_lon=0.1, bbox=bbox)
         else:
-            raise NotImplementedError(
-                product, "Grid not implemented for product."
-            )
+            raise NotImplementedError(product,
+                                      "Grid not implemented for product.")
 
     if filetype == "grib":
         if land_points:
             raise NotImplementedError(
-                "Reshuffling land points only implemented for netcdf files"
-            )
+                "Reshuffling land points only implemented for netcdf files")
 
         input_dataset = ERA5GrbDs(
             root_path=input_root,
@@ -170,8 +165,7 @@ def parse_args(args):
 
     parser = argparse.ArgumentParser(
         description="Convert downloaded ERA5/ERA5-Land image data into time "
-                    "series format."
-    )
+        "series format.")
     parser.add_argument(
         "dataset_root",
         help="Root of local filesystem where the image data is stored.",
@@ -179,44 +173,36 @@ def parse_args(args):
     parser.add_argument(
         "timeseries_root",
         help="Root of local filesystem where the time series should "
-             "be stored.",
+        "be stored.",
     )
     parser.add_argument(
-        "start", type=mkdate, help=("Startdate in format YYYY-MM-DD")
-    )
+        "start", type=mkdate, help=("Startdate in format YYYY-MM-DD"))
     parser.add_argument(
-        "end", type=mkdate, help=("Enddate in format YYYY-MM-DD")
-    )
+        "end", type=mkdate, help=("Enddate in format YYYY-MM-DD"))
     parser.add_argument(
         "variables",
         metavar="variables",
         nargs="+",
-        help=(
-            "Short name of variables as stored in the images, "
-            "which are reshuffled. "
-            "See documentation on image download for resp. ERA products, "
-            "for more information on variable names of the product. "
-        ),
+        help=("Short name of variables as stored in the images, "
+              "which are reshuffled. "
+              "See documentation on image download for resp. ERA products, "
+              "for more information on variable names of the product. "),
     )
     parser.add_argument(
         "--land_points",
         type=str2bool,
         default="False",
-        help=(
-            "Store only time series for points that are over land. "
-            "Default is False."
-        ),
+        help=("Store only time series for points that are over land. "
+              "Default is False."),
     )
     parser.add_argument(
         "--bbox",
         type=float,
         default=None,
         nargs=4,
-        help=(
-            "min_lon min_lat max_lon max_lat. "
-            "Bounding Box (lower left and upper right corner) "
-            "of area to reshuffle (WGS84). By default all data is loaded."
-        ),
+        help=("min_lon min_lat max_lon max_lat. "
+              "Bounding Box (lower left and upper right corner) "
+              "of area to reshuffle (WGS84). By default all data is loaded."),
     )
     parser.add_argument(
         "--h_steps",
@@ -227,8 +213,7 @@ def parse_args(args):
             "Time steps (full hours) of images that will be reshuffled "
             "(must be in the images). "
             "By default 6H images (starting at 0:00 UTC) will be reshuffled: "
-            "0 6 12 18"
-        ),
+            "0 6 12 18"),
     )
     parser.add_argument(
         "--imgbuffer",
@@ -237,16 +222,12 @@ def parse_args(args):
         help=(
             "How many images to read at once. Bigger numbers make the "
             "conversion faster but consume more memory. Choose this according "
-            "to your system and the size of a single image. Default is 50."
-        ),
+            "to your system and the size of a single image. Default is 50."),
     )
     args = parser.parse_args(args)
 
-    print(
-        "Converting ERA5/ERA5-Land data from {} to {} into {}.".format(
-            args.start.isoformat(), args.end.isoformat(), args.timeseries_root
-        )
-    )
+    print("Converting ERA5/ERA5-Land data from {} to {} into {}.".format(
+        args.start.isoformat(), args.end.isoformat(), args.timeseries_root))
 
     return args
 

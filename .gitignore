@@ -27,6 +27,7 @@ __pycache__/*
 # Unittest and coverage
 htmlcov/*
 .coverage
+.coverage*
 .tox
 junit.xml
 coverage.xml
@@ -43,3 +44,4 @@ MANIFEST
 #others
 src/ecmwf_models/bin/*
 */local_scripts/*
+.artifacts

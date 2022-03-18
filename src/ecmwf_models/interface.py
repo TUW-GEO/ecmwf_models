@@ -35,13 +35,14 @@ from ecmwf_models.grid import (
     ERA_IrregularImgGrid,
 )
 from ecmwf_models.utils import lookup
+import glob
+
 import xarray as xr
 
 try:
     import pygrib
 except ImportError:
     warnings.warn("pygrib has not been imported")
-
 """
 Base classes for reading downloaded ERA netcdf and grib images and stacks
 """
@@ -98,8 +99,7 @@ class ERANcImg(ImageBase):
         if self.subgrid and not self.array_1D:
             warnings.warn(
                 "Reading spatial subsets as 2D arrays ony works if there "
-                "is an equal number of points in each line"
-            )
+                "is an equal number of points in each line")
 
     def read(self, timestamp=None):
         """
@@ -115,29 +115,24 @@ class ERANcImg(ImageBase):
 
         try:
             dataset = xr.open_dataset(
-                self.filename, engine="netcdf4", mask_and_scale=True
-            )
+                self.filename, engine="netcdf4", mask_and_scale=True)
         except IOError as e:
             print(e)
             print(" ".join([self.filename, "can not be opened"]))
             raise e
 
         res_lat, res_lon = get_grid_resolution(
-            dataset.variables["latitude"][:], dataset.variables["longitude"][:]
-        )
+            dataset.variables["latitude"][:],
+            dataset.variables["longitude"][:])
 
         grid = (
             ERA_RegularImgGrid(res_lat, res_lon)
-            if not self.subgrid
-            else self.subgrid
-        )
+            if not self.subgrid else self.subgrid)
 
         if self.mask_seapoints:
             if "lsm" not in dataset.variables.keys():
-                raise IOError(
-                    "No land sea mask parameter (lsm) in"
-                    " passed image for masking."
-                )
+                raise IOError("No land sea mask parameter (lsm) in"
+                              " passed image for masking.")
             else:
                 sea_mask = dataset.variables["lsm"].values
 
@@ -145,7 +140,15 @@ class ERANcImg(ImageBase):
             if name in self.parameter:
                 variable = dataset[name]
 
-                param_data = variable.data
+                if 'expver' in variable.dims and (variable.data.ndim == 3):
+                    warnings.warn(
+                        f"Found experimental data in {self.filename}")
+                    param_data = variable.data[-1]
+                    for vers_data in variable.data:
+                        if not np.all(np.isnan(vers_data)):
+                            param_data = vers_data
+                else:
+                    param_data = variable.data
 
                 if self.mask_seapoints:
                     param_data = np.ma.array(
@@ -159,8 +162,7 @@ class ERANcImg(ImageBase):
 
                 return_metadata[name] = variable.attrs
                 return_img.update(
-                    dict([(str(name), param_data[grid.activegpis])])
-                )
+                    dict([(str(name), param_data[grid.activegpis])]))
 
                 try:
                     return_img[name]
@@ -169,12 +171,9 @@ class ERANcImg(ImageBase):
                     warnings.warn(
                         "Cannot load variable {var} from file {thefile}. "
                         "Filling image with NaNs.".format(
-                            var=name, thefile=thefile
-                        )
-                    )
+                            var=name, thefile=thefile))
                     return_img[name] = np.empty(grid.activegpis.size).fill(
-                        np.nan
-                    )
+                        np.nan)
 
         dataset.close()
 
@@ -232,14 +231,14 @@ class ERANcDs(MultiTemporalImageBase):
     """
 
     def __init__(
-        self,
-        root_path,
-        product,
-        parameter=("swvl1", "swvl2"),
-        subgrid=None,
-        mask_seapoints=False,
-        h_steps=(0, 6, 12, 18),
-        array_1D=False,
+            self,
+            root_path,
+            product,
+            parameter=("swvl1", "swvl2"),
+            subgrid=None,
+            mask_seapoints=False,
+            h_steps=(0, 6, 12, 18),
+            array_1D=False,
     ):
 
         self.h_steps = h_steps
@@ -249,22 +248,79 @@ class ERANcDs(MultiTemporalImageBase):
             parameter = [parameter]
 
         ioclass_kws = {
-            "product": product,
-            "parameter": parameter,
-            "subgrid": subgrid,
-            "mask_seapoints": mask_seapoints,
-            "array_1D": array_1D,
+            'product': product,
+            'parameter': parameter,
+            'subgrid': subgrid,
+            'mask_seapoints': mask_seapoints,
+            'array_1D': array_1D
         }
+
+        # the goal is to use expERA5*.nc if necessary, but perfer ERA5*.nc
+        self.fn_templ_priority = [
+            'ERA5_*_{datetime}.nc', 'expERA5_*_{datetime}.nc'
+        ]
 
         super(ERANcDs, self).__init__(
             root_path,
             ERANcImg,
-            fname_templ="*_{datetime}.nc",
+            fname_templ='*_{datetime}.nc',
             datetime_format="%Y%m%d_%H%M",
             subpath_templ=subpath_templ,
             exact_templ=False,
-            ioclass_kws=ioclass_kws,
-        )
+            ioclass_kws=ioclass_kws)
+
+    def _search_files(self,
+                      timestamp,
+                      custom_templ=None,
+                      str_param=None,
+                      custom_datetime_format=None):
+        """
+        override the original filename generation to allow multiple files for
+        time stamp
+        """
+        if custom_templ is not None:
+            raise NotImplementedError
+        else:
+            fname_templ = self.fname_templ
+
+        if custom_datetime_format is not None:
+            dFormat = {self.dtime_placeholder: custom_datetime_format}
+
+        else:
+            dFormat = {self.dtime_placeholder: self.datetime_format}
+
+        sub_path = ''
+        if self.subpath_templ is not None:
+            for s in self.subpath_templ:
+                sub_path = os.path.join(sub_path, timestamp.strftime(s))
+
+        fname_templ = fname_templ.format(**dFormat)
+
+        if str_param is not None:
+            fname_templ = fname_templ.format(**str_param)
+
+        search_file = os.path.join(self.path, sub_path,
+                                   timestamp.strftime(fname_templ))
+
+        if self.exact_templ:
+            raise NotImplementedError
+        else:
+            filename = glob.glob(search_file)
+            if len(filename) > 1:
+                for templ in self.fn_templ_priority:
+                    fname_templ = templ.format(**dFormat)
+                    if str_param is not None:
+                        fname_templ = fname_templ.format(**str_param)
+                    search_file = os.path.join(self.path, sub_path,
+                                               timestamp.strftime(fname_templ))
+                    filename = glob.glob(search_file)
+                    if len(filename) == 1:
+                        break
+
+        if not filename:
+            filename = []
+
+        return filename
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
@@ -334,9 +390,8 @@ class ERAGrbImg(ImageBase):
         if type(parameter) == str:
             parameter = [parameter]
 
-        self.parameter = lookup(product, parameter)[
-            "short_name"
-        ].values  # look up short names
+        self.parameter = lookup(
+            product, parameter)["short_name"].values  # look up short names
         self.product = product
 
         self.mask_seapoints = mask_seapoints
@@ -406,15 +461,13 @@ class ERAGrbImg(ImageBase):
 
             if "levels" in message.keys():
                 return_metadata[param_name]["depth"] = "{:} cm".format(
-                    message["levels"]
-                )
+                    message["levels"])
 
         if self.mask_seapoints:
             if sea_mask is None:
                 raise IOError(
                     "No land sea mask parameter (lsm) in passed image"
-                    " for masking."
-                )
+                    " for masking.")
             else:
                 # mask the loaded data
                 for name in return_img.keys():
@@ -434,17 +487,13 @@ class ERAGrbImg(ImageBase):
             if n is not None:
                 continue
             param_data = np.full(shape, np.nan)
-            warnings.warn(
-                "Cannot load variable {var} from file {thefile}. "
-                "Filling image with NaNs.".format(
-                    var=param_name, thefile=self.filename
-                )
-            )
+            warnings.warn("Cannot load variable {var} from file {thefile}. "
+                          "Filling image with NaNs.".format(
+                              var=param_name, thefile=self.filename))
             return_img[param_name] = param_data
             return_metadata[param_name] = {}
             return_metadata[param_name]["long_name"] = lookup(
-                self.product, [param_name]
-            ).iloc[0]["long_name"]
+                self.product, [param_name]).iloc[0]["long_name"]
 
         if self.array_1D:
             return Image(
@@ -497,14 +546,14 @@ class ERAGrbDs(MultiTemporalImageBase):
     """
 
     def __init__(
-        self,
-        root_path,
-        product,
-        parameter=("swvl1", "swvl2"),
-        subgrid=None,
-        mask_seapoints=False,
-        h_steps=(0, 6, 12, 18),
-        array_1D=True,
+            self,
+            root_path,
+            product,
+            parameter=("swvl1", "swvl2"),
+            subgrid=None,
+            mask_seapoints=False,
+            h_steps=(0, 6, 12, 18),
+            array_1D=True,
     ):
 
         self.h_steps = h_steps

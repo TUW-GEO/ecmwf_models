@@ -6,7 +6,7 @@ and grib base classes, that are used for reading all ecmwf products.
 """
 
 from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
-from typing import Tuple, Optional
+from typing import Optional, Collection
 from typing_extensions import Literal
 from pygeogrids.grids import CellGrid
 
@@ -23,14 +23,15 @@ def _assert_product(product: str) -> str:
 
 class ERA5NcImg(ERANcImg):
 
-    def __init__(self,
-                 filename: str,
-                 parameter: Optional[Tuple[str, ...]] = ("swvl1", "swvl2"),
-                 product: Literal['era5', 'era5-land'] = 'era5',
-                 subgrid: Optional[CellGrid] = None,
-                 mask_seapoints: Optional[bool] = False,
-                 array_1D: Optional[bool] = False,
-                 ):
+    def __init__(
+        self,
+        filename: str,
+        parameter: Optional[Collection[str]] = ("swvl1", "swvl2"),
+        product: Literal['era5', 'era5-land'] = 'era5',
+        subgrid: Optional[CellGrid] = None,
+        mask_seapoints: Optional[bool] = False,
+        array_1D: Optional[bool] = False,
+    ):
         """
         Reader for a single ERA5 netcdf image file.
 
@@ -86,14 +87,14 @@ class ERA5NcDs(ERANcDs):
     """
 
     def __init__(
-            self,
-            root_path: str,
-            parameter: Tuple[str, ...] = ("swvl1", "swvl2"),
-            product: Literal['era5', 'era5-land'] = 'era5',
-            h_steps: Tuple[int, ...] = (0, 6, 12, 18),
-            subgrid: Optional[CellGrid] = None,
-            mask_seapoints: Optional[bool] = False,
-            array_1D: Optional[bool] = False,
+        self,
+        root_path: str,
+        parameter: Collection[str] = ("swvl1", "swvl2"),
+        product: Literal['era5', 'era5-land'] = 'era5',
+        h_steps: Collection[int] = (0, 6, 12, 18),
+        subgrid: Optional[CellGrid] = None,
+        mask_seapoints: Optional[bool] = False,
+        array_1D: Optional[bool] = False,
     ):
         super(ERA5NcDs, self).__init__(
             root_path=root_path,
@@ -107,13 +108,14 @@ class ERA5NcDs(ERANcDs):
 
 
 class ERA5GrbImg(ERAGrbImg):
+
     def __init__(
-            self,
-            filename: str,
-            parameter: Optional[Tuple[str, ...]] = ("swvl1", "swvl2"),
-            subgrid: Optional[CellGrid] = None,
-            mask_seapoints: Optional[bool] = False,
-            array_1D=False,
+        self,
+        filename: str,
+        parameter: Optional[Collection[str]] = ("swvl1", "swvl2"),
+        subgrid: Optional[CellGrid] = None,
+        mask_seapoints: Optional[bool] = False,
+        array_1D=False,
     ):
         """
         Reader for a single ERA5 grib image file.
@@ -144,15 +146,16 @@ class ERA5GrbImg(ERAGrbImg):
 
 
 class ERA5GrbDs(ERAGrbDs):
+
     def __init__(
-            self,
-            root_path: str,
-            parameter: Tuple[str, ...] = ("swvl1", "swvl2"),
-            h_steps: Tuple[int, ...] = (0, 6, 12, 18),
-            product: Literal['era5', 'era5-land'] = "era5",
-            subgrid: Optional[CellGrid] = None,
-            mask_seapoints: Optional[bool] = False,
-            array_1D: Optional[bool] = False,
+        self,
+        root_path: str,
+        parameter: Collection[str] = ("swvl1", "swvl2"),
+        h_steps: Collection[int] = (0, 6, 12, 18),
+        product: Literal['era5', 'era5-land'] = "era5",
+        subgrid: Optional[CellGrid] = None,
+        mask_seapoints: Optional[bool] = False,
+        array_1D: Optional[bool] = False,
     ):
         """
         Reader for a stack of ERA5 grib image file.

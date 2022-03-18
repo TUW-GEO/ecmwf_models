@@ -109,8 +109,7 @@ def download_era5(
         c.retrieve("reanalysis-era5-land", request, target)
     else:
         raise ValueError(
-            product, "Unknown product, choose either 'era5' or 'era5-land'"
-        )
+            product, "Unknown product, choose either 'era5' or 'era5-land'")
 
     return True
 
@@ -131,10 +130,8 @@ class CDSStatusTracker:
         message_prefix = args[0]
         message_body = args[1]
         if self.download_statuscode != self.statuscode_unavailable:
-            if (
-                message_prefix.startswith("Reason:")
-                and message_body == "Request returned no data"
-            ):
+            if (message_prefix.startswith("Reason:") and
+                    message_body == "Request returned no data"):
                 self.download_statuscode = self.statuscode_unavailable
             else:
                 self.download_statuscode = self.statuscode_error
@@ -238,8 +235,7 @@ def download_and_move(
     else:
         cds_status_tracker = CDSStatusTracker()
         c = cdsapi.Client(
-            error_callback=cds_status_tracker.handle_error_function
-        )
+            error_callback=cds_status_tracker.handle_error_function)
 
     pool = multiprocessing.Pool(1)
     while curr_start <= enddate:
@@ -247,9 +243,8 @@ def download_and_move(
         sy, sm, sd = curr_start.year, curr_start.month, curr_start.day
         y, m = sy, sm
         if stepsize == "month":
-            sm_days = calendar.monthrange(sy, sm)[
-                1
-            ]  # days in the current month
+            sm_days = calendar.monthrange(sy,
+                                          sm)[1]  # days in the current month
             if (enddate.year == y) and (enddate.month == m):
                 d = enddate.day
             else:
@@ -292,12 +287,10 @@ def download_and_move(
                 status_code = 0
                 break
 
-            except:  # noqa: E722
+            except Exception:  # noqa: E722
                 # If no data is available we don't need to retry
-                if (
-                    cds_status_tracker.download_statuscode
-                    == CDSStatusTracker.statuscode_unavailable
-                ):
+                if (cds_status_tracker.download_statuscode ==
+                        CDSStatusTracker.statuscode_unavailable):
                     status_code = -10
                     break
 
@@ -371,8 +364,7 @@ def parse_args(args):
         "dates. Before this program can be used, you have to "
         "register at the CDS and setup your .cdsapirc file "
         "as described here: "
-        "https://cds.climate.copernicus.eu/api-how-to"
-    )
+        "https://cds.climate.copernicus.eu/api-how-to")
     parser.add_argument(
         "localroot",
         help="Root of local filesystem where the downloaded data will be "
@@ -383,31 +375,25 @@ def parse_args(args):
         "--start",
         type=mkdate,
         default=datetime(1979, 1, 1),
-        help=(
-            "Startdate in format YYYY-MM-DD. "
-            "If no data is found there then the first available date of the "
-            "product is used."
-        ),
+        help=("Startdate in format YYYY-MM-DD. "
+              "If no data is found there then the first available date of the "
+              "product is used."),
     )
     parser.add_argument(
         "-e",
         "--end",
         type=mkdate,
         default=datetime.now(),
-        help=(
-            "Enddate in format YYYY-MM-DD. "
-            "If not given then the current date is used."
-        ),
+        help=("Enddate in format YYYY-MM-DD. "
+              "If not given then the current date is used."),
     )
     parser.add_argument(
         "-p",
         "--product",
         type=str,
         default="ERA5",
-        help=(
-            "The ERA5 product to download. Choose either ERA5 or ERA5-Land. "
-            "Default is ERA5."
-        ),
+        help=("The ERA5 product to download. Choose either ERA5 or ERA5-Land. "
+              "Default is ERA5."),
     )
     parser.add_argument(
         "-var",
@@ -416,63 +402,53 @@ def parse_args(args):
         type=str,
         default=None,
         nargs="+",
-        help=(
-            "Name of variables to download. If None are passed, we use the "
-            "default ones from the "
-            "era5_lut.csv resp. era5-land_lut.csv files in this package. "
-            "See the ERA5/ERA5-LAND documentation for more variable names: "
-            "     https://confluence.ecmwf.int/display/CKB/"
-            "ERA5+data+documentation "
-            "     https://confluence.ecmwf.int/display/CKB/"
-            "ERA5-Land+data+documentation"
-        ),
+        help=("Name of variables to download. If None are passed, we use the "
+              "default ones from the "
+              "era5_lut.csv resp. era5-land_lut.csv files in this package. "
+              "See the ERA5/ERA5-LAND documentation for more variable names: "
+              "     https://confluence.ecmwf.int/display/CKB/"
+              "ERA5+data+documentation "
+              "     https://confluence.ecmwf.int/display/CKB/"
+              "ERA5-Land+data+documentation"),
     )
     parser.add_argument(
         "-keep",
         "--keep_original",
         type=str2bool,
         default="False",
-        help=(
-            "Also keep the originally, temporarily downloaded image stack "
-            "instead of deleting it after extracting single images. "
-            "Default is False."
-        ),
+        help=("Also keep the originally, temporarily downloaded image stack "
+              "instead of deleting it after extracting single images. "
+              "Default is False."),
     )
     parser.add_argument(
         "-grb",
         "--as_grib",
         type=str2bool,
         default="False",
-        help=(
-            "Download data in grib format instead of netcdf. "
-            "Default is False."
-        ),
+        help=("Download data in grib format instead of netcdf. "
+              "Default is False."),
     )
     parser.add_argument(
         "--h_steps",
         type=int,
         default=[0, 6, 12, 18],
         nargs="+",
-        help=(
-            "Temporal resolution of downloaded images. "
-            "Pass a set of full hours here, like '--h_steps 0 12'. "
-            "By default 6H images (starting at 0:00 UTC, i.e. 0 6 12 18) "
-            "will be downloaded"
-        ),
+        help=("Temporal resolution of downloaded images. "
+              "Pass a set of full hours here, like '--h_steps 0 12'. "
+              "By default 6H images (starting at 0:00 UTC, i.e. 0 6 12 18) "
+              "will be downloaded"),
     )
 
     args = parser.parse_args(args)
 
-    print(
-        "Downloading {p} {f} files between {s} and {e} into folder {root}"
-        .format(
-            p=args.product,
-            f="grib" if args.as_grib is True else "netcdf",
-            s=args.start.isoformat(),
-            e=args.end.isoformat(),
-            root=args.localroot,
-        )
-    )
+    print("Downloading {p} {f} files between {s} and {e} into folder {root}"
+          .format(
+              p=args.product,
+              f="grib" if args.as_grib is True else "netcdf",
+              s=args.start.isoformat(),
+              e=args.end.isoformat(),
+              root=args.localroot,
+          ))
     return args
 
 

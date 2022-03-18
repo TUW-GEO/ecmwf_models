@@ -167,25 +167,16 @@ Implement your changes
 Code styling
 ------------
 
-We use black with line length 79 to style all python file. You can install
-black with::
+To apply pep8 conform styling to any changed files we use yapf.
+The correct settings are already set in setup.cfg.
+Therefore the following command should be enough::
 
-    pip install black
+    yapf file.py --in-place
 
-and run the following command on a file to apply the correct styling::
-
-    black -l 79 file.py
 
 Afterwards the file should be styled correctly, i.e. the pre-commit hooks should
-pass. If there are still issues the must be fixed manually.
-You can exclude lines from being changed by black by placing the following
-commands into the code files around a code block to ignore:
+pass. If there are still issues, they must be fixed manually.
 
-.. code-block:: python
-
-    # fmt: off
-    *** Here comes code that will be ignored by black ***
-    # fmt: on
 
 Submit your contribution
 ------------------------

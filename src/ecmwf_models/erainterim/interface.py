@@ -7,7 +7,7 @@ base classes, that are used for reading all ecmwf products.
 
 from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
 import warnings
-from typing import Tuple, Optional
+from typing import Collection, Optional
 from pygeogrids.grids import CellGrid
 
 
@@ -15,7 +15,7 @@ class ERAIntNcImg(ERANcImg):
     def __init__(
         self,
         filename: str,
-        parameter: Optional[Tuple[str, ...]] = ("swvl1", "swvl2"),
+        parameter: Optional[Collection[str]] = ("swvl1", "swvl2"),
         mode: Optional[str] = "r",
         subgrid: Optional[CellGrid] = None,
         mask_seapoints: Optional[bool] = False,
@@ -59,10 +59,10 @@ class ERAIntNcDs(ERANcDs):
     def __init__(
         self,
         root_path: str,
-        parameter: Optional[Tuple[str, ...]] = ("swvl1", "swvl2"),
+        parameter: Optional[Collection[str]] = ("swvl1", "swvl2"),
         subgrid: Optional[CellGrid] = None,
         mask_seapoints: Optional[bool] = False,
-        h_steps: Tuple[int, ...] = (0, 6, 12, 18),
+        h_steps: Collection[int] = (0, 6, 12, 18),
         array_1D: Optional[bool] = False,
     ):
 
@@ -106,7 +106,7 @@ class ERAIntGrbImg(ERAGrbImg):
     def __init__(
         self,
         filename: str,
-        parameter: Optional[Tuple[str, ...]] = ("swvl1", "swvl2"),
+        parameter: Optional[Collection[str]] = ("swvl1", "swvl2"),
         mode: Optional[str] = "r",
         subgrid: Optional[CellGrid] = None,
         mask_seapoints: Optional[bool] = False,
@@ -152,10 +152,10 @@ class ERAIntGrbDs(ERAGrbDs):
     def __init__(
         self,
         root_path: str,
-        parameter: Tuple[str, ...] = ("swvl1", "swvl2"),
+        parameter: Collection[str] = ("swvl1", "swvl2"),
         subgrid: Optional[CellGrid] = None,
         mask_seapoints: Optional[bool] = False,
-        h_steps: Tuple[int, ...] = (0, 6, 12, 18),
+        h_steps: Collection[int] = (0, 6, 12, 18),
         array_1D: Optional[bool] = False,
     ):
         """

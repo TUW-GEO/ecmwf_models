@@ -20,7 +20,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 """
 Test module for image to time series conversion.
 """
@@ -39,45 +38,36 @@ from ecmwf_models.era5.reshuffle import parse_args
 
 def test_parse_args():
 
-    args = parse_args(
-        [
-            "/in",
-            "/out",
-            "2000-01-01",
-            "2010-12-31",
-            "swvl1",
-            "swvl2",
-            "--land_points",
-            "True",
-            "--imgbuffer",
-            "1000",
-            "--bbox",
-            "12",
-            "46",
-            "17",
-            "50",
-        ]
-    )
+    args = parse_args([
+        "/in",
+        "/out",
+        "2000-01-01",
+        "2010-12-31",
+        "swvl1",
+        "swvl2",
+        "--land_points",
+        "True",
+        "--imgbuffer",
+        "1000",
+        "--bbox",
+        "12",
+        "46",
+        "17",
+        "50",
+    ])
 
     assert isinstance(args.dataset_root, str) and args.dataset_root == "/in"
-    assert (
-        isinstance(args.timeseries_root, str)
-        and args.timeseries_root == "/out"
-    )
+    assert (isinstance(args.timeseries_root, str) and
+            args.timeseries_root == "/out")
     assert isinstance(args.start, datetime) and args.start == datetime(
-        2000, 1, 1
-    )
+        2000, 1, 1)
     assert isinstance(args.end, datetime) and args.end == datetime(
-        2010, 12, 31
-    )
+        2010, 12, 31)
     assert isinstance(args.variables, list) and len(args.variables) == 2
     assert isinstance(args.land_points, bool) and args.land_points is True
     assert isinstance(args.imgbuffer, int) and args.imgbuffer == 1000
-    assert (
-        isinstance(args.bbox, list)
-        and len(args.bbox) == 4
-        and all([isinstance(a, float) for a in args.bbox])
-    )
+    assert (isinstance(args.bbox, list) and len(args.bbox) == 4 and
+            all([isinstance(a, float) for a in args.bbox]))
 
 
 def test_ERA5_reshuffle_nc():
@@ -99,28 +89,20 @@ def test_ERA5_reshuffle_nc():
     bbox = ["--bbox", "12", "46", "17", "50"]
 
     with tempfile.TemporaryDirectory() as ts_path:
-        args = (
-            [inpath, ts_path, startdate, enddate]
-            + parameters
-            + h_steps
-            + landpoints
-            + bbox
-        )
+        args = ([inpath, ts_path, startdate, enddate] + parameters + h_steps +
+                landpoints + bbox)
         main(args)
-        assert (
-            len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5
-        )  # less files because only land points and bbox
+        assert (len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5)
+        # less files because only land points and bbox
         ds = ERATs(ts_path, ioclass_kws={"read_bulk": True})
         ts = ds.read(15, 48)
         ds.close()
         swvl1_values_should = np.array([0.402825, 0.390983], dtype=np.float32)
         nptest.assert_allclose(
-            ts["swvl1"].values, swvl1_values_should, rtol=1e-5
-        )
+            ts["swvl1"].values, swvl1_values_should, rtol=1e-5)
         swvl2_values_should = np.array([0.390512, 0.390981], dtype=np.float32)
         nptest.assert_allclose(
-            ts["swvl2"].values, swvl2_values_should, rtol=1e-5
-        )
+            ts["swvl2"].values, swvl2_values_should, rtol=1e-5)
 
 
 def test_ERA5_reshuffle_grb():
@@ -142,13 +124,8 @@ def test_ERA5_reshuffle_grb():
 
     with tempfile.TemporaryDirectory() as ts_path:
 
-        args = (
-            [inpath, ts_path, startdate, enddate]
-            + parameters
-            + h_steps
-            + landpoints
-            + bbox
-        )
+        args = ([inpath, ts_path, startdate, enddate] + parameters + h_steps +
+                landpoints + bbox)
 
         main(args)
 
@@ -158,9 +135,7 @@ def test_ERA5_reshuffle_grb():
         ds.close()
         swvl1_values_should = np.array([0.402824, 0.390979], dtype=np.float32)
         nptest.assert_allclose(
-            ts["swvl1"].values, swvl1_values_should, rtol=1e-5
-        )
+            ts["swvl1"].values, swvl1_values_should, rtol=1e-5)
         swvl2_values_should = np.array([0.390514, 0.390980], dtype=np.float32)
         nptest.assert_allclose(
-            ts["swvl2"].values, swvl2_values_should, rtol=1e-5
-        )
+            ts["swvl2"].values, swvl2_values_should, rtol=1e-5)
