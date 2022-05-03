@@ -237,6 +237,9 @@ def download_and_move(
         c = cdsapi.Client(
             error_callback=cds_status_tracker.handle_error_function)
 
+    all_status_codes = [] # Since we download month/month or day/day we need to
+                          # collect all the status codes to return a valid
+                          # status code for the whole time period
     pool = multiprocessing.Pool(1)
     while curr_start <= enddate:
         status_code = -1
@@ -326,6 +329,8 @@ def download_and_move(
                     ),
                 )
 
+        all_status_codes.append(status_code)
+
         curr_start = curr_end + timedelta(days=1)
     pool.close()
     pool.join()
@@ -341,7 +346,9 @@ def download_and_move(
         if os.path.exists(weightspath):
             os.unlink(weightspath)
 
-    return status_code
+    # if any of the sub-periods was successful we want the function to return 0
+    consolidated_status_code = max(all_status_codes)
+    return consolidated_status_code
 
 
 def parse_args(args):
