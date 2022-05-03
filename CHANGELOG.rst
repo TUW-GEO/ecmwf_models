@@ -5,6 +5,11 @@ Changelog
 Unreleased
 ==========
 
+Version 0.9.1
+=============
+
+- Fix returned status code in case of partial data availability.
+
 Version 0.9
 ===========
 
