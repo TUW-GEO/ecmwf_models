@@ -350,8 +350,8 @@ def download_and_move(
         status_code = -1
 
         fname = "{start}_{end}.{ext}".format(
-            start=curr_start.strftime("%Y%m%d%H"),
-            end=curr_end.strftime("%Y%m%d%H"),
+            start=curr_start.strftime("%Y%m%d"),
+            end=curr_end.strftime("%Y%m%d"),
             ext="grb" if grb else "nc",
         )
 
