@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-
 """
 Module to download ERA5 from terminal in netcdf and grib format.
 """
+import pandas as pd
 
 from ecmwf_models.utils import (
     load_var_table,
@@ -18,11 +18,11 @@ import argparse
 import sys
 import os
 import logging
-from datetime import datetime, timedelta, time
+from datetime import datetime, time
 import shutil
 import cdsapi
-import calendar
 import multiprocessing
+import numpy as np
 
 
 def default_variables(product="era5"):
@@ -38,6 +38,89 @@ def default_variables(product="era5"):
     lut = load_var_table(name=product)
     defaults = lut.loc[lut["default"] == 1]["dl_name"].values
     return defaults.tolist()
+
+
+def split_array(array, chunk_size):
+    """
+    Split an array into chunks of a given size.
+
+    Parameters
+    ----------
+    array : array-like
+        Array to split into chunks
+    chunk_size : int
+        Size of each chunk
+
+    Returns
+    -------
+    chunks : list
+        List of chunks
+    """
+    chunks = []
+    for i in range(0, len(array), chunk_size):
+        chunks.append(array[i:i + chunk_size])
+    return chunks
+
+
+def split_chunk(timestamps,
+                n_vars,
+                n_hsteps,
+                max_req_size=1000,
+                reduce=False,
+                daily_request=False):
+    """
+    Split the passed time stamps into chunks for a valid request. One chunk
+    can at most hold data for one month or one day, but cannot be larger than
+    the maximum request size.
+
+    Parameters
+    ----------
+    timestamps: pd.DatetimeIndex
+        List of daily timestamps to split into chunks
+    n_vars: int
+        Number of variables in each request.
+    max_req_size: int, optional (default: 1000)
+        Maximum size of a request that the CDS API can handle
+    reduce: bool, optional (default: False)
+        Return only the start and end of each subperiod instead of all
+        time stamps.
+    daily_request: bool, optional (default: False)
+        Only submit daily requests, otherwise monthly requests are allowed
+        (if the max_req_size is not reached).
+
+    Returns
+    -------
+    chunks: list
+        List of start and end dates that contain a chunk that the API can
+        handle.
+    """
+    n = int(max_req_size / n_vars / n_hsteps)
+
+    def yield_chunk():
+        for _, chunk_year in timestamps.groupby(timestamps.year).items():
+            for _, chunk_month in chunk_year.groupby(chunk_year.month).items():
+                if daily_request:
+                    for _, chunk_day in chunk_month.groupby(
+                            chunk_month.day).items():
+                        yield chunk_day
+                else:
+                    yield chunk_month
+
+    # each chunk contains either time stamps for one month, or for less,
+    # if the request of one month would be too large.
+    all_chunks = []
+    for chunk in yield_chunk():
+        if len(chunk) > n:
+            chunks = split_array(chunk, n)
+        else:
+            chunks = np.array([chunk])
+        for chunk in chunks:
+            if reduce:
+                all_chunks.append(np.array([chunk[0], chunk[-1]]))
+            else:
+                all_chunks.append(chunk)
+
+    return all_chunks
 
 
 def download_era5(
@@ -145,13 +228,14 @@ def download_and_move(
     product="era5",
     variables=None,
     keep_original=False,
-    h_steps=[0, 6, 12, 18],
+    h_steps=(0, 6, 12, 18),
     grb=False,
     dry_run=False,
     grid=None,
     remap_method="bil",
     cds_kwds={},
     stepsize="month",
+    n_max_request=1000,
 ) -> int:
     """
     Downloads the data from the ECMWF servers and moves them to the target
@@ -173,15 +257,15 @@ def download_and_move(
         Either ERA5 or ERA5Land
     variables : list, optional (default: None)
         Name of variables to download
-    keep_original: bool
+    keep_original: bool (default: False)
         keep the original downloaded data
-    h_steps: list
+    h_steps: list or tuple
         List of full hours to download data at the selected dates e.g [0, 12]
     grb: bool, optional (default: False)
         Download data as grib files
     dry_run: bool
         Do not download anything, this is just used for testing the functions
-    grid : dict, optional
+    grid : dict, optional (default: None)
         A grid on which to remap the data using CDO. This must be a dictionary
         using CDO's grid description format, e.g.::
 
@@ -196,7 +280,7 @@ def download_and_move(
             }
 
         Default is to use no regridding.
-    remap_method : str, optional
+    remap_method : str, optional (dafault: 'bil')
         Method to be used for regridding. Available methods are:
         - "bil": bilinear (default)
         - "bic": bicubic
@@ -205,10 +289,12 @@ def download_and_move(
         - "con": 1st order conservative remapping
         - "con2": 2nd order conservative remapping
         - "laf": largest area fraction remapping
-    cds_kwds: dict, optional
+    cds_kwds: dict, optional (default: {})
         Additional arguments to be passed to the CDS API retrieve request.
-    stepsize : str, optional
-        Size of steps for requests, can be "month" or "day".
+    n_max_request : int, optional (default: 1000)
+        Maximum size that a request can have to be processed by CDS. At the
+        moment of writing this is 1000 (N_timstamps * N_variables in a request)
+        but as this is a server side settings, it can change.
 
     Returns
     -------
@@ -217,6 +303,7 @@ def download_and_move(
         -1 : Error
         -10 : No data available for requested time period
     """
+    h_steps = list(h_steps)
     product = product.lower()
 
     if variables is None:
@@ -225,8 +312,6 @@ def download_and_move(
         # find the dl_names
         variables = lookup(name=product, variables=variables)
         variables = variables["dl_name"].values.tolist()
-
-    curr_start = startdate
 
     if dry_run:
         warnings.warn("Dry run does not create connection to CDS")
@@ -237,27 +322,32 @@ def download_and_move(
         c = cdsapi.Client(
             error_callback=cds_status_tracker.handle_error_function)
 
-    all_status_codes = [] # Since we download month/month or day/day we need to
-                          # collect all the status codes to return a valid
-                          # status code for the whole time period
-    pool = multiprocessing.Pool(1)
-    while curr_start <= enddate:
-        status_code = -1
-        sy, sm, sd = curr_start.year, curr_start.month, curr_start.day
-        y, m = sy, sm
-        if stepsize == "month":
-            sm_days = calendar.monthrange(sy,
-                                          sm)[1]  # days in the current month
-            if (enddate.year == y) and (enddate.month == m):
-                d = enddate.day
-            else:
-                d = sm_days
-        elif stepsize == "day":
-            d = sd
-        else:
-            raise ValueError(f"Invalid stepsize: {stepsize}")
+    timestamps = pd.DatetimeIndex(
+        np.array([
+            datetime(t.year, t.month, t.day)
+            for t in pd.date_range(startdate, enddate, freq='D')
+        ]))
 
-        curr_end = datetime(y, m, d)
+    daily_request = True if stepsize == "day" else False
+    req_periods = split_chunk(
+        timestamps,
+        n_vars=len(variables),
+        n_hsteps=len(h_steps),
+        max_req_size=n_max_request,
+        reduce=True,
+        daily_request=daily_request)
+
+    # Since we download month/month or day/day we need to
+    # collect all the status codes to return a valid
+    # status code for the whole time period
+    all_status_codes = []
+
+    pool = multiprocessing.Pool(1)
+    for curr_start, curr_end in req_periods:
+        curr_start = pd.to_datetime(curr_start).to_pydatetime()
+        curr_end = pd.to_datetime(curr_end).to_pydatetime()
+
+        status_code = -1
 
         fname = "{start}_{end}.{ext}".format(
             start=curr_start.strftime("%Y%m%d"),
@@ -276,9 +366,9 @@ def download_and_move(
             try:
                 finished = download_era5(
                     c,
-                    years=[sy],
-                    months=[sm],
-                    days=range(sd, d + 1),
+                    years=[curr_start.year],
+                    months=[curr_start.month],
+                    days=range(curr_start.day, curr_end.day + 1),
                     h_steps=h_steps,
                     variables=variables,
                     grb=grb,
@@ -331,7 +421,6 @@ def download_and_move(
 
         all_status_codes.append(status_code)
 
-        curr_start = curr_end + timedelta(days=1)
     pool.close()
     pool.join()
 
@@ -446,6 +535,16 @@ def parse_args(args):
               "will be downloaded"),
     )
 
+    parser.add_argument(
+        "--max_request_size",
+        type=int,
+        default=1000,
+        help=("Maximum number of requests that the CDS API allows. "
+              "The default is 1000, but depends on server side setting. "
+              "Service settings may change at some point and can  be changed "
+              "accordingly here in case that 'the request is too large'. "
+              "A smaller number will results in smaller download chunks."))
+
     args = parser.parse_args(args)
 
     print("Downloading {p} {f} files between {s} and {e} into folder {root}"
@@ -470,6 +569,8 @@ def main(args):
         h_steps=args.h_steps,
         grb=args.as_grib,
         keep_original=args.keep_original,
+        stepsize='month',
+        n_max_request=args.max_request_size,
     )
     return status_code
 

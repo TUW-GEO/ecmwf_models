@@ -34,6 +34,7 @@ import numpy as np
 import xarray as xr
 import pytest
 import tempfile
+import time
 
 grid = {
     "gridtype": "lonlat",
@@ -68,9 +69,10 @@ def test_dry_download_nc_era5():
             os.path.dirname(os.path.abspath(__file__)), '..',
             "ecmwf_models-test-data", "download",
             "era5_example_downloaded_raw.nc")
-        shutil.copyfile(
-            thefile,
-            os.path.join(dl_path, 'temp_downloaded', '20100101_20100101.nc'))
+        trgt = os.path.join(dl_path, 'temp_downloaded', '20100101_20100101.nc')
+        shutil.copyfile(thefile, trgt)
+
+        assert os.path.isfile(trgt)
 
         startdate = enddate = datetime(2010, 1, 1)
 

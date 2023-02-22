@@ -15,9 +15,13 @@ jobs:
   build:
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
-        python-version: ['3.7', '3.8', '3.9']
-        ymlfile: ['latest.yml']
+        python-version: [ '3.8', '3.9', '3.10' ]
+        os: [ "ubuntu-latest" ]
+        ymlfile: [ "latest.yml" ]
+        include:
+          - os: "windows-latest"
+            python-version: "3.10"
+            ymlfile: "latest.yml"
     name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}
     runs-on: ${{ matrix.os }}
 
@@ -29,12 +33,14 @@ jobs:
           lfs: true
       - name: Checkout LFS objects
         run: git lfs checkout
-      - uses: conda-incubator/setup-miniconda@v2.0.1
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: "latest"
           auto-update-conda: true
+          channel-priority: flexible
           python-version: ${{ matrix.python-version }}
           environment-file: environment/${{ matrix.ymlfile }}
+          mamba-version: "*"
           activate-environment: ecmwf_models # todo: must match with name in latest.yml
           auto-activate-base: false
       - name: Print Infos
