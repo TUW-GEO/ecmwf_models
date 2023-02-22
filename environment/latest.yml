@@ -8,7 +8,7 @@ dependencies:
 - configobj
 - pygrib>=2.0.1
 - hdf5
-- netcdf4>=1.4.2
+- netcdf4>=1.4.2,!=1.6.2
 - scipy
 - pyresample
 - xarray
@@ -26,5 +26,7 @@ dependencies:
     - typing_extensions
     - pre-commit
     - sphinx_rtd_theme
+    - toml
+    - yapf
     - pytest
     - pytest-cov
