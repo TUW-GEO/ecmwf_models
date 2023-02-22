@@ -2,8 +2,10 @@
 Changelog
 =========
 
-Unreleased
-==========
+Unreleased changes in master branch
+===================================
+
+- Fix issue with too large data requests to download, added command line arg to specify max request size.
 
 Version 0.9.1
 =============
