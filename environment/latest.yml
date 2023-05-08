@@ -18,7 +18,7 @@ dependencies:
     - pynetcf>=0.5.0
     - repurpose
     - pygeogrids
-    - cdsapi>0.6.1
+    - cdsapi>=0.6.1
     - ecmwf-api-client
     - datedown>=0.3
     - requests
