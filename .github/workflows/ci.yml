@@ -62,6 +62,8 @@ jobs:
               conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
           fi
       - name: Install package and test
+        env:
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
         shell: bash -l {0}
         run: |
           pip install .
