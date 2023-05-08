@@ -5,7 +5,14 @@ Changelog
 Unreleased changes in master branch
 ===================================
 
+-
+
+Version 0.9.2
+=============
+
 - Fix issue with too large data requests to download, added command line arg to specify max request size.
+- Pin pynetcf>=0.5.0
+- Add test for downloading ERA5 data directly from CDS (requires CDS API key)
 
 Version 0.9.1
 =============

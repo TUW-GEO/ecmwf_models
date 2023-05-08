@@ -25,7 +25,7 @@ import os
 from pygeobase.io_base import ImageBase, MultiTemporalImageBase
 from pygeobase.object_base import Image
 import numpy as np
-from datetime import timedelta
+from datetime import timedelta, datetime  # noqa: F401
 
 from pygeogrids.netcdf import load_grid
 from pynetcf.time_series import GriddedNcOrthoMultiTs
