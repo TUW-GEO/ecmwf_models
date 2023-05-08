@@ -512,9 +512,10 @@ def parse_args(args):
         "--keep_original",
         type=str2bool,
         default="False",
-        help=("Also keep the originally, temporarily downloaded image stack "
-              "instead of deleting it after extracting single images. "
-              "Default is False."),
+        help=("Also keep the downloaded image stack as retrieved from CDS - "
+              "before slicing it into single images - instead of deleting it "
+              "after extracting all images. "
+              "Pass either True or False. Default is False."),
     )
     parser.add_argument(
         "-grb",
@@ -522,7 +523,7 @@ def parse_args(args):
         type=str2bool,
         default="False",
         help=("Download data in grib format instead of netcdf. "
-              "Default is False."),
+              "Pass either True or False. Default is False."),
     )
     parser.add_argument(
         "--h_steps",
@@ -540,8 +541,8 @@ def parse_args(args):
         type=int,
         default=1000,
         help=("Maximum number of requests that the CDS API allows. "
-              "The default is 1000, but depends on server side setting. "
-              "Service settings may change at some point and can  be changed "
+              "The default is 1000, but depends on server side settings. "
+              "Server settings may change at some point. Change "
               "accordingly here in case that 'the request is too large'. "
               "A smaller number will results in smaller download chunks."))
 
