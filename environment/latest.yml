@@ -8,17 +8,17 @@ dependencies:
 - configobj
 - pygrib>=2.0.1
 - hdf5
-- netcdf4>=1.4.2,!=1.6.2
+- netcdf4>=1.4.2
 - scipy
 - pyresample
 - xarray
 - pip
 - pip:
     - pygeobase
-    - pynetcf
+    - pynetcf>=0.5.0
     - repurpose
     - pygeogrids
-    - cdsapi
+    - cdsapi>0.6.1
     - ecmwf-api-client
     - datedown>=0.3
     - requests
