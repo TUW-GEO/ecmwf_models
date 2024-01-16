@@ -139,3 +139,8 @@ def test_ERA5_reshuffle_grb():
         swvl2_values_should = np.array([0.390514, 0.390980], dtype=np.float32)
         nptest.assert_allclose(
             ts["swvl2"].values, swvl2_values_should, rtol=1e-5)
+
+
+
+if __name__ == '__main__':
+    test_ERA5_reshuffle_nc()

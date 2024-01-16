@@ -41,6 +41,7 @@ def ERA5_RegularImgLandGrid(
     res_lat: float = 0.25,
     res_lon: float = 0.25,
     bbox: Tuple[float, float, float, float] = None,
+    cellsize: float = 5.0,
 ) -> CellGrid:
     """
     Uses the 0.25 DEG ERA5 land mask to create a land grid of the same size,
@@ -55,6 +56,8 @@ def ERA5_RegularImgLandGrid(
     bbox: tuple, optional (default: None)
         (min_lon, min_lat, max_lon, max_lat) - wgs84
         bbox to cut the global grid to.
+    cellsize: float, optional (default: 5.0)
+        Size of time series series chunks in degrees.
     """
     try:
         ds = Dataset(
@@ -78,7 +81,7 @@ def ERA5_RegularImgLandGrid(
     land_grid = global_grid.subgrid_from_gpis(
         land_points[~land_points.mask].filled().astype("int"))
 
-    land_grid = land_grid.to_cell_grid(5.0, 5.0)
+    land_grid = land_grid.to_cell_grid(cellsize, cellsize)
 
     if bbox is not None:
         gpis = land_grid.get_bbox_grid_points(
@@ -92,6 +95,7 @@ def ERA_RegularImgGrid(
     res_lat: float = 0.25,
     res_lon: float = 0.25,
     bbox: Tuple[float, float, float, float] = None,
+    cellsize = 5.0,
 ) -> CellGrid:
     """
     Create regular cell grid for bounding box with the selected
@@ -106,6 +110,8 @@ def ERA_RegularImgGrid(
     bbox: tuple, optional (default: None)
         (min_lon, min_lat, max_lon, max_lat) - wgs84
         bbox to cut the global grid to.
+    cellsize: float, optional (default: 5.0)
+        Size of the time series chunks in degrees.
 
     Returns
     ----------
@@ -126,7 +132,7 @@ def ERA_RegularImgGrid(
     lon, lat = np.meshgrid(lon, lat)
 
     glob_basic_grid = BasicGrid(lon.flatten() / f_lon, lat.flatten() / f_lat)
-    glob_cell_grid = glob_basic_grid.to_cell_grid(cellsize=5.0)
+    glob_cell_grid = glob_basic_grid.to_cell_grid(cellsize=cellsize)
 
     if bbox is not None:
         gpis = glob_cell_grid.get_bbox_grid_points(
