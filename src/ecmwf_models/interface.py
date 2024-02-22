@@ -654,3 +654,7 @@ class ERATs(GriddedNcOrthoMultiTs):
 
         grid = load_grid(grid_path)
         super(ERATs, self).__init__(ts_path, grid, **kwargs)
+
+if __name__ == '__main__':
+    ds = ERATs("/tmp/era5/")
+    ts = ds.read(3, 48)

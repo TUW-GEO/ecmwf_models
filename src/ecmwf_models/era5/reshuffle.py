@@ -5,17 +5,16 @@ Module for a command line interface to convert the ERA Interim data into a
 time series format using the repurpose package
 """
 
+from repurpose.img2ts import Img2Ts
 import os
 import sys
 import argparse
+from repurpose.process import ImageBaseConnection
 import numpy as np
-
-from repurpose.img2ts import Img2Ts
 from ecmwf_models.era5.interface import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.grid import ERA_RegularImgGrid, ERA5_RegularImgLandGrid
 from ecmwf_models.utils import mkdate, parse_filetype, parse_product, str2bool
-from datetime import time, datetime
-
+from datetime import datetime, time
 
 def reshuffle(
         input_root,
@@ -28,6 +27,7 @@ def reshuffle(
         h_steps=(0, 6, 12, 18),
         land_points=False,
         imgbuffer=50,
+        n_proc=1
 ):
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
@@ -65,6 +65,8 @@ def reshuffle(
         This number affects how many images are stored in memory and should
         be chosen according to the available amount of memory and the size of
         a single image.
+    n_proc: int, optional (default: 1)
+        Number of parallel processes to launch.
     """
 
     if h_steps is None:
@@ -96,7 +98,7 @@ def reshuffle(
             raise NotImplementedError(
                 "Reshuffling land points only implemented for netcdf files")
 
-        input_dataset = ERA5GrbDs(
+        input_dataset = ImageBaseConnection(ERA5GrbDs(
             root_path=input_root,
             parameter=variables,
             subgrid=grid,
@@ -104,9 +106,9 @@ def reshuffle(
             h_steps=h_steps,
             product=product,
             mask_seapoints=False,
-        )
+        ))
     elif filetype == "netcdf":
-        input_dataset = ERA5NcDs(
+        input_dataset = ImageBaseConnection(ERA5NcDs(
             root_path=input_root,
             parameter=variables,
             subgrid=grid,
@@ -114,9 +116,9 @@ def reshuffle(
             h_steps=h_steps,
             product=product,
             mask_seapoints=False,
-        )
+        ))
     else:
-        raise Exception("Unknown file format")
+        raise ValueError("Unknown file format.")
 
     if not os.path.exists(outputpath):
         os.makedirs(outputpath)
@@ -144,6 +146,7 @@ def reshuffle(
         zlib=True,
         unlim_chunksize=1000,
         ts_attributes=ts_attributes,
+        n_proc=n_proc,
     )
     reshuffler.calc()
 
@@ -224,15 +227,32 @@ def parse_args(args):
             "conversion faster but consume more memory. Choose this according "
             "to your system and the size of a single image. Default is 50."),
     )
+
+    parser.add_argument(
+        "--n_proc",
+        type=int,
+        default=1,
+        help=(
+            "Number of parallel processes to launch to read and covert the "
+            "image data. Default is 1."),
+    )
+
     args = parser.parse_args(args)
 
-    print("Converting ERA5/ERA5-Land data from {} to {} into {}.".format(
-        args.start.isoformat(), args.end.isoformat(), args.timeseries_root))
+    print(f"Converting ERA5/ERA5-Land image data to time series")
+    print(f"- Period: {args.start.isoformat()} to {args.end.isoformat()}")
+    print(f"- Variables: {args.variables}")
+    print(f"- Land Points only: {args.land_points}")
+    print(f"- Bounding Box [llc_x, llc_y, urc_x, urc_y]: {args.bbox}")
+    print(f"- Hours: {args.h_steps}")
+    print(f"- Image Buffer Size: {args.imgbuffer}")
+    print(f"- Parallel Processes: {args.n_proc}")
 
     return args
 
 
 def main(args):
+    t1 = datetime.now()
     args = parse_args(args)
 
     reshuffle(
@@ -245,8 +265,20 @@ def main(args):
         h_steps=args.h_steps,
         land_points=args.land_points,
         imgbuffer=args.imgbuffer,
+        n_proc=args.n_proc,
     )
+
+    print(f"Reshuffling done after {(datetime.now()-t1).seconds} seconds.")
 
 
 def run():
     main(sys.argv[1:])
+
+if __name__ == '__main__':
+    input_root = "/home/wpreimes/shares/climers/Datapool/ECMWF_reanalysis/01_raw/ERA5-Land/datasets/images/"
+    output_path = "/data-write/USERS/wpreimes/temp/raphi_era5land_temp_missing"
+    main([input_root, output_path, "1981-01-01", "2022-07-31",
+          "stl1", "stl2", "stl3", "stl4", "t2m", "skt", "d2m",
+          "--bbox", "114", "59", "120", "65",
+          "--land_points", "True", "--imgbuffer", "500", "--n_proc", "2"])
+    print("Done")

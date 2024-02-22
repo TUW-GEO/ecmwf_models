@@ -188,3 +188,17 @@ class ERA5GrbDs(ERAGrbDs):
             mask_seapoints=mask_seapoints,
             array_1D=array_1D,
         )
+
+if __name__ == '__main__':
+    from datetime import datetime
+    from ecmwf_models.grid import ERA5_RegularImgLandGrid
+
+    grid = ERA5_RegularImgLandGrid(res_lat=0.1, res_lon=0.1,
+                                   bbox=(114, 59, 120, 65))
+
+    reader = ERA5NcDs("/home/wpreimes/shares/climers/Datapool/ECMWF_reanalysis/01_raw/ERA5-Land/datasets/images/",
+                      product="era5-land", parameter=["stl1", "stl2", "stl3", "stl4", "t2m", "skt", "d2m",],
+                      subgrid=grid)
+    img = reader.read(datetime(1981,1,8,12))
+
+
