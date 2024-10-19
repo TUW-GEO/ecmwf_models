@@ -5,19 +5,18 @@ This module contains ERA5/ERA5-Land specific child classes of the netcdf
 and grib base classes, that are used for reading all ecmwf products.
 """
 
-from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
 from typing import Optional, Collection
 from typing_extensions import Literal
 from pygeogrids.grids import CellGrid
 
-# ERA5 products supported by the reader.
-_supported_products = ['era5', 'era5-land']
+from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
+from ecmwf_models.glob import SUPPORTED_PRODUCTS
 
 
 def _assert_product(product: str) -> str:
-    if product not in _supported_products:
+    if product not in SUPPORTED_PRODUCTS:
         raise ValueError(f"Got product {product} but expected one of "
-                         f"{_supported_products}")
+                         f"{SUPPORTED_PRODUCTS}")
     return product
 
 

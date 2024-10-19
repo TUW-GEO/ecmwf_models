@@ -31,10 +31,11 @@ from datetime import datetime
 import xarray as xr
 import pandas as pd
 from datedown.fname_creator import create_dt_fpath
-import argparse
 import numpy as np
 from netCDF4 import Dataset
 from collections import OrderedDict
+
+from ecmwf_models.glob import CdoNotFoundError, DOTRC
 
 try:
     from cdo import Cdo
@@ -47,36 +48,6 @@ try:
     pygrib_available = True
 except ImportError:
     pygrib_available = False
-
-
-class CdoNotFoundError(ModuleNotFoundError):
-
-    def __init__(self, msg=None):
-        _default_msg = "cdo and/or python-cdo not installed. " \
-                       "Use conda to install it them under Linux."
-        self.msg = _default_msg if msg is None else msg
-
-
-def str2bool(v):
-    """
-    Parse a string to True/False
-
-    Parameters
-    ---------
-    v : str
-        String to parse, must be part of the lists below.
-
-    Return
-    ---------
-    str2bool : bool
-        The parsed bool from the passed string
-    """
-    if v.lower() in ("yes", "true", "t", "y", "1"):
-        return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
-        return False
-    else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def save_ncs_from_nc(
@@ -216,25 +187,28 @@ def save_gribs_from_grib(
         os.remove(input_grib)
 
 
-def mkdate(datestring):
-    """
-    Turns a datetime string into a datetime object
-
-    Parameters
-    -----------
-    datestring: str
-        Input datetime string
-
-    Returns
-    -----------
-    datetime : datetime
-        Converted string
-    """
-    if len(datestring) == 10:
-        return datetime.strptime(datestring, "%Y-%m-%d")
-    if len(datestring) == 16:
-        return datetime.strptime(datestring, "%Y-%m-%dT%H:%M")
-
+def check_api_read() -> bool:
+    if not os.path.isfile(DOTRC):
+        url = os.environ.get('CDSAPI_URL')
+        key = os.environ.get('CDSAPI_KEY')
+        if url is None or key is None:
+            ValueError('CDS API KEY or .cdsapirc file not found, '
+                       'download will not work! '
+                       'Please create a .cdsapirc file with your credentials'
+                       'or pass your uid/key to the command line tool '
+                       'See: '
+                       'https://cds.climate.copernicus.eu/api-how-to')
+            api_ready = False
+        elif ":" not in key:
+            raise ValueError(
+                'Your CDS token is not valid. It must be in the format '
+                '<UID>:<APIKEY>, both of which are found on your CDS'
+                'profile page.')
+        else:
+            api_ready = True
+    else:
+        api_ready = True
+    return api_ready
 
 def parse_product(inpath: str) -> str:
     """
@@ -263,8 +237,6 @@ def parse_product(inpath: str) -> str:
                 return "era5-land"
             elif "ERA5" in parts:
                 return "era5"
-            elif "ERAINT" in parts:
-                return "eraint"
             else:
                 continue
 
@@ -323,12 +295,6 @@ def load_var_table(name="era5", lut=False):
             "era5",
             "era5-land_lut.csv",
         )
-    elif name == "eraint":
-        era_vars_csv = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "erainterim",
-            "eraint_lut.csv",
-        )
     else:
         raise ValueError(name, "No LUT for the selected dataset found.")
 
@@ -343,7 +309,7 @@ def load_var_table(name="era5", lut=False):
 def lookup(name, variables):
     """
     Search the passed elements in the lookup table, if one does not exists,
-    raise a Warning
+    print a Warning
     """
     lut = load_var_table(name=name, lut=True)
 
@@ -455,3 +421,40 @@ def make_era5_land_definition_file(
 
     ds_in.close()
     ds_out.close()
+
+
+def default_variables(product="era5"):
+    """
+    These variables are being downloaded, when None are passed by the user
+
+    Parameters
+    ---------
+    product : str, optional (default: 'era5')
+        Name of the era5 product to read the default variables for.
+        Either 'era5' or 'era5-land'.
+    """
+    lut = load_var_table(name=product)
+    defaults = lut.loc[lut["default"] == 1]["dl_name"].values
+    return defaults.tolist()
+
+
+def split_array(array, chunk_size):
+    """
+    Split an array into chunks of a given size.
+
+    Parameters
+    ----------
+    array : array-like
+        Array to split into chunks
+    chunk_size : int
+        Size of each chunk
+
+    Returns
+    -------
+    chunks : list
+        List of chunks
+    """
+    chunks = []
+    for i in range(0, len(array), chunk_size):
+        chunks.append(array[i:i + chunk_size])
+    return chunks

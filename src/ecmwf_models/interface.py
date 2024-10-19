@@ -20,6 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+"""
+Base classes for reading downloaded ERA netcdf and grib images and stacks
+"""
+
 import warnings
 import os
 from pygeobase.io_base import ImageBase, MultiTemporalImageBase
@@ -43,9 +47,6 @@ try:
     import pygrib
 except ImportError:
     warnings.warn("pygrib has not been imported")
-"""
-Base classes for reading downloaded ERA netcdf and grib images and stacks
-"""
 
 
 class ERANcImg(ImageBase):
@@ -57,7 +58,7 @@ class ERANcImg(ImageBase):
     filename: str
         Path to the image file to read.
     product : str
-        'era5' or 'era5-land' or 'eraint'
+        'era5' or 'era5-land'
     parameter: list or str, optional (default: ['swvl1', 'swvl2'])
         Name of parameters to read from the image file.
     subgrid: pygeogrids.CellGrid, optional (default: None)

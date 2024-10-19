@@ -5,17 +5,12 @@ Module to download ERA5 from terminal in netcdf and grib format.
 import pandas as pd
 
 from ecmwf_models.utils import (
-    load_var_table,
     lookup,
     save_gribs_from_grib,
     save_ncs_from_nc,
-    mkdate,
-    str2bool,
+    default_variables, split_array
 )
 import warnings
-import errno
-import argparse
-import sys
 import os
 import logging
 from datetime import datetime, time
@@ -23,43 +18,6 @@ import shutil
 import cdsapi
 import multiprocessing
 import numpy as np
-
-
-def default_variables(product="era5"):
-    """
-    These variables are being downloaded, when None are passed by the user
-
-    Parameters
-    ---------
-    product : str, optional (default: 'era5')
-        Name of the era5 product to read the default variables for.
-        Either 'era5' or 'era5-land'.
-    """
-    lut = load_var_table(name=product)
-    defaults = lut.loc[lut["default"] == 1]["dl_name"].values
-    return defaults.tolist()
-
-
-def split_array(array, chunk_size):
-    """
-    Split an array into chunks of a given size.
-
-    Parameters
-    ----------
-    array : array-like
-        Array to split into chunks
-    chunk_size : int
-        Size of each chunk
-
-    Returns
-    -------
-    chunks : list
-        List of chunks
-    """
-    chunks = []
-    for i in range(0, len(array), chunk_size):
-        chunks.append(array[i:i + chunk_size])
-    return chunks
 
 
 def split_chunk(timestamps,
@@ -254,7 +212,7 @@ def download_and_move(
     enddate: datetime
         last date to download
     product : str, optional (default: ERA5)
-        Either ERA5 or ERA5Land
+        Either ERA5 or ERA5-Land
     variables : list, optional (default: None)
         Name of variables to download
     keep_original: bool (default: False)
@@ -313,11 +271,20 @@ def download_and_move(
         variables = lookup(name=product, variables=variables)
         variables = variables["dl_name"].values.tolist()
 
+    logger = logging.getLogger('dl_logger')
+
     if dry_run:
         warnings.warn("Dry run does not create connection to CDS")
         c = None
         cds_status_tracker = None
     else:
+        if not check_api_read():
+            raise ValueError(
+                "Cannot establish connection to CDS. Please set up"
+                "your CDS API key as described at "
+                "https://cds.climate.copernicus.eu/api-how-to")
+
+        os.makedirs(target_path, exist_ok=True)
         cds_status_tracker = CDSStatusTracker()
         c = cdsapi.Client(
             error_callback=cds_status_tracker.handle_error_function)
@@ -438,149 +405,3 @@ def download_and_move(
     # if any of the sub-periods was successful we want the function to return 0
     consolidated_status_code = max(all_status_codes)
     return consolidated_status_code
-
-
-def parse_args(args):
-    """
-    Parse command line parameters for recursive download
-
-    Parameters
-    ----------
-    args : list
-        Command line parameters as list of strings
-
-    Returns
-    ----------
-    clparams : argparse.Namespace
-        Parsed command line parameters
-    """
-
-    parser = argparse.ArgumentParser(
-        description="Download ERA 5 reanalysis data images between two "
-        "dates. Before this program can be used, you have to "
-        "register at the CDS and setup your .cdsapirc file "
-        "as described here: "
-        "https://cds.climate.copernicus.eu/api-how-to")
-    parser.add_argument(
-        "localroot",
-        help="Root of local filesystem where the downloaded data will be "
-        "stored.",
-    )
-    parser.add_argument(
-        "-s",
-        "--start",
-        type=mkdate,
-        default=datetime(1979, 1, 1),
-        help=("Startdate in format YYYY-MM-DD. "
-              "If no data is found there then the first available date of the "
-              "product is used."),
-    )
-    parser.add_argument(
-        "-e",
-        "--end",
-        type=mkdate,
-        default=datetime.now(),
-        help=("Enddate in format YYYY-MM-DD. "
-              "If not given then the current date is used."),
-    )
-    parser.add_argument(
-        "-p",
-        "--product",
-        type=str,
-        default="ERA5",
-        help=("The ERA5 product to download. Choose either ERA5 or ERA5-Land. "
-              "Default is ERA5."),
-    )
-    parser.add_argument(
-        "-var",
-        "--variables",
-        metavar="variables",
-        type=str,
-        default=None,
-        nargs="+",
-        help=("Name of variables to download. If None are passed, we use the "
-              "default ones from the "
-              "era5_lut.csv resp. era5-land_lut.csv files in this package. "
-              "See the ERA5/ERA5-LAND documentation for more variable names: "
-              "     https://confluence.ecmwf.int/display/CKB/"
-              "ERA5+data+documentation "
-              "     https://confluence.ecmwf.int/display/CKB/"
-              "ERA5-Land+data+documentation"),
-    )
-    parser.add_argument(
-        "-keep",
-        "--keep_original",
-        type=str2bool,
-        default="False",
-        help=("Also keep the downloaded image stack as retrieved from CDS - "
-              "before slicing it into single images - instead of deleting it "
-              "after extracting all images. "
-              "Pass either True or False. Default is False."),
-    )
-    parser.add_argument(
-        "-grb",
-        "--as_grib",
-        type=str2bool,
-        default="False",
-        help=("Download data in grib format instead of netcdf. "
-              "Pass either True or False. Default is False."),
-    )
-    parser.add_argument(
-        "--h_steps",
-        type=int,
-        default=[0, 6, 12, 18],
-        nargs="+",
-        help=("Temporal resolution of downloaded images. "
-              "Pass a set of full hours here, like '--h_steps 0 12'. "
-              "By default 6H images (starting at 0:00 UTC, i.e. 0 6 12 18) "
-              "will be downloaded"),
-    )
-
-    parser.add_argument(
-        "--max_request_size",
-        type=int,
-        default=1000,
-        help=("Maximum number of requests that the CDS API allows. "
-              "The default is 1000, but depends on server side settings. "
-              "Server settings may change at some point. Change "
-              "accordingly here in case that 'the request is too large'. "
-              "A smaller number will results in smaller download chunks."))
-
-    args = parser.parse_args(args)
-
-    print("Downloading {p} {f} files between {s} and {e} into folder {root}"
-          .format(
-              p=args.product,
-              f="grib" if args.as_grib is True else "netcdf",
-              s=args.start.isoformat(),
-              e=args.end.isoformat(),
-              root=args.localroot,
-          ))
-    return args
-
-
-def main(args):
-    args = parse_args(args)
-    status_code = download_and_move(
-        target_path=args.localroot,
-        startdate=args.start,
-        enddate=args.end,
-        product=args.product,
-        variables=args.variables,
-        h_steps=args.h_steps,
-        grb=args.as_grib,
-        keep_original=args.keep_original,
-        stepsize='month',
-        n_max_request=args.max_request_size,
-    )
-    return status_code
-
-
-def run():
-    status_code = main(sys.argv[1:])
-    if status_code == -10:
-        return_code = errno.ENODATA  # Default no data status code of 61
-    else:
-        return_code = status_code
-
-    sys.exit(return_code)

@@ -25,7 +25,8 @@ Tests for transferring downloaded data to netcdf or grib files
 '''
 
 from ecmwf_models.era5.download import download_and_move, save_ncs_from_nc
-from ecmwf_models.utils import CdoNotFoundError, cdo_available
+from ecmwf_models.utils import cdo_available
+from ecmwf_models.glob import CdoNotFoundError
 
 import os
 import shutil

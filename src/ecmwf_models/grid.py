@@ -143,6 +143,16 @@ def ERA_IrregularImgGrid(
 ) -> CellGrid:
     """
     Create a irregular grid from the passed coordinates.
+
+    Parameters
+    ----------
+    lons : np.ndarray
+        List of longitude values
+    lats: np.ndarray
+        List of latitude values
+    bbox : Tuple[float, float, float], optional (default: None)
+        Keep only points in the passed bounding box.
+        latmin, latmax, lonmin, lonmax
     """
     lons_gt_180 = np.where(lons > 180.0)
     lons[lons_gt_180] = lons[lons_gt_180] - 360
