@@ -7,23 +7,21 @@ time series format using the repurpose package
 
 import os
 import pandas as pd
-import sys
-import argparse
 import numpy as np
 from datetime import time, datetime
 
 from repurpose.img2ts import Img2Ts
 
-from ecmwf_models.era5.interface import ERA5NcDs, ERA5GrbDs
+from ecmwf_models.era5.reader import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.grid import ERA_RegularImgGrid, ERA5_RegularImgLandGrid
-from ecmwf_models.utils import mkdate, parse_filetype, parse_product, str2bool
+from ecmwf_models.utils import parse_filetype, parse_product
 
 def img2ts(
         input_root,
         outputpath,
         startdate,
         enddate,
-        variables,
+        variables=None,
         product=None,
         bbox=None,
         h_steps=(0, 6, 12, 18),
@@ -46,7 +44,7 @@ def img2ts(
     enddate : str
         End date, from which images are read and time series are generated.
         Format YYYY-mm-dd
-    variables: tuple or list or str
+    variables: tuple or str
         Variables to read from the passed images and convert into time
         series format.
     product : str, optional (default: None)
@@ -63,6 +61,8 @@ def img2ts(
         Reshuffle only land points. Uses the ERA5 land mask to create a land
         grid.
         The land grid is fixed to 0.25*0.25 or 0.1*0.1 deg for now.
+    include_prelim: bool, optional (default: True)
+        Include preliminary data (from Era5-T and ERA5-Land-T files)
     imgbuffer: int, optional (default: 200)
         How many images to read at once before writing time series.
         This number affects how many images are stored in memory and should
@@ -73,26 +73,23 @@ def img2ts(
     startdate = pd.to_datetime(startdate).to_pydatetime().date()
     enddate = pd.to_datetime(enddate).to_pydatetime().date()
 
-    if h_steps is None:
-        h_steps = (0, 6, 12, 18)
-
     filetype = parse_filetype(input_root)
-    product = parse_product(input_root) if not product else product
+    product: str = parse_product(input_root) if product is None else product
 
     if land_points:
         if product == "era5":
             grid = ERA5_RegularImgLandGrid(
-                res_lat=0.25, res_lon=0.25, bbox=bbox)
+                resolution=0.25, bbox=bbox)
         elif product == "era5-land":
-            grid = ERA5_RegularImgLandGrid(res_lat=0.1, res_lon=0.1, bbox=bbox)
+            grid = ERA5_RegularImgLandGrid(resolution=0.1, bbox=bbox)
         else:
             raise NotImplementedError(
                 product, "Land grid not implemented for product.")
     else:
-        if product == "era5":
-            grid = ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25, bbox=bbox)
-        elif product == "era5-land":
-            grid = ERA_RegularImgGrid(res_lat=0.1, res_lon=0.1, bbox=bbox)
+        if product.lower() in ['era5-land', 'era5-land-t']:
+            grid = ERA_RegularImgGrid(resolution=0.1, bbox=bbox)
+        elif product.lower() in ['era5', 'era5-t']:
+            grid = ERA_RegularImgGrid(resolution=0.25, bbox=bbox)
         else:
             raise NotImplementedError(product,
                                       "Grid not implemented for product.")
@@ -154,3 +151,10 @@ def img2ts(
         n_proc=1,
     )
     reshuffler.calc()
+
+
+if __name__ == '__main__':
+    img2ts("/home/wpreimes/shares/home/code/ecmwf_models/tests/ecmwf_models-test-data/ERA5/grib",
+           '/tmp/era5/ts', variables=['swvl1', "swvl2"],
+           startdate='2010-01-01', enddate='2010-01-01', land_points=False,
+           h_steps=[0, 12], bbox=(12, 46, 17, 50))

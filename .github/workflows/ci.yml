@@ -4,45 +4,44 @@
 # For more information see:
 # https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Automated Tests
+name: CI/CD
 
 on:
   push:
   pull_request:
   workflow_dispatch:
-  schedule: # only upstream, won't trigger on forks!
-    - cron: '0 0 * * *' # daily
+  schedule:
+    - cron: '0 0 * * *'  # nightly build
+
+env:  # Required to upload docker image
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   build:
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10' ]
-        os: [ "ubuntu-latest" ]
+        python-version: [ '3.8', '3.12' ]
+        os: [ "ubuntu-latest" , "windows-latest", "macos-latest"]
         ymlfile: [ "latest.yml" ]
-        include:
-          - os: "windows-latest"
-            python-version: "3.10"
-            ymlfile: "latest.yml"
-    name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}
+    name: Py${{ matrix.python-version }}@${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
           lfs: true
       - name: Checkout LFS objects
         run: git lfs checkout
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
-          miniconda-version: "latest"
           auto-update-conda: true
-          channel-priority: flexible
           python-version: ${{ matrix.python-version }}
           environment-file: environment/${{ matrix.ymlfile }}
-          mamba-version: "*"
-          activate-environment: ecmwf_models # todo: must match with name in latest.yml
+          channel-priority: flexible
+          activate-environment: ecmwf_models
           auto-activate-base: false
       - name: Print Infos
         shell: bash -l {0}
@@ -52,22 +51,27 @@ jobs:
           pip list
           which pip
           which python
+      - name: Install dependencies and package
+        shell: bash -l {0}
+        run: |
+          # On macos pykdtree was built with OpenMP (C-level parallelization library) support
+          if [ ${{ matrix.os }} == "macos-latest" ] 
+          then
+            conda install -c conda-forge pykdtree
+          fi
+          pip install -e .[testing]
+      - name: Run all tests
+        env:
+          CDS_APIKEY: ${{ secrets.CDS_APIKEY }}
+        shell: bash -l {0}
+        run: |      
+          pytest
       - name: Export Environment
         shell: bash -l {0}
         run: |
-          mkdir -p .artifacts
-          if [ ${{ matrix.ymlfile }} == "latest.yml" ]
-          then
-              filename=pinned_${{ matrix.python-version }}_${{ matrix.os }}.yml
-              conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
-          fi
-      - name: Install package and test
-        env:
-          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
-        shell: bash -l {0}
-        run: |
-          pip install .
-          pytest
+          mkdir -p artifacts
+          filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
+          conda env export --no-builds | grep -v "prefix" > artifacts/$filename
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
@@ -79,23 +83,25 @@ jobs:
       - name: Create wheel and dist package
         shell: bash -l {0}
         run: |
-          pip install setuptools_scm
+          pip install setuptools_scm twine
           if [ ${{ matrix.os }} == "windows-latest" ]
           then
             # build whls on windows
             pip install wheel
-            python setup.py bdist_wheel --dist-dir .artifacts/dist
+            python setup.py bdist_wheel --dist-dir artifacts/dist
           else
             # build dist on linux
-            python setup.py sdist --dist-dir .artifacts/dist
+            python setup.py sdist --dist-dir artifacts/dist
           fi
-          ls .artifacts/dist
+          ls artifacts/dist
+          twine check artifacts/dist/*
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
-          path: .artifacts/*
-  coveralls:
+          name: Artifacts-py${{ matrix.python-version }}-${{ matrix.os }}
+          path: artifacts/*
+
+  publish-coverage:
     name: Submit Coveralls 👚
     needs: build
     runs-on: ubuntu-latest
@@ -106,9 +112,13 @@ jobs:
           pip3 install --upgrade coveralls && coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  publish:
-    name: Upload to PyPI
-    if: startsWith(github.ref, 'refs/tags/v') && startsWith(github.repository, 'TUW-GEO')
+
+  publish-pypi-package:
+    name: Publish PyPI 🚀
+    # Will only trigger when Tests have passed on release/tag from the TUW-GEO repository
+    if: |
+      startsWith(github.ref, 'refs/tags/v') &&
+      startsWith(github.repository, 'TUW-GEO')
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -117,7 +127,11 @@ jobs:
           echo "GITHUB_REF = $GITHUB_REF"
           echo "GITHUB_REPOSITORY = $GITHUB_REPOSITORY"
       - name: Download Artifacts
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
+        with:
+          path: Artifacts
+          pattern: Artifacts-*
+          merge-multiple: true
       - name: Display downloaded files
         run: ls -aR
       - name: Upload to PyPI
@@ -128,4 +142,46 @@ jobs:
           verify_metadata: true
           packages_dir: Artifacts/dist/
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}  # todo: add pypi token to GHA
+          password: ${{ secrets.PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets
+
+  publish-docker-image:
+    name: Publish Docker 📦
+    # Will only trigger when Tests have passed on release/tag from the TUW-GEO repository
+    if: | 
+      startsWith(github.ref, 'refs/tags/v') && 
+      startsWith(github.repository, 'TUW-GEO')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

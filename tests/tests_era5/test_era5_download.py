@@ -23,11 +23,6 @@
 '''
 Tests for transferring downloaded data to netcdf or grib files
 '''
-
-from ecmwf_models.era5.download import download_and_move, save_ncs_from_nc
-from ecmwf_models.utils import cdo_available
-from ecmwf_models.glob import CdoNotFoundError
-
 import os
 import shutil
 from datetime import datetime
@@ -35,7 +30,10 @@ import numpy as np
 import xarray as xr
 import pytest
 import tempfile
-import time
+
+from ecmwf_models.era5.download import download_and_move, save_ncs_from_nc
+from ecmwf_models.utils import cdo_available, read_summary_yml
+from ecmwf_models.globals import CdoNotFoundError
 
 grid = {
     "gridtype": "lonlat",
@@ -76,20 +74,25 @@ def test_dry_download_nc_era5():
         assert os.path.isfile(trgt)
 
         startdate = enddate = datetime(2010, 1, 1)
+        variables, h_steps = ['swvl1', 'swvl2', 'lsm'], [0, 12]
 
         download_and_move(
             dl_path,
             startdate,
             enddate,
-            variables=['swvl1', 'swvl2', 'lsm'],
+            variables=variables,
             keep_original=False,
-            h_steps=[0, 12],
+            h_steps=h_steps,
             grb=False,
             dry_run=True)
 
-        assert (os.listdir(dl_path) == ['2010'])
-        assert (os.listdir(os.path.join(dl_path, '2010')) == ['001'])
-        assert (len(os.listdir(os.path.join(dl_path, '2010', '001'))) == 2)
+        cont = os.listdir(dl_path)
+        assert len(cont) == 2
+        assert 'overview.yml' in cont
+        assert '2010' in cont
+
+        assert os.listdir(os.path.join(dl_path, '2010')) == ['001']
+        assert len(os.listdir(os.path.join(dl_path, '2010', '001'))) == 2
 
         should_dlfiles = [
             'ERA5_AN_20100101_0000.nc', 'ERA5_AN_20100101_1200.nc'
@@ -98,9 +101,12 @@ def test_dry_download_nc_era5():
         assert (sorted(os.listdir(os.path.join(
             dl_path, '2010', '001'))) == sorted(should_dlfiles))
 
-        assert (os.listdir(dl_path) == ['2010'])
-        assert (os.listdir(os.path.join(dl_path, '2010')) == ['001'])
-        assert (len(os.listdir(os.path.join(dl_path, '2010', '001'))) == 2)
+        props = read_summary_yml(dl_path)
+        assert props['product'].lower() == 'era5'
+        assert props['download_settings']['grb'] is False
+        assert props['period_to'] == props['period_from'] == '2010-01-01'
+        assert len(props['download_settings']['variables']) == len(variables)
+        assert props['download_settings']['h_steps'] == h_steps
 
 
 def test_dry_download_grb_era5():
@@ -118,18 +124,23 @@ def test_dry_download_grb_era5():
             os.path.join(dl_path, 'temp_downloaded', '20100101_20100101.grb'))
 
         startdate = enddate = datetime(2010, 1, 1)
+        variables, h_steps = ['swvl1', 'swvl2', 'lsm'], [0, 12]
 
         download_and_move(
             dl_path,
             startdate,
             enddate,
-            variables=['swvl1', 'swvl2', 'lsm'],
+            variables=variables,
             keep_original=False,
-            h_steps=[0, 12],
+            h_steps=h_steps,
             grb=True,
             dry_run=True)
 
-        assert (os.listdir(dl_path) == ['2010'])
+        cont = os.listdir(dl_path)
+        assert len(cont) == 2
+        assert 'overview.yml' in cont
+        assert '2010' in cont
+
         assert (os.listdir(os.path.join(dl_path, '2010')) == ['001'])
         assert (len(os.listdir(os.path.join(dl_path, '2010', '001'))) == 2)
 
@@ -139,6 +150,13 @@ def test_dry_download_grb_era5():
 
         assert (sorted(os.listdir(os.path.join(
             dl_path, '2010', '001'))) == sorted(should_dlfiles))
+
+        props = read_summary_yml(dl_path)
+        assert props['product'].lower() == 'era5'
+        assert props['download_settings']['grb'] is True
+        assert props['period_to'] == props['period_from'] == '2010-01-01'
+        assert len(props['download_settings']['variables']) == len(variables)
+        assert props['download_settings']['h_steps'] == h_steps
 
 
 @pytest.mark.skipif(not cdo_available, reason="CDO is not installed")
@@ -168,7 +186,11 @@ def test_download_nc_era5_regridding():
             dry_run=True,
             grid=grid)
 
-        assert (os.listdir(dl_path) == ['2010'])
+        cont = os.listdir(dl_path)
+        assert len(cont) == 2
+        assert 'overview.yml' in cont
+        assert '2010' in cont
+
         assert (os.listdir(os.path.join(dl_path, '2010')) == ['001'])
         assert (len(os.listdir(os.path.join(dl_path, '2010', '001'))) == 2)
 
@@ -181,9 +203,11 @@ def test_download_nc_era5_regridding():
 
         for f in os.listdir(os.path.join(dl_path, "2010", "001")):
             ds = xr.open_dataset(os.path.join(dl_path, "2010", "001", f))
-            assert dict(ds.dims) == {"lon": 720, "lat": 360}
+            assert ds['lon'].shape == (720,)
+            assert ds['lat'].shape == (360,)
             assert np.all(np.arange(89.75, -90, -0.5) == ds.lat)
             assert np.all(np.arange(-179.75, 180, 0.5) == ds.lon)
+
 
 if __name__ == '__main__':
     test_dry_download_nc_era5()

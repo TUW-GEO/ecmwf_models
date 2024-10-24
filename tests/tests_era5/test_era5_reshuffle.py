@@ -29,69 +29,59 @@ import glob
 import tempfile
 import numpy as np
 import numpy.testing as nptest
-from datetime import datetime
+import subprocess
 
-from ecmwf_models.era5.reshuffle import main
+from ecmwf_models.era5.reshuffle import img2ts
 from ecmwf_models import ERATs
-from ecmwf_models.era5.reshuffle import parse_args
+from ecmwf_models.utils import read_summary_yml
 
+inpath = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..",
+    "ecmwf_models-test-data",
+    "ERA5",
+)
 
-def test_parse_args():
+def test_cli_reshuffle():
+    path = os.path.join(inpath, 'netcdf')
+    with tempfile.TemporaryDirectory() as ts_path:
+        subprocess.call(["era5", "reshuffle", path, ts_path, "2010-01-01",
+                         "2010-01-01", "-v", "swvl1,swvl2", "-l",
+                         "--bbox", "12.0", "46.0", "17.0", "50.0",
+                         "--h_steps", "0"])
 
-    args = parse_args([
-        "/in",
-        "/out",
-        "2000-01-01",
-        "2010-12-31",
-        "swvl1",
-        "swvl2",
-        "--land_points",
-        "True",
-        "--imgbuffer",
-        "1000",
-        "--bbox",
-        "12",
-        "46",
-        "17",
-        "50",
-    ])
+        sum = read_summary_yml(ts_path)
+        change summary
 
-    assert isinstance(args.dataset_root, str) and args.dataset_root == "/in"
-    assert (isinstance(args.timeseries_root, str) and
-            args.timeseries_root == "/out")
-    assert isinstance(args.start, datetime) and args.start == datetime(
-        2000, 1, 1)
-    assert isinstance(args.end, datetime) and args.end == datetime(
-        2010, 12, 31)
-    assert isinstance(args.variables, list) and len(args.variables) == 2
-    assert isinstance(args.land_points, bool) and args.land_points is True
-    assert isinstance(args.imgbuffer, int) and args.imgbuffer == 1000
-    assert (isinstance(args.bbox, list) and len(args.bbox) == 4 and
-            all([isinstance(a, float) for a in args.bbox]))
+        write new summary
 
+        call update with manipulated summary
+
+        subprocess.call(["era5", "update_ts", path, ts_path, "2010-01-01",
+                         "2010-01-01", "-v", "swvl1,swvl2", "-l",
+                         "--bbox", "12.0", "46.0", "17.0", "50.0",
+                         "--h_steps", "12"])
+
+        ds = ERATs(ts_path, ioclass_kws={"read_bulk": True})
+        ts = ds.read(15, 48)
+        swvl1_values_should = np.array([0.402825, 0.390983], dtype=np.float32)
+        nptest.assert_allclose(
+            ts["swvl1"].values, swvl1_values_should, rtol=1e-5)
 
 def test_ERA5_reshuffle_nc():
     # test reshuffling era5 netcdf images to time series
 
-    inpath = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..",
-        "ecmwf_models-test-data",
-        "ERA5",
-        "netcdf",
-    )
-
     startdate = "2010-01-01"
     enddate = "2010-01-01"
     parameters = ["swvl1", "swvl2"]
-    h_steps = ["--h_steps", "0", "12"]
-    landpoints = ["--land_points", "True"]
-    bbox = ["--bbox", "12", "46", "17", "50"]
+    h_steps = [0, 12]
+    landpoints = True
+    bbox = (12, 46, 17, 50)
 
     with tempfile.TemporaryDirectory() as ts_path:
-        args = ([inpath, ts_path, startdate, enddate] + parameters + h_steps +
-                landpoints + bbox)
-        main(args)
+        img2ts(os.path.join(inpath, 'netcdf'), ts_path, startdate, enddate,
+               variables=parameters, h_steps=h_steps, land_points=landpoints,
+               bbox=bbox)
         assert (len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5)
         # less files because only land points and bbox
         ds = ERATs(ts_path, ioclass_kws={"read_bulk": True})
@@ -108,26 +98,19 @@ def test_ERA5_reshuffle_nc():
 def test_ERA5_reshuffle_grb():
     # test reshuffling era5 netcdf images to time series
 
-    inpath = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..",
-        "ecmwf_models-test-data",
-        "ERA5",
-        "netcdf",
-    )
+
     startdate = "2010-01-01"
     enddate = "2010-01-01"
     parameters = ["swvl1", "swvl2"]
-    h_steps = ["--h_steps", "0", "12"]
-    landpoints = ["--land_points", "False"]
-    bbox = ["--bbox", "12", "46", "17", "50"]
+    h_steps = [0, 12]
+    landpoints = False
+    bbox = (12, 46, 17, 50)
 
     with tempfile.TemporaryDirectory() as ts_path:
 
-        args = ([inpath, ts_path, startdate, enddate] + parameters + h_steps +
-                landpoints + bbox)
-
-        main(args)
+        img2ts(os.path.join(inpath, 'grib'), ts_path, startdate, enddate,
+               variables=parameters,
+               h_steps=h_steps, land_points=landpoints, bbox=bbox)
 
         assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5
         ds = ERATs(ts_path, ioclass_kws={"read_bulk": True})
@@ -139,3 +122,7 @@ def test_ERA5_reshuffle_grb():
         swvl2_values_should = np.array([0.390514, 0.390980], dtype=np.float32)
         nptest.assert_allclose(
             ts["swvl2"].values, swvl2_values_should, rtol=1e-5)
+
+
+if __name__ == '__main__':
+    test_cli_reshuffle()

@@ -68,6 +68,10 @@ dependencies. The file `pinned` is a fallback option and should always work.
     python setup.py develop
     pytest
 
+API Setup
+=========
+
+https://cds.climate.copernicus.eu/how-to-api
 
 Supported Products
 ==================

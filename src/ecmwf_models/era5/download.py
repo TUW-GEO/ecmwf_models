@@ -6,18 +6,22 @@ import pandas as pd
 
 from ecmwf_models.utils import (
     lookup,
-    save_gribs_from_grib,
-    save_ncs_from_nc,
-    default_variables, split_array
+    update_image_summary_file,
+    save_ncs_from_nc, save_gribs_from_grib,
+    default_variables, split_array, check_api_ready,
+    read_summary_yml
 )
+from repurpose.process import parallel_process
+from repurpose.misc import delete_empty_directories
+
 import warnings
 import os
 import logging
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import shutil
 import cdsapi
-import multiprocessing
 import numpy as np
+import traceback
 
 
 def split_chunk(timestamps,
@@ -115,8 +119,8 @@ def download_era5(
         default variables will be downloaded.
     target : str
         File name, where the data is stored.
-    geb : bool, optional (default: False)
-        Download data in grib format
+    grb : bool, optional (default: False)
+        Download data in grib format instead of netcdf
     product : str
         ERA5 data product to download, either era5 or era5-land
     dry_run: bool, optional (default: False)
@@ -136,15 +140,17 @@ def download_era5(
 
     request = {
         "format": "grib" if grb else "netcdf",
+        "download_format": "unarchived",
         "variable": variables,
         "year": [str(y) for y in years],
         "month": [str(m).zfill(2) for m in months],
         "day": [str(d).zfill(2) for d in days],
         "time": [time(h, 0).strftime("%H:%M") for h in h_steps],
     }
+
     request.update(cds_kwds)
     if product == "era5":
-        request["product_type"] = "reanalysis"
+        request["product_type"] = ["reanalysis"]
         c.retrieve("reanalysis-era5-single-levels", request, target)
     elif product == "era5-land":
         c.retrieve("reanalysis-era5-land", request, target)
@@ -164,8 +170,9 @@ class CDSStatusTracker:
     statuscode_error = -1
     statuscode_unavailable = 10
 
-    def __init__(self):
+    def __init__(self, logger=logging.getLogger()):
         self.download_statuscode = self.statuscode_ok
+        self.logger = logger
 
     def handle_error_function(self, *args, **kwargs):
         message_prefix = args[0]
@@ -176,7 +183,7 @@ class CDSStatusTracker:
                 self.download_statuscode = self.statuscode_unavailable
             else:
                 self.download_statuscode = self.statuscode_error
-        logging.error(*args, **kwargs)
+        self.logger.error(*args, **kwargs)
 
 
 def download_and_move(
@@ -191,9 +198,11 @@ def download_and_move(
     dry_run=False,
     grid=None,
     remap_method="bil",
-    cds_kwds={},
+    cds_kwds=None,
     stepsize="month",
     n_max_request=1000,
+    keep_prelim=True,
+    cds_token=None,
 ) -> int:
     """
     Downloads the data from the ECMWF servers and moves them to the target
@@ -211,16 +220,21 @@ def download_and_move(
         first date to download
     enddate: datetime
         last date to download
-    product : str, optional (default: ERA5)
-        Either ERA5 or ERA5-Land
+    product : str, optional (default: era5)
+        Either era5 or era5-land
     variables : list, optional (default: None)
-        Name of variables to download
+        Name of variables to download, see the documentation for all variable
+        names. If None is chosen, then the 'default' variables are downloaded.
     keep_original: bool (default: False)
-        keep the original downloaded data
-    h_steps: list or tuple
-        List of full hours to download data at the selected dates e.g [0, 12]
+        If True, keep the original downloaded data stack as received from CDS
+        after slicing individual time stamps.
+    h_steps: tuple, optional (default: (0, 6, 12, 18))
+        List of full hours to download data for at the selected dates e.g
+        [0, 12] would download at 0:00 and 12:00. Only full hours are possible.
     grb: bool, optional (default: False)
-        Download data as grib files
+        Download data as grib files instead of netcdf.
+        Note that downloading in grib format, does not allow on-the-fly
+        resampling (`grid` argument)
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     grid : dict, optional (default: None)
@@ -238,6 +252,7 @@ def download_and_move(
             }
 
         Default is to use no regridding.
+        To use this option, it is necessary that CDO is installed.
     remap_method : str, optional (dafault: 'bil')
         Method to be used for regridding. Available methods are:
         - "bil": bilinear (default)
@@ -247,22 +262,41 @@ def download_and_move(
         - "con": 1st order conservative remapping
         - "con2": 2nd order conservative remapping
         - "laf": largest area fraction remapping
-    cds_kwds: dict, optional (default: {})
-        Additional arguments to be passed to the CDS API retrieve request.
+    cds_kwds: dict, optional (default: None)
+        Additional keyword arguments to be passed to the CDS API request.
+        This might be useful in the future, when new server-side options are
+        added which are not yet directly supported by this package.
     n_max_request : int, optional (default: 1000)
         Maximum size that a request can have to be processed by CDS. At the
         moment of writing this is 1000 (N_timstamps * N_variables in a request)
         but as this is a server side settings, it can change.
+    keep_prelim: bool, optional (default: True)
+        Keep preliminary data from ERA5T under a different file name.
+        These data are not yet final and might change if an issue is detected.
+        If False is chosen, then the preliminary data will be discarded and
+        not stored.
+    cds_token: str, optional (default: None)
+        To identify with the CDS. Required if no .cdsapirc file exists in
+        the home directory (see documentation). You can find your token/key
+         on your CDS user profile page. Alternatively, the CDSAPI_KEY
+         environment variable can be set manually instead of passing the token
+         here.
 
     Returns
     -------
     status_code: int
-        0 : Downloaded data ok
-        -1 : Error
+        Status code summary from all requests:
+        0 : All Downloaded data ok
+        -1 : Error in at least one request
         -10 : No data available for requested time period
     """
+    if cds_token is not None:
+        os.environ["CDSAPI_KEY"] = cds_token
+    check_api_ready()
+
     h_steps = list(h_steps)
     product = product.lower()
+    cds_kwds = cds_kwds or dict()
 
     if variables is None:
         variables = default_variables(product=product)
@@ -271,18 +305,15 @@ def download_and_move(
         variables = lookup(name=product, variables=variables)
         variables = variables["dl_name"].values.tolist()
 
-    logger = logging.getLogger('dl_logger')
+    # this logger name is also used by CDS API, don't change it
+    logger = logging.getLogger('cdsapi')
 
     if dry_run:
         warnings.warn("Dry run does not create connection to CDS")
         c = None
         cds_status_tracker = None
     else:
-        if not check_api_read():
-            raise ValueError(
-                "Cannot establish connection to CDS. Please set up"
-                "your CDS API key as described at "
-                "https://cds.climate.copernicus.eu/api-how-to")
+        check_api_ready()
 
         os.makedirs(target_path, exist_ok=True)
         cds_status_tracker = CDSStatusTracker()
@@ -295,22 +326,23 @@ def download_and_move(
             for t in pd.date_range(startdate, enddate, freq='D')
         ]))
 
-    daily_request = True if stepsize == "day" else False
     req_periods = split_chunk(
         timestamps,
         n_vars=len(variables),
         n_hsteps=len(h_steps),
         max_req_size=n_max_request,
         reduce=True,
-        daily_request=daily_request)
+        daily_request=True if stepsize == "day" else False
+    )
 
-    # Since we download month/month or day/day we need to
-    # collect all the status codes to return a valid
-    # status code for the whole time period
-    all_status_codes = []
+    logger.info(f"Request is split into {len(req_periods)} chunks")
+    logger.info(f"Target directory {target_path}")
 
-    pool = multiprocessing.Pool(1)
-    for curr_start, curr_end in req_periods:
+    downloaded_data_path = os.path.join(target_path, "temp_downloaded")
+    if not os.path.exists(downloaded_data_path):
+        os.mkdir(downloaded_data_path)
+
+    def _download(curr_start, curr_end):
         curr_start = pd.to_datetime(curr_start).to_pydatetime()
         curr_end = pd.to_datetime(curr_end).to_pydatetime()
 
@@ -319,12 +351,9 @@ def download_and_move(
         fname = "{start}_{end}.{ext}".format(
             start=curr_start.strftime("%Y%m%d"),
             end=curr_end.strftime("%Y%m%d"),
-            ext="grb" if grb else "nc",
+            ext="grb" if grb else "nc"
         )
 
-        downloaded_data_path = os.path.join(target_path, "temp_downloaded")
-        if not os.path.exists(downloaded_data_path):
-            os.mkdir(downloaded_data_path)
         dl_file = os.path.join(downloaded_data_path, fname)
 
         finished, i = False, 0
@@ -363,37 +392,44 @@ def download_and_move(
 
         if status_code == 0:
             if grb:
-                pool.apply_async(
-                    save_gribs_from_grib,
-                    args=(dl_file, target_path),
-                    kwds=dict(
-                        product_name=product.upper(),
-                        keep_original=keep_original,
-                    ),
+                save_gribs_from_grib(
+                    dl_file,
+                    target_path,
+                    product_name=product.upper(),
+                    keep_original=keep_original,
+                    keep_prelim=keep_prelim
                 )
             else:
-                pool.apply_async(
-                    save_ncs_from_nc,
-                    args=(
-                        dl_file,
-                        target_path,
-                    ),
-                    kwds=dict(
-                        product_name=product.upper(),
-                        grid=grid,
-                        remap_method=remap_method,
-                        keep_original=keep_original,
-                    ),
+                save_ncs_from_nc(
+                    dl_file,
+                    target_path,
+                    product_name=product.upper(),
+                    grid=grid,
+                    remap_method=remap_method,
+                    keep_original=keep_original,
+                    keep_prelim=keep_prelim
                 )
 
-        all_status_codes.append(status_code)
+        return status_code
 
-    pool.close()
-    pool.join()
+
+
+    # Since we download month/month or day/day we need to
+    # collect all the status codes to return a valid
+    # status code for the whole time period
+    all_status_codes = parallel_process(
+        _download,
+        ITER_KWARGS={
+            'curr_start': [p[0] for p in req_periods],
+            'curr_end': [p[1] for p in req_periods]
+        },
+        logger_name='cdsapi', loglevel='DEBUG'
+    )
 
     # remove temporary files
     if not keep_original:
         shutil.rmtree(downloaded_data_path)
+
     if grid is not None:
         gridpath = os.path.join(target_path, "grid.txt")
         if os.path.exists(gridpath):
@@ -402,6 +438,82 @@ def download_and_move(
         if os.path.exists(weightspath):
             os.unlink(weightspath)
 
+    delete_empty_directories(target_path)
+
+    dl_settings = {
+        'product': product,
+        'variables': variables,
+        'keep_original': keep_original,
+        'h_steps': h_steps,
+        'grb': grb,
+        'grid': grid,
+        'remap_method': remap_method,
+        'cds_kwds': cds_kwds,
+        'stepsize': stepsize,
+        'n_max_request': n_max_request,
+        'keep_prelim': keep_prelim,
+    }
+
+    update_image_summary_file(target_path, dl_settings)
+
+    handlers = logger.handlers[:]
+
+    for handler in handlers:
+        logger.removeHandler(handler)
+        handler.close()
+    handlers.clear()
+
     # if any of the sub-periods was successful we want the function to return 0
     consolidated_status_code = max(all_status_codes)
     return consolidated_status_code
+
+
+def download_record_extension(path, dry_run=False, cds_token=None):
+    """
+    Uses information from an existing record to download additional data
+    from CDS.
+
+    Parameters
+    ----------
+    path: str
+        Path where the image data to extend is stored. Must also contain
+        a `summary.yml` file.
+    dry_run: bool, optional
+        Do not download anything, this is just used for testing the functions
+    cds_token: str, optional (default: None)
+        To identify with the CDS. Required if no `.cdsapirc` file exists in
+        the home directory (see documentation). You can find your token/key
+        on your CDS user profile page. Alternatively, the CDSAPI_KEY
+        environment variable can be set manually instead of passing the token
+        here.
+
+    Returns
+    -------
+    status_code: int
+        Status code summary from all requests:
+        0 : All Downloaded data ok
+        -1 : Error in at least one request
+        -10 : No data available for requested time period
+    """
+    props = read_summary_yml(path)
+
+    startdate = pd.to_datetime(props['period_to']).to_pydatetime() \
+                + timedelta(days=1)  # next day
+
+    enddate = pd.to_datetime(datetime.now().date()).to_pydatetime() \
+              - timedelta(days=1)  # yesterday
+
+    return download_and_move(
+        path, startdate=startdate, enddate=enddate,
+        cds_token=cds_token, dry_run=dry_run,
+        **props['download_settings'])
+
+
+if __name__ == '__main__':
+    download_record_extension('/tmp/era5/nc')
+    # download_and_move(
+    #     '/tmp/era5/nc', startdate='2024-07-01',
+    #     enddate='2024-07-10', product='era5', keep_original=False,
+    #     variables=['swvl1'], h_steps=[0,23], grb=False, dry_run=False,
+    #     keep_prelim=False
+    # )

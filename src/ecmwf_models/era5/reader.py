@@ -9,15 +9,8 @@ from typing import Optional, Collection
 from typing_extensions import Literal
 from pygeogrids.grids import CellGrid
 
+from ecmwf_models.utils import assert_product
 from ecmwf_models.interface import ERANcImg, ERANcDs, ERAGrbImg, ERAGrbDs
-from ecmwf_models.glob import SUPPORTED_PRODUCTS
-
-
-def _assert_product(product: str) -> str:
-    if product not in SUPPORTED_PRODUCTS:
-        raise ValueError(f"Got product {product} but expected one of "
-                         f"{SUPPORTED_PRODUCTS}")
-    return product
 
 
 class ERA5NcImg(ERANcImg):
@@ -25,7 +18,7 @@ class ERA5NcImg(ERANcImg):
     def __init__(
         self,
         filename: str,
-        parameter: Optional[Collection[str]] = ("swvl1", "swvl2"),
+        parameter: Collection[str] = None,
         product: Literal['era5', 'era5-land'] = 'era5',
         subgrid: Optional[CellGrid] = None,
         mask_seapoints: Optional[bool] = False,
@@ -38,8 +31,9 @@ class ERA5NcImg(ERANcImg):
         ----------
         filename: str
             Path to the image file to read.
-        parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        parameter: list[str] or str, optional (default: None)
             Name of parameters to read from the image file.
+            None means all parameter
         product: str, optional (default: 'era5')
             What era5 product, either era5 or era5-land.
         subgrid: pygeogrids.CellGrid, optional (default: None)
@@ -54,7 +48,7 @@ class ERA5NcImg(ERANcImg):
 
         super(ERA5NcImg, self).__init__(
             filename=filename,
-            product=_assert_product(product),
+            product=assert_product(product.lower()),
             parameter=parameter,
             subgrid=subgrid,
             mask_seapoints=mask_seapoints,
@@ -70,10 +64,11 @@ class ERA5NcDs(ERANcDs):
     ----------
     root_path: str
         Path to the image files to read.
-    parameter: list or str, optional (default: ('swvl1', 'swvl2'))
+    parameter: list[str] or str, optional (default: None)
         Name of parameters to read from the image file.
+        None means all parameter
     product: str, optional (default: 'era5')
-        What era5 product, either era5 or era5-land.
+        What era5 product, either `era5` or `era5-land`.
     h_steps : list, optional (default: (0,6,12,18))
         List of full hours to read images for.
     subgrid: pygeogrids.CellGrid, optional (default: None)
@@ -88,8 +83,8 @@ class ERA5NcDs(ERANcDs):
     def __init__(
         self,
         root_path: str,
-        parameter: Collection[str] = ("swvl1", "swvl2"),
-        product: Literal['era5', 'era5-land'] = 'era5',
+        parameter: Collection[str] = None,
+        product: str = 'era5',
         h_steps: Collection[int] = (0, 6, 12, 18),
         subgrid: Optional[CellGrid] = None,
         mask_seapoints: Optional[bool] = False,
@@ -97,7 +92,7 @@ class ERA5NcDs(ERANcDs):
     ):
         super(ERA5NcDs, self).__init__(
             root_path=root_path,
-            product=_assert_product(product),
+            product=assert_product(product.lower()),
             parameter=parameter,
             subgrid=subgrid,
             h_steps=h_steps,
@@ -111,7 +106,7 @@ class ERA5GrbImg(ERAGrbImg):
     def __init__(
         self,
         filename: str,
-        parameter: Optional[Collection[str]] = ("swvl1", "swvl2"),
+        parameter: Collection[str] = None,
         subgrid: Optional[CellGrid] = None,
         mask_seapoints: Optional[bool] = False,
         array_1D=False,
@@ -123,8 +118,9 @@ class ERA5GrbImg(ERAGrbImg):
         ----------
         filename: str
             Path to the image file to read.
-        parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        parameter: list[str] or str, optional (default: None)
             Name of parameters to read from the image file.
+            None means all parameter
         subgrid: pygeogrids.CellGrid, optional (default: None)
             Read only data for points of this grid and not global values.
         mask_seapoints : bool, optional (default: False)
@@ -149,9 +145,9 @@ class ERA5GrbDs(ERAGrbDs):
     def __init__(
         self,
         root_path: str,
-        parameter: Collection[str] = ("swvl1", "swvl2"),
+        parameter: Collection[str] = None,
         h_steps: Collection[int] = (0, 6, 12, 18),
-        product: Literal['era5', 'era5-land'] = "era5",
+        product: str = "era5",
         subgrid: Optional[CellGrid] = None,
         mask_seapoints: Optional[bool] = False,
         array_1D: Optional[bool] = False,
@@ -163,12 +159,13 @@ class ERA5GrbDs(ERAGrbDs):
         ----------
         root_path: str
             Path to the image files to read.
-        parameter: list or str, optional (default: ['swvl1', 'swvl2'])
+        parameter: list[str] or str, optional (default: None)
             Name of parameters to read from the image file.
+            None means all parameter
         h_steps : list, optional (default: [0,6,12,18])
             List of full hours to read images for.
         product: str, optional (default: 'era5')
-            What era5 product, either era5 or era5-land.
+            What era5 product, either `era5` or `era5-land`.
         subgrid: pygeogrids.CellGrid, optional (default: None)
             Read only data for points of this grid and not global values.
         mask_seapoints : bool, optional (default: False)
@@ -180,7 +177,7 @@ class ERA5GrbDs(ERAGrbDs):
 
         super(ERA5GrbDs, self).__init__(
             root_path=root_path,
-            product=_assert_product(product),
+            product=assert_product(product.lower()),
             parameter=parameter,
             subgrid=subgrid,
             h_steps=h_steps,

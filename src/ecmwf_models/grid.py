@@ -4,11 +4,20 @@ Common grid definitions for ECMWF model reanalysis products (regular gridded)
 """
 
 import numpy as np
-from pygeogrids.grids import BasicGrid, CellGrid
-from netCDF4 import Dataset
+from pygeogrids.grids import BasicGrid, CellGrid, gridfromdims
 import os
-from typing import Tuple
+from typing import Tuple, Literal
+import xarray as xr
 
+def trafo_lon(lon):
+    lons_gt_180 = np.where(lon > 180.)
+    lon[lons_gt_180] = lon[lons_gt_180] - 360.0
+    return lon
+
+def safe_arange(start, stop, step):
+    f_step = (1. / float(step))
+    vals = np.arange(float(start) * f_step, float(stop) * f_step , float(step) * f_step)
+    return vals / f_step
 
 def get_grid_resolution(lats: np.ndarray, lons: np.ndarray) -> (float, float):
     """
@@ -38,8 +47,7 @@ def get_grid_resolution(lats: np.ndarray, lons: np.ndarray) -> (float, float):
 
 
 def ERA5_RegularImgLandGrid(
-    res_lat: float = 0.25,
-    res_lon: float = 0.25,
+    resolution: float = 0.25,
     bbox: Tuple[float, float, float, float] = None,
 ) -> CellGrid:
     """
@@ -48,49 +56,53 @@ def ERA5_RegularImgLandGrid(
 
     Parameters
     ----------
-    res_lat: float, optional (default: 0.25)
-        Grid resolution (in degrees) in latitude direction.
-    res_lon: float, optional (default: 0.25)
-        Grid resolution (in degrees) in longitude direction.
+    resolution: float, optional (default: 0.25)
+        Grid resolution in degrees. Either 0.25 (ERA5) or 0.1 (ERA5-Land)
     bbox: tuple, optional (default: None)
-        (min_lon, min_lat, max_lon, max_lat) - wgs84
-        bbox to cut the global grid to.
+        WGS84 (min_lon, min_lat, max_lon, max_lat)
+        Values must be between -180 to 180 and -90 to 90
+        bbox to cut the global grid to
+
+    Returns
+    -------
+    landgrid: CellGrid
+        ERA Land grid at the given resolution, cut to the given bounding box
     """
+    if resolution not in [0.25, 0.1]:
+        raise ValueError("Unsupported resolution. Choose one of 0.25 or 0.1")
     try:
-        ds = Dataset(
+        ds = xr.open_dataset(
             os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
                 "era5",
                 "land_definition_files",
-                f"landmask_{res_lat}_{res_lon}.nc",
-            ))
+                f"landmask_{resolution}_{resolution}.nc",
+            ))["land"]
+        ds = ds.assign_coords({'longitude': trafo_lon(ds['longitude'].values)})
+        if bbox is not None:
+            ds = ds.sel(latitude=slice(bbox[3], bbox[1]))
+            ds = ds.isel(longitude=np.where((
+                    (ds['longitude'].values >= bbox[0]) &
+                    (ds['longitude'].values <= bbox[2])
+            ))[0])
+
+        land_mask = np.array(ds.values == 1.0)
+
     except FileNotFoundError:
         raise FileNotFoundError(
             "Land definition for this grid resolution not yet available. "
             "Please create and add it.")
 
-    global_grid = ERA_RegularImgGrid(res_lat, res_lon, bbox=None)
+    full_grid = ERA_RegularImgGrid(resolution, bbox=bbox)
 
-    land_mask = ds.variables["land"][:].flatten().filled(0.0) == 1.0
-    land_points = np.ma.masked_array(global_grid.get_grid_points()[0],
-                                     ~land_mask)
-
-    land_grid = global_grid.subgrid_from_gpis(
-        land_points[~land_points.mask].filled().astype("int"))
-
-    land_grid = land_grid.to_cell_grid(5.0, 5.0)
-
-    if bbox is not None:
-        gpis = land_grid.get_bbox_grid_points(
-            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3])
-        land_grid = land_grid.subgrid_from_gpis(gpis)
+    land_gpis = full_grid.get_grid_points()[0][land_mask.flatten()]
+    land_grid = full_grid.subgrid_from_gpis(land_gpis)
 
     return land_grid
 
 
 def ERA_RegularImgGrid(
-    res_lat: float = 0.25,
-    res_lon: float = 0.25,
+    resolution: float = 0.25,
     bbox: Tuple[float, float, float, float] = None,
 ) -> CellGrid:
     """
@@ -99,12 +111,12 @@ def ERA_RegularImgGrid(
 
     Parameters
     ----------
-    res_lat: float, optional (default: 0.25)
-        Grid resolution (in degrees) in latitude direction.
-    res_lon: float, optional (default: 0.25)
-        Grid resolution (in degrees) in longitude direction.
+    resolution: float, optional (default: 0.25)
+        Grid resolution (in degrees) in both directions.
+        Either 0.25 (ERA5) or 0.1 (ERA5-Land)
     bbox: tuple, optional (default: None)
-        (min_lon, min_lat, max_lon, max_lat) - wgs84
+        (min_lon, min_lat, max_lon, max_lat)
+        wgs84 (Lon -180 to 180)
         bbox to cut the global grid to.
 
     Returns
@@ -113,55 +125,23 @@ def ERA_RegularImgGrid(
         Regular, CellGrid with 5DEG*5DEG cells for the passed bounding box.
     """
 
-    # np.arange is not precise...
-    f_lon = 1.0 / res_lon
-    f_lat = 1.0 / res_lat
-    res_lon = res_lon * f_lon
-    res_lat = res_lat * f_lat
-    lon = np.arange(0.0, 360.0 * f_lon, res_lon)
-    lat = np.arange(90.0 * f_lat, -90 * f_lat - res_lat, -1 * res_lat)
-    lons_gt_180 = np.where(lon > (180.0 * f_lon))
-    lon[lons_gt_180] = lon[lons_gt_180] - (360.0 * f_lon)
-
-    lon, lat = np.meshgrid(lon, lat)
-
-    glob_basic_grid = BasicGrid(lon.flatten() / f_lon, lat.flatten() / f_lat)
-    glob_cell_grid = glob_basic_grid.to_cell_grid(cellsize=5.0)
+    # to get precise coordinates
+    lon = safe_arange(-180, 180, resolution)
+    lat = safe_arange(-90, 90+resolution, resolution)[::-1]
 
     if bbox is not None:
-        gpis = glob_cell_grid.get_bbox_grid_points(
-            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3])
-        glob_cell_grid = glob_cell_grid.subgrid_from_gpis(gpis)
+        lon = lon[np.where((lon >= bbox[0]) & (lon <= bbox[2]))]
+        lat = lat[np.where((lat >= bbox[1]) & (lat <= bbox[3]))]
+
+    # ERA grid LLC point has Lon=0
+    lon = np.roll(lon, int(len(lon) * 0.5))
+    glob_basic_grid = gridfromdims(lon, lat, origin='top')
+
+    glob_cell_grid = glob_basic_grid.to_cell_grid(cellsize=5.0)
 
     return glob_cell_grid
 
 
-def ERA_IrregularImgGrid(
-    lons: np.ndarray,
-    lats: np.ndarray,
-    bbox: Tuple[float, float, float, float] = None,
-) -> CellGrid:
-    """
-    Create a irregular grid from the passed coordinates.
 
-    Parameters
-    ----------
-    lons : np.ndarray
-        List of longitude values
-    lats: np.ndarray
-        List of latitude values
-    bbox : Tuple[float, float, float], optional (default: None)
-        Keep only points in the passed bounding box.
-        latmin, latmax, lonmin, lonmax
-    """
-    lons_gt_180 = np.where(lons > 180.0)
-    lons[lons_gt_180] = lons[lons_gt_180] - 360
-    grid = BasicGrid(lons.flatten(), lats.flatten())\
-        .to_cell_grid(cellsize=5.0)
-
-    if bbox is not None:
-        gpis = grid.get_bbox_grid_points(
-            lonmin=bbox[0], latmin=bbox[1], lonmax=bbox[2], latmax=bbox[3])
-        grid = grid.subgrid_from_gpis(gpis)
-
-    return grid
+if __name__ == '__main__':
+    a = ERA5_RegularImgLandGrid(0.25)
