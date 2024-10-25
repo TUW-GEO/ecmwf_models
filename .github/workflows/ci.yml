@@ -57,6 +57,11 @@ jobs:
           then
             conda install -c conda-forge pykdtree
           fi
+          # And on windows pygrib wheels are not available
+          if [ ${{ matrix.os }} == "windows-latest" ] 
+          then
+            conda install -c conda-forge pygrib
+          fi
           pip install -e .[testing]
       - name: Run all tests
         env:
