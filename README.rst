@@ -45,17 +45,17 @@ Quickstart
 ==========
 
 Download image data from CDS using the ``era5 download`` and ``era5land download``
-shell command ...
+shell command (see ``era5 download --help`` for all options) ...
 
 .. code-block:: shell
 
-    era5 download /tmp/era5/img -s 2024-04-01 -e 2024-04-05 -v swvl1,swvl2 --h_steps 0,12
+    era5land download /tmp/era5/img -s 2024-04-01 -e 2024-04-05 -v swvl1,swvl2 --h_steps 0,12
 
-... and convert them to time series
+... and convert them to time series (ideally for a longer period). Check ``era5 reshuffle --help``
 
 .. code-block:: shell
 
-    era5 reshuffle /tmp/era5/img /tmp/era5/ts 2024-04-01 2024-04-05 --land_points
+    era5land reshuffle /tmp/era5/img /tmp/era5/ts 2024-04-01 2024-04-05 --land_points
 
 Finally, in python, read the time series data for a location as a pandas
 DataFrame.
@@ -64,16 +64,16 @@ DataFrame.
 
     >> from ecmwf_models.interface import ERATs
     >> ds = ERATs('/tmp/era5/ts')
-    >> ds.read(18, 48)
+    >> ds.read(18, 48)  # (lon, lat)
 
                             swvl1     swvl2
-    2024-04-01 00:00:00  0.299046  0.303497
-    2024-04-01 12:00:00  0.286958  0.294542
-    2024-04-02 00:00:00  0.332938  0.292352
-            ...             ...        ...
-    2024-04-04 12:00:00  0.323561  0.313509
-    2024-04-05 00:00:00  0.331137  0.313139
-    2024-04-05 12:00:00  0.323436  0.309964
+    2024-04-01 00:00:00  0.318054  0.329590
+    2024-04-01 12:00:00  0.310715  0.325958
+    2024-04-02 00:00:00  0.360229  0.323502
+            ...             ...       ...
+    2024-04-04 12:00:00  0.343353  0.348755
+    2024-04-05 00:00:00  0.350266  0.346558
+    2024-04-05 12:00:00  0.343994  0.344498
 
 
 CDS API Setup
