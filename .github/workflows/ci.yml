@@ -23,7 +23,6 @@ jobs:
       matrix:
         python-version: [ '3.8', '3.12' ]
         os: [ "ubuntu-latest" , "windows-latest", "macos-latest"]
-        ymlfile: [ "latest.yml" ]
     name: Py${{ matrix.python-version }}@${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -39,7 +38,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          environment-file: environment/${{ matrix.ymlfile }}
           channel-priority: flexible
           activate-environment: ecmwf_models
           auto-activate-base: false
