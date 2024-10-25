@@ -62,7 +62,6 @@ def test_download_with_cdo_not_installed():
             save_ncs_from_nc(
                 infile, out_path, 'ERA5', grid=grid, keep_original=True)
 
-
 def test_dry_download_nc_era5():
     with tempfile.TemporaryDirectory() as dl_path:
         dl_path = os.path.join(dl_path, 'era5')
@@ -81,15 +80,16 @@ def test_dry_download_nc_era5():
         startdate = enddate = datetime(2010, 1, 1)
         variables, h_steps = ['swvl1', 'swvl2', 'lsm'], [0, 12]
 
-        download_and_move(
-            dl_path,
-            startdate,
-            enddate,
-            variables=variables,
-            keep_original=False,
-            h_steps=h_steps,
-            grb=False,
-            dry_run=True)
+        with pytest.warns(UserWarning, match='Dry run*'):
+            download_and_move(
+                dl_path,
+                startdate,
+                enddate,
+                variables=variables,
+                keep_original=False,
+                h_steps=h_steps,
+                grb=False,
+                dry_run=True)
 
         cont = os.listdir(dl_path)
         assert len(cont) == 2
@@ -131,15 +131,16 @@ def test_dry_download_grb_era5():
         startdate = enddate = datetime(2010, 1, 1)
         variables, h_steps = ['swvl1', 'swvl2', 'lsm'], [0, 12]
 
-        download_and_move(
-            dl_path,
-            startdate,
-            enddate,
-            variables=variables,
-            keep_original=False,
-            h_steps=h_steps,
-            grb=True,
-            dry_run=True)
+        with pytest.warns(UserWarning, match="Dry run*"):
+            download_and_move(
+                dl_path,
+                startdate,
+                enddate,
+                variables=variables,
+                keep_original=False,
+                h_steps=h_steps,
+                grb=True,
+                dry_run=True)
 
         cont = os.listdir(dl_path)
         assert len(cont) == 2
@@ -180,16 +181,18 @@ def test_download_nc_era5_regridding():
             os.path.join(dl_path, 'temp_downloaded', '20100101_20100101.nc'))
 
         startdate = enddate = datetime(2010, 1, 1)
-        download_and_move(
-            dl_path,
-            startdate,
-            enddate,
-            variables=['swvl1', 'swvl2', 'lsm'],
-            keep_original=False,
-            h_steps=[0, 12],
-            grb=False,
-            dry_run=True,
-            grid=grid)
+
+        with pytest.warns(UserWarning, match="Dry run*"):
+            download_and_move(
+                dl_path,
+                startdate,
+                enddate,
+                variables=['swvl1', 'swvl2', 'lsm'],
+                keep_original=False,
+                h_steps=[0, 12],
+                grb=False,
+                dry_run=True,
+                grid=grid)
 
         cont = os.listdir(dl_path)
         assert len(cont) == 2

@@ -289,10 +289,6 @@ def download_and_move(
         -1 : Error in at least one request
         -10 : No data available for requested time period
     """
-    if cds_token is not None:
-        os.environ["CDSAPI_KEY"] = cds_token
-    check_api_ready()
-
     h_steps = list(h_steps)
     product = product.lower()
     cds_kwds = cds_kwds or dict()
@@ -312,6 +308,8 @@ def download_and_move(
         c = None
         cds_status_tracker = None
     else:
+        if cds_token is not None:
+            os.environ["CDSAPI_KEY"] = cds_token
         check_api_ready()
 
         os.makedirs(target_path, exist_ok=True)

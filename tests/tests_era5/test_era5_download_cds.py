@@ -25,9 +25,8 @@ class DownloadTest(unittest.TestCase):
 
     @unittest.skipIf(
         os.environ.get('CDSAPI_KEY') is None and not api_ready,
-        'CDSAPI_KEY not found. Make sure the environment variable exists.'
+        'CDSAPI_KEY not found.'
     )
-    @pytest.mark.wget
     def test_cli_download(self):
 
         with tempfile.TemporaryDirectory() as dl_path:
