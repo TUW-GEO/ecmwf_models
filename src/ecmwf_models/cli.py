@@ -342,7 +342,9 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
     """
 
     h_steps = [int(h.strip()) for h in h_steps.split(',')]
-    variables = [str(v.strip()) for v in variables.split(',')]
+
+    if variables is not None:
+        variables = [str(v.strip()) for v in variables.split(',')]
 
     print(f"Converting ERA5/ERA5-Land images in period {start} to {end} into "
           f"time series to {ts_path}.")
