@@ -35,7 +35,7 @@ Install required C-libraries via conda. For installation we recommend
     conda install -c conda-forge pygrib netcdf4 pyresample pykdtree
 
 Afterwards the following command will install all remaining dependencies as
-well as the ecmwf_models package itself.
+well as the ``ecmwf_models`` package itself.
 
 .. code::
 
@@ -44,7 +44,7 @@ well as the ecmwf_models package itself.
 Quickstart
 ==========
 
-Download image data from CDS using the `era5 download` and `era5land download`
+Download image data from CDS using the ``era5 download`` and ``era5land download``
 shell command ...
 
 .. code-block:: shell
