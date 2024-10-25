@@ -18,7 +18,9 @@ from repurpose.misc import delete_empty_directories
 from ecmwf_models.utils import (
     lookup,
     update_image_summary_file,
-    default_variables, split_array, check_api_ready,
+    default_variables,
+    split_array,
+    check_api_ready,
 )
 from ecmwf_models.extract import save_ncs_from_nc, save_gribs_from_grib
 
@@ -329,8 +331,7 @@ def download_and_move(
         n_hsteps=len(h_steps),
         max_req_size=n_max_request,
         reduce=True,
-        daily_request=True if stepsize == "day" else False
-    )
+        daily_request=True if stepsize == "day" else False)
 
     logger.info(f"Request is split into {len(req_periods)} chunks")
     logger.info(f"Target directory {target_path}")
@@ -348,8 +349,7 @@ def download_and_move(
         fname = "{start}_{end}.{ext}".format(
             start=curr_start.strftime("%Y%m%d"),
             end=curr_end.strftime("%Y%m%d"),
-            ext="grb" if grb else "nc"
-        )
+            ext="grb" if grb else "nc")
 
         dl_file = os.path.join(downloaded_data_path, fname)
 
@@ -394,8 +394,7 @@ def download_and_move(
                     target_path,
                     product_name=product.upper(),
                     keep_original=keep_original,
-                    keep_prelim=keep_prelim
-                )
+                    keep_prelim=keep_prelim)
             else:
                 save_ncs_from_nc(
                     dl_file,
@@ -404,12 +403,9 @@ def download_and_move(
                     grid=grid,
                     remap_method=remap_method,
                     keep_original=keep_original,
-                    keep_prelim=keep_prelim
-                )
+                    keep_prelim=keep_prelim)
 
         return status_code
-
-
 
     # Since we download month/month or day/day we need to
     # collect all the status codes to return a valid
@@ -420,8 +416,8 @@ def download_and_move(
             'curr_start': [p[0] for p in req_periods],
             'curr_end': [p[1] for p in req_periods]
         },
-        logger_name='cdsapi', loglevel='DEBUG'
-    )
+        logger_name='cdsapi',
+        loglevel='DEBUG')
 
     # remove temporary files
     if not keep_original:
@@ -501,6 +497,9 @@ def download_record_extension(path, dry_run=False, cds_token=None):
               - timedelta(days=1)  # yesterday
 
     return download_and_move(
-        path, startdate=startdate, enddate=enddate,
-        cds_token=cds_token, dry_run=dry_run,
+        path,
+        startdate=startdate,
+        enddate=enddate,
+        cds_token=cds_token,
+        dry_run=dry_run,
         **props['download_settings'])

@@ -9,6 +9,7 @@ import os
 from typing import Tuple
 import xarray as xr
 
+
 def trafo_lon(lon):
     """
     0...360 -> 0...180...-180
@@ -26,6 +27,7 @@ def trafo_lon(lon):
     lons_gt_180 = np.where(lon > 180.)
     lon[lons_gt_180] = lon[lons_gt_180] - 360.0
     return lon
+
 
 def safe_arange(start, stop, step):
     """
@@ -47,9 +49,12 @@ def safe_arange(start, stop, step):
         Range of values in interval at the given step size / sampling
     """
     f_step = (1. / float(step))
-    vals = np.arange(float(start) * f_step, float(stop) * f_step,
-                     float(step) * f_step)
+    vals = np.arange(
+        float(start) * f_step,
+        float(stop) * f_step,
+        float(step) * f_step)
     return vals / f_step
+
 
 def get_grid_resolution(lats: np.ndarray, lons: np.ndarray) -> (float, float):
     """
@@ -113,10 +118,9 @@ def ERA5_RegularImgLandGrid(
         ds = ds.assign_coords({'longitude': trafo_lon(ds['longitude'].values)})
         if bbox is not None:
             ds = ds.sel(latitude=slice(bbox[3], bbox[1]))
-            ds = ds.isel(longitude=np.where((
-                    (ds['longitude'].values >= bbox[0]) &
-                    (ds['longitude'].values <= bbox[2])
-            ))[0])
+            ds = ds.isel(
+                longitude=np.where(((ds['longitude'].values >= bbox[0])
+                                    & (ds['longitude'].values <= bbox[2])))[0])
 
         land_mask = np.array(ds.values == 1.0)
 
@@ -167,8 +171,8 @@ def ERA_RegularImgGrid(
     grid = grid.to_cell_grid(cellsize=5.0)
 
     if bbox is not None:
-        subgpis = grid.get_bbox_grid_points(latmin=bbox[1], latmax=bbox[3],
-                                            lonmin=bbox[0], lonmax=bbox[2])
+        subgpis = grid.get_bbox_grid_points(
+            latmin=bbox[1], latmax=bbox[3], lonmin=bbox[0], lonmax=bbox[2])
         grid = grid.subgrid_from_gpis(subgpis)
 
     return grid

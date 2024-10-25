@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Image to time series conversion tools.
 """
@@ -16,6 +15,7 @@ from c3s_sm.misc import update_ts_summary_file, read_summary_yml
 from ecmwf_models.era5.reader import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.grid import ERA_RegularImgGrid, ERA5_RegularImgLandGrid
 from ecmwf_models.utils import parse_filetype, parse_product, get_first_last_image_date
+
 
 def extend_ts(ts_path, **img2ts_kwargs):
     """
@@ -41,8 +41,7 @@ def extend_ts(ts_path, **img2ts_kwargs):
             "No overview.yml file found in the passed directory. "
             "This file is required to use the same settings to extend an "
             "existing record. NOTE: Use the `era5 download` or "
-            "`era5land download` programs first."
-        )
+            "`era5land download` programs first.")
 
     ts_props = read_summary_yml(ts_path)
 
@@ -59,7 +58,7 @@ def extend_ts(ts_path, **img2ts_kwargs):
                 img2ts_kwargs[k] = v
 
     if 'enddate' not in img2ts_kwargs:
-        img2ts_kwargs['enddate'] = None   # All available images
+        img2ts_kwargs['enddate'] = None  # All available images
 
     img2ts(outputpath=ts_path, **img2ts_kwargs)
 
@@ -136,8 +135,7 @@ def img2ts(
 
     if land_points:
         if product == "era5":
-            grid = ERA5_RegularImgLandGrid(
-                resolution=0.25, bbox=bbox)
+            grid = ERA5_RegularImgLandGrid(resolution=0.25, bbox=bbox)
         elif product == "era5-land":
             grid = ERA5_RegularImgLandGrid(resolution=0.1, bbox=bbox)
         else:
@@ -187,8 +185,11 @@ def img2ts(
     data = input_dataset.read(first_date_time)
     ts_attributes = data.metadata
 
-    props = {'product': product, 'filetype': filetype,
-             'last_update': datetime.now()}
+    props = {
+        'product': product,
+        'filetype': filetype,
+        'last_update': datetime.now()
+    }
 
     kwargs = {
         'input_root': input_root,
@@ -225,4 +226,3 @@ def img2ts(
     reshuffler.calc()
 
     update_ts_summary_file(outputpath, props)
-

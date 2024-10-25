@@ -20,7 +20,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 """
 Utility functions for all data products in this package.
 """
@@ -36,10 +35,10 @@ import yaml
 from ecmwf_models.extract import save_gribs_from_grib
 from repurpose.misc import find_first_at_depth
 
-from ecmwf_models.globals import (
-    DOTRC, CDS_API_URL, IMG_FNAME_TEMPLATE,
-    IMG_FNAME_DATETIME_FORMAT, SUPPORTED_PRODUCTS
-)
+from ecmwf_models.globals import (DOTRC, CDS_API_URL, IMG_FNAME_TEMPLATE,
+                                  IMG_FNAME_DATETIME_FORMAT,
+                                  SUPPORTED_PRODUCTS)
+
 
 def parse_product(inpath: str) -> str:
     """
@@ -63,7 +62,8 @@ def parse_product(inpath: str) -> str:
     elif "era5" in props['product'].lower():
         return "era5"  # also era5-t
     else:
-        raise ValueError(f"Could not derive product name from data in {inpath}")
+        raise ValueError(
+            f"Could not derive product name from data in {inpath}")
 
 
 def parse_filetype(inpath: str) -> str:
@@ -176,12 +176,12 @@ def default_variables(product="era5", format='dl_name'):
 
 
 def make_era5_land_definition_file(
-        data_file,
-        out_file,
-        data_file_y_res=0.25,
-        ref_var="lsm",
-        threshold=0.5,
-        exclude_antarctica=True,
+    data_file,
+    out_file,
+    data_file_y_res=0.25,
+    ref_var="lsm",
+    threshold=0.5,
+    exclude_antarctica=True,
 ):
     """
     Create a land grid definition file from a variable within a downloaded,
@@ -215,8 +215,7 @@ def make_era5_land_definition_file(
 
     for dim_name in ds_in.dimensions.keys():
         ds_out.createDimension(dim_name, size=ds_in.dimensions[dim_name].size)
-        ds_out.createVariable(dim_name, "float32", (dim_name,),
-                              zlib=True)
+        ds_out.createVariable(dim_name, "float32", (dim_name,), zlib=True)
         ds_out.variables[dim_name][:] = ds_in.variables[dim_name][:]
 
     ref = ds_in.variables[ref_var]
@@ -232,13 +231,12 @@ def make_era5_land_definition_file(
     if exclude_antarctica:
         cut_off_lat = -60.0
         index_thres_lat = ((180.0 / data_file_y_res) + 1) - (
-                (90.0 + cut_off_lat) / data_file_y_res)
+            (90.0 + cut_off_lat) / data_file_y_res)
         land_mask[int(index_thres_lat):, :] = np.nan
     else:
         cut_off_lat = None
 
-    ds_out.createVariable("land", "float32",
-                          (lat_name, lon_name), zlib=True)
+    ds_out.createVariable("land", "float32", (lat_name, lon_name), zlib=True)
     ds_out.variables["land"][:] = land_mask
 
     land_attrs = OrderedDict([
@@ -298,8 +296,7 @@ def check_api_ready() -> bool:
                 'Neither CDSAPI_KEY variable nor .cdsapirc file found, '
                 'download will not work! '
                 'Please create a .cdsapirc file with your API key. '
-                'See: https://cds.climate.copernicus.eu/how-to-api'
-            )
+                'See: https://cds.climate.copernicus.eu/how-to-api')
         else:
             return True
     else:
@@ -353,9 +350,8 @@ def get_first_last_image_date(path, start_from_last=True):
         Parse date from the last found image file that matches `fntempl`.
     """
     try:
-        props = img_infer_file_props(path,
-                                     fntempl=IMG_FNAME_TEMPLATE,
-                                     start_from_last=start_from_last)
+        props = img_infer_file_props(
+            path, fntempl=IMG_FNAME_TEMPLATE, start_from_last=start_from_last)
         dt = datetime.strptime(props['datetime'], IMG_FNAME_DATETIME_FORMAT)
     except ValueError:
         raise ValueError('Could not infer date from filenames. '
@@ -382,10 +378,10 @@ def update_image_summary_file(data_path: str,
         If not specified, then `data_path` is used. If a file already exists,
         it will be overwritten.
     """
-    first_image_date = get_first_last_image_date(data_path,
-                                                 start_from_last=False)
-    last_image_date = get_first_last_image_date(data_path,
-                                                start_from_last=True)
+    first_image_date = get_first_last_image_date(
+        data_path, start_from_last=False)
+    last_image_date = get_first_last_image_date(
+        data_path, start_from_last=True)
 
     props = img_infer_file_props(data_path, start_from_last=False)
     _ = props.pop("datetime")
@@ -414,7 +410,8 @@ def assert_product(product: str) -> str:
     return product
 
 
-
 if __name__ == '__main__':
-    save_gribs_from_grib("/tmp/era5/grb/temp_downloaded/20240730_20240731.grb",
-                         output_path='/tmp/era5/grb', product_name='ERA5')
+    save_gribs_from_grib(
+        "/tmp/era5/grb/temp_downloaded/20240730_20240731.grb",
+        output_path='/tmp/era5/grb',
+        product_name='ERA5')

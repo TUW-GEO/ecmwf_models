@@ -2,31 +2,33 @@ import click
 from datetime import datetime
 
 from ecmwf_models.era5.download import download_and_move, download_record_extension
-from ecmwf_models.utils import (
-    default_variables
-)
+from ecmwf_models.utils import (default_variables)
 
 from ecmwf_models.era5.reshuffle import img2ts, extend_ts
 
 
 @click.command(
     "download",
-    context_settings={'show_default': True,
-                      'help_option_names': ['-h', '--help']},
+    context_settings={
+        'show_default': True,
+        'help_option_names': ['-h', '--help']
+    },
     short_help="Download ERA5 reanalysis image data between two "
-               "dates from the Copernicus Climate Data Store (CDS). "
-               "Before this program can be used, you have to "
-               "register an account at CDS, and should setup a `.cdsapirc` "
-               "file as described here: "
-               "https://cds.climate.copernicus.eu/how-to-api")
+    "dates from the Copernicus Climate Data Store (CDS). "
+    "Before this program can be used, you have to "
+    "register an account at CDS, and should setup a `.cdsapirc` "
+    "file as described here: "
+    "https://cds.climate.copernicus.eu/how-to-api")
 @click.argument("PATH", type=click.Path(writable=True))
 @click.option(
-    '--start', '-s',
+    '--start',
+    '-s',
     type=click.STRING,
     default=str(datetime(1979, 1, 1)),
     help="First date of the period to download data for. Format: YYYY-MM-DD")
 @click.option(
-    '--end', '-e',
+    '--end',
+    '-e',
     type=click.STRING,
     default=str(datetime.now().date()),
     help="Last date of the period to download data for. Format: YYYY-MM-DD")
@@ -36,51 +38,51 @@ from ecmwf_models.era5.reshuffle import img2ts, extend_ts
     type=click.STRING,
     default=','.join(default_variables('era5', 'short_name')),
     help="Name of variables to download. To download multiple variables pass "
-         "comma-separated names (e.g. `-v swvl1,stl1`). "
-         "For all available variables see the docs. ")
+    "comma-separated names (e.g. `-v swvl1,stl1`). "
+    "For all available variables see the docs. ")
 @click.option(
     "-k",
     "--keep_original",
     type=click.BOOL,
     default=False,
     help="Also keep the original image stacks as downloaded from CDS, "
-         "instead of deleting them after extracting individual images. "
-         "Default is False.")
+    "instead of deleting them after extracting individual images. "
+    "Default is False.")
 @click.option(
     "-grb",
     "--as_grib",
     type=click.BOOL,
     default=False,
     help="Download data in grib format instead of netcdf. "
-         "Default is False.")
+    "Default is False.")
 @click.option(
     "--h_steps",
     type=str,
     default="0,6,12,18",
     help="Temporal sampling of downloaded images. To download multiple time "
-         "stamps or each day, pass comma-separated values. "
-         "Pass a set of full hours here, like '--h_steps 0,12' to download "
-         "two images for each day, at 0:00 and 12:00 respectively. "
-         "By default, we download 6-hourly images starting at 0:00 UTC, "
-         "(i.e. `--h_steps 0,6,12,18`")
+    "stamps or each day, pass comma-separated values. "
+    "Pass a set of full hours here, like '--h_steps 0,12' to download "
+    "two images for each day, at 0:00 and 12:00 respectively. "
+    "By default, we download 6-hourly images starting at 0:00 UTC, "
+    "(i.e. `--h_steps 0,6,12,18`")
 @click.option(
     "--max_request_size",
     type=int,
     default=1000,
     help="Maximum number of requests to pass to the CDS API. "
-         "The default is 1000, but what is allowed, depends on server "
-         "settings. Server settings may change at some point. Change "
-         "accordingly here in case that 'the request is too large'. "
-         "A smaller number will results in smaller download chunks (slower).")
+    "The default is 1000, but what is allowed, depends on server "
+    "settings. Server settings may change at some point. Change "
+    "accordingly here in case that 'the request is too large'. "
+    "A smaller number will results in smaller download chunks (slower).")
 @click.option(
     "--cds_token",
     type=click.STRING,
     default=None,
     help="To identify with the CDS. Required only if no `.cdsapirc` file "
-         "exists in the home directory (see documentation). "
-         "You can find your token/key on your CDS user profile page. "
-         "Alternatively, you can also set an environment variable "
-         "`CDSAPI_KEY` with your token.")
+    "exists in the home directory (see documentation). "
+    "You can find your token/key on your CDS user profile page. "
+    "Alternatively, you can also set an environment variable "
+    "`CDSAPI_KEY` with your token.")
 def cli_download_era5(path, start, end, variables, keep_original, as_grib,
                       h_steps, max_request_size, cds_token):
     """
@@ -121,22 +123,26 @@ def cli_download_era5(path, start, end, variables, keep_original, as_grib,
 
 @click.command(
     "download",
-    context_settings={'show_default': True,
-                      'help_option_names': ['-h', '--help']},
+    context_settings={
+        'show_default': True,
+        'help_option_names': ['-h', '--help']
+    },
     short_help="Download ERA5 reanalysis image data between two "
-               "dates from the Copernicus Climate Data Store (CDS). "
-               "Before this program can be used, you have to "
-               "register an account at CDS, and should setup a `.cdsapirc` "
-               "file as described here: "
-               "https://cds.climate.copernicus.eu/how-to-api")
+    "dates from the Copernicus Climate Data Store (CDS). "
+    "Before this program can be used, you have to "
+    "register an account at CDS, and should setup a `.cdsapirc` "
+    "file as described here: "
+    "https://cds.climate.copernicus.eu/how-to-api")
 @click.argument("PATH", type=click.Path(writable=True))
 @click.option(
-    '--start', '-s',
+    '--start',
+    '-s',
     type=click.STRING,
     default=str(datetime(1979, 1, 1)),
     help="First date of the period to download data for. Format: YYYY-MM-DD")
 @click.option(
-    '--end', '-e',
+    '--end',
+    '-e',
     type=click.STRING,
     default=str(datetime.now().date()),
     help="Last date of the period to download data for. Format: YYYY-MM-DD")
@@ -146,51 +152,51 @@ def cli_download_era5(path, start, end, variables, keep_original, as_grib,
     type=click.STRING,
     default=','.join(default_variables('era5-land', 'short_name')),
     help="Name of variables to download. To download multiple variables pass "
-         "comma-separated names (e.g. `-v swvl1,stl1`). "
-         "For all available variables see the docs. ")
+    "comma-separated names (e.g. `-v swvl1,stl1`). "
+    "For all available variables see the docs. ")
 @click.option(
     "-k",
     "--keep_original",
     type=click.BOOL,
     default=False,
     help="Also keep the original image stacks as downloaded from CDS, "
-         "instead of deleting them after extracting individual images. "
-         "Default is False.")
+    "instead of deleting them after extracting individual images. "
+    "Default is False.")
 @click.option(
     "-grb",
     "--as_grib",
     type=click.BOOL,
     default=False,
     help="Download data in grib format instead of netcdf. "
-         "Default is False.")
+    "Default is False.")
 @click.option(
     "--h_steps",
     type=click.STRING,
     default='0,6,12,18',
     help="Temporal sampling of downloaded images. To download multiple time "
-         "stamps or each day, pass comma-separated values. "
-         "Pass a set of full hours here, like '--h_steps 0,12' to download "
-         "two images for each day, at 0:00 and 12:00 respectively. "
-         "By default, we download 6-hourly images starting at 0:00 UTC, "
-         "(i.e. `--h_steps 0,6,12,18`")
+    "stamps or each day, pass comma-separated values. "
+    "Pass a set of full hours here, like '--h_steps 0,12' to download "
+    "two images for each day, at 0:00 and 12:00 respectively. "
+    "By default, we download 6-hourly images starting at 0:00 UTC, "
+    "(i.e. `--h_steps 0,6,12,18`")
 @click.option(
     "--max_request_size",
     type=int,
     default=1000,
     help="Maximum number of requests to pass to the CDS API. "
-         "The default is 1000, but what is allowed, depends on server "
-         "settings. Server settings may change at some point. Change "
-         "accordingly here in case that 'the request is too large'. "
-         "A smaller number will results in smaller download chunks (slower).")
+    "The default is 1000, but what is allowed, depends on server "
+    "settings. Server settings may change at some point. Change "
+    "accordingly here in case that 'the request is too large'. "
+    "A smaller number will results in smaller download chunks (slower).")
 @click.option(
     "--cds_token",
     type=click.STRING,
     default=None,
     help="To identify with the CDS. Required only if no `.cdsapirc` file "
-         "exists in the home directory (see documentation). "
-         "You can find your token/key on your CDS user profile page. "
-         "Alternatively, you can also set an environment variable "
-         "`CDSAPI_KEY` with your token.")
+    "exists in the home directory (see documentation). "
+    "You can find your token/key on your CDS user profile page. "
+    "Alternatively, you can also set an environment variable "
+    "`CDSAPI_KEY` with your token.")
 def cli_download_era5land(path, start, end, variables, keep_original, as_grib,
                           h_steps, max_request_size, cds_token):
     """
@@ -224,30 +230,31 @@ def cli_download_era5land(path, start, end, variables, keep_original, as_grib,
         keep_original=keep_original,
         stepsize='month',
         n_max_request=max_request_size,
-        cds_token=cds_token
-    )
+        cds_token=cds_token)
 
     return status_code
 
 
 @click.command(
     "update_img",
-    context_settings={'show_default': True,
-                      'help_option_names': ['-h', '--help']},
+    context_settings={
+        'show_default': True,
+        'help_option_names': ['-h', '--help']
+    },
     short_help="Extend an existing set of images by downloading new data "
-               "with the same settings as before."
-               "NOTE: First use the `era5 download` or `era5land download` "
-               "programs.")
+    "with the same settings as before."
+    "NOTE: First use the `era5 download` or `era5land download` "
+    "programs.")
 @click.argument("path", type=click.Path(writable=True))
 @click.option(
     "--cds_token",
     type=click.STRING,
     default=None,
     help="To identify with the CDS. Required only if no `.cdsapirc` file "
-         "exists in the home directory (see documentation). "
-         "You can find your token/key on your CDS user profile page. "
-         "Alternatively, you can also set an environment variable "
-         "`CDSAPI_KEY` with your token.")
+    "exists in the home directory (see documentation). "
+    "You can find your token/key on your CDS user profile page. "
+    "Alternatively, you can also set an environment variable "
+    "`CDSAPI_KEY` with your token.")
 def cli_update_img(path, cds_token=None):
     """
     Download new images from CDS to your existing local archive. Use the same
@@ -272,10 +279,12 @@ def cli_update_img(path, cds_token=None):
 
 @click.command(
     "reshuffle",
-    context_settings={'show_default': True,
-                      'help_option_names': ['-h', '--help']},
+    context_settings={
+        'show_default': True,
+        'help_option_names': ['-h', '--help']
+    },
     short_help="Convert previously downloaded ERA5/ERA5-Land image "
-               "data into a time series format.")
+    "data into a time series format.")
 @click.argument("IMG_PATH", type=click.Path(readable=True))
 @click.argument("TS_PATH", type=click.Path(writable=True))
 @click.argument("START", type=click.STRING)
@@ -286,39 +295,42 @@ def cli_update_img(path, cds_token=None):
     type=click.STRING,
     default=None,
     help="Subset of variables to convert. Pass comma-separated names"
-         "to select multiple variables (short names, as in the input images, "
-         "e.g. `-v swvl1,stl1`). If not specified, all variables from the "
-         "first image file are used.")
+    "to select multiple variables (short names, as in the input images, "
+    "e.g. `-v swvl1,stl1`). If not specified, all variables from the "
+    "first image file are used.")
 @click.option(
-    '--land_points', '-l', is_flag=True, show_default=True,
+    '--land_points',
+    '-l',
+    is_flag=True,
+    show_default=True,
     default=False,
     help="Store only time series for points that are over land. "
-         "Default is False.")
+    "Default is False.")
 @click.option(
     '--bbox',
     nargs=4,
     type=click.FLOAT,
     default=None,
     help="4 NUMBERS | min_lon min_lat max_lon max_lat. "
-         "Set Bounding Box (lower left and upper right corner) "
-         "of area to reshuffle (WGS84). Default is global.")
+    "Set Bounding Box (lower left and upper right corner) "
+    "of area to reshuffle (WGS84). Default is global.")
 @click.option(
     "--h_steps",
     type=click.STRING,
     default="0,6,12,18",
     help="Full hour time stamps of images to include in time series. "
-         "To select multiple, pass comma-separated values here, "
-         "e.g. '--h_steps 0,12' will only include data from images at "
-         "0:00 and 12:00 UTC and ignore all other available time stamps."
-         "By default, we include data for every 6th hour each day.")
+    "To select multiple, pass comma-separated values here, "
+    "e.g. '--h_steps 0,12' will only include data from images at "
+    "0:00 and 12:00 UTC and ignore all other available time stamps."
+    "By default, we include data for every 6th hour each day.")
 @click.option(
     '--imgbuffer',
     '-b',
     type=click.INT,
     default=50,
     help="Number of images to read into memory at once before "
-         "conversion to time series. A larger buffer means faster "
-         "processing but requires more memory.")
+    "conversion to time series. A larger buffer means faster "
+    "processing but requires more memory.")
 def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
                   h_steps, imgbuffer):
     """
@@ -365,8 +377,10 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
 
 @click.command(
     "update_ts",
-    context_settings={'show_default': True,
-                      'help_option_names': ['-h', '--help']},
+    context_settings={
+        'show_default': True,
+        'help_option_names': ['-h', '--help']
+    },
     short_help="Append new image data to an existing time series archive.")
 @click.argument("TS_PATH", type=click.Path(writable=True))
 @click.option(
@@ -375,17 +389,17 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
     type=click.STRING,
     default=None,
     help="Manually specify where the image data to extend the time "
-         "series are located. If this is not specified, we use the previously "
-         "used path from the `overview.yml` file stored with the time series "
-         "data.")
+    "series are located. If this is not specified, we use the previously "
+    "used path from the `overview.yml` file stored with the time series "
+    "data.")
 @click.option(
     '--imgbuffer',
     '-b',
     type=click.INT,
     default=50,
     help="Number of images to read into memory at once before "
-         "conversion to time series. A larger buffer means faster "
-         "processing but requires more memory.")
+    "conversion to time series. A larger buffer means faster "
+    "processing but requires more memory.")
 def cli_extend_ts(ts_path, imgpath, imgbuffer):
     """
     Append new image data to an existing time series archive. The archive must
@@ -410,7 +424,7 @@ def cli_extend_ts(ts_path, imgpath, imgbuffer):
 
 
 @click.group(short_help="ERA5 Command Line Programs imported from the "
-                        "`ecmwf_models` pip package.")
+             "`ecmwf_models` pip package.")
 def era5():
     pass
 
@@ -421,7 +435,7 @@ era5.add_command(cli_extend_ts)
 
 
 @click.group(short_help="ERA5-Land Command Line Programs imported from the "
-                        "`ecmwf_models` pip package.")
+             "`ecmwf_models` pip package.")
 def era5land():
     pass
 

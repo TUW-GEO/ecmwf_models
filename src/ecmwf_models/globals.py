@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-
 IMG_FNAME_TEMPLATE = "{product}_{type}_{datetime}.{ext}"
 IMG_FNAME_DATETIME_FORMAT = "%Y%m%d_%H%M"
 
@@ -33,6 +32,7 @@ except ImportError:
 
 
 class PygribNotFoundError(ModuleNotFoundError):
+
     def __init__(self, msg=None):
         _default_msg = ("pygrib could not be imported. "
                         "Pleas run `conda install -c conda-forge pygrib` to "
@@ -41,8 +41,10 @@ class PygribNotFoundError(ModuleNotFoundError):
 
 
 class CdoNotFoundError(ModuleNotFoundError):
+
     def __init__(self, msg=None):
-        _default_msg = ("cdo and/or python-cdo not installed. "
-                        "Pleas run `conda install -c conda-forge cdo` and also "
-                        "`pip install cdo`.")
+        _default_msg = (
+            "cdo and/or python-cdo not installed. "
+            "Pleas run `conda install -c conda-forge cdo` and also "
+            "`pip install cdo`.")
         self.msg = _default_msg if msg is None else msg

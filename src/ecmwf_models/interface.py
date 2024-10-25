@@ -19,7 +19,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 """
 Base classes for reading downloaded ERA netcdf and grib images and stacks
 """
@@ -39,12 +38,13 @@ from pygeogrids.netcdf import load_grid
 from ecmwf_models.grid import trafo_lon
 from ecmwf_models.utils import lookup
 from ecmwf_models.globals import (
-    IMG_FNAME_TEMPLATE, IMG_FNAME_DATETIME_FORMAT,
-    SUPPORTED_PRODUCTS, SUBDIRS,
+    IMG_FNAME_TEMPLATE,
+    IMG_FNAME_DATETIME_FORMAT,
+    SUPPORTED_PRODUCTS,
+    SUBDIRS,
 )
-from ecmwf_models.globals import (
-    pygrib, pygrib_available, PygribNotFoundError
-)
+from ecmwf_models.globals import (pygrib, pygrib_available,
+                                  PygribNotFoundError)
 
 
 class ERANcImg(ImageBase):
@@ -75,14 +75,14 @@ class ERANcImg(ImageBase):
     """
 
     def __init__(
-            self,
-            filename,
-            product,
-            parameter=None,
-            subgrid=None,
-            mask_seapoints=False,
-            array_1D=False,
-            mode='r',
+        self,
+        filename,
+        product,
+        parameter=None,
+        subgrid=None,
+        mask_seapoints=False,
+        array_1D=False,
+        mode='r',
     ):
 
         super(ERANcImg, self).__init__(filename, mode=mode)
@@ -90,7 +90,7 @@ class ERANcImg(ImageBase):
         if parameter is not None:
             # look up short names
             self.parameter = lookup(
-                product,  np.atleast_1d(parameter))["short_name"].values
+                product, np.atleast_1d(parameter))["short_name"].values
         else:
             self.parameter = None
 
@@ -135,8 +135,10 @@ class ERANcImg(ImageBase):
         return_img = {}
         return_metadata = {}
 
-        grid = gridfromdims(trafo_lon(dataset['longitude'].values),
-                            dataset['latitude'].values, origin='top')
+        grid = gridfromdims(
+            trafo_lon(dataset['longitude'].values),
+            dataset['latitude'].values,
+            origin='top')
 
         if self.subgrid is not None:
             gpis = grid.find_nearest_gpi(self.subgrid.activearrlon,
@@ -149,11 +151,10 @@ class ERANcImg(ImageBase):
                 variable = dataset[name]
             except KeyError:
                 path, f = os.path.split(self.filename)
-                warnings.warn(
-                    f"Cannot load variable {name} from file {f}. "
-                    f"Filling image with NaNs.")
-                dat = np.full(grid.shape if gpis is None else len(gpis),
-                              np.nan)
+                warnings.warn(f"Cannot load variable {name} from file {f}. "
+                              f"Filling image with NaNs.")
+                dat = np.full(
+                    grid.shape if gpis is None else len(gpis), np.nan)
                 return_img[name] = dat
                 continue
 
@@ -268,7 +269,8 @@ class ERANcDs(MultiTemporalImageBase):
 
         if parameter is not None:
             # look up short names
-            self.parameter = lookup(product, np.atleast_1d(parameter))["short_name"].values
+            self.parameter = lookup(
+                product, np.atleast_1d(parameter))["short_name"].values
         else:
             self.parameter = None
 
@@ -282,20 +284,18 @@ class ERANcDs(MultiTemporalImageBase):
 
         # the goal is to use ERA5-T*.nc if necessary, but prefer ERA5*.nc
         self.fn_templ_priority = [
-            IMG_FNAME_TEMPLATE.format(product=(p + ext).upper(),
-                                      type='*',
-                                      datetime="{datetime}",
-                                      ext='nc')
-            for ext in ['', '-T'] for p in SUPPORTED_PRODUCTS
+            IMG_FNAME_TEMPLATE.format(
+                product=(p + ext).upper(),
+                type='*',
+                datetime="{datetime}",
+                ext='nc') for ext in ['', '-T'] for p in SUPPORTED_PRODUCTS
         ]
 
         super(ERANcDs, self).__init__(
             root_path,
             ERANcImg,
-            fname_templ=IMG_FNAME_TEMPLATE.format(product='*',
-                                                  type='*',
-                                                  datetime='{datetime}',
-                                                  ext='nc'),
+            fname_templ=IMG_FNAME_TEMPLATE.format(
+                product='*', type='*', datetime='{datetime}', ext='nc'),
             datetime_format=IMG_FNAME_DATETIME_FORMAT,
             subpath_templ=SUBDIRS,
             exact_templ=False,
@@ -384,16 +384,14 @@ class ERANcDs(MultiTemporalImageBase):
 
 class ERAGrbImg(ImageBase):
 
-    def __init__(
-            self,
-            filename,
-            product,
-            parameter=None,
-            subgrid=None,
-            mask_seapoints=False,
-            array_1D=True,
-            mode='r'
-    ):
+    def __init__(self,
+                 filename,
+                 product,
+                 parameter=None,
+                 subgrid=None,
+                 mask_seapoints=False,
+                 array_1D=True,
+                 mode='r'):
         """
         Reader for a single ERA grib file. The main purpose of this class is
         to use it in the time series conversion routine. To read downloaded image
@@ -476,8 +474,10 @@ class ERAGrbImg(ImageBase):
             param_data = message.values
 
             if grid is None:
-                grid = BasicGrid(trafo_lon(lons).flatten(), lats.flatten(),
-                                 shape=param_data.shape)
+                grid = BasicGrid(
+                    trafo_lon(lons).flatten(),
+                    lats.flatten(),
+                    shape=param_data.shape)
 
             param_data = param_data.flatten()
 
@@ -532,8 +532,7 @@ class ERAGrbImg(ImageBase):
                     param_data = np.full(np.prod(self.subgrid.shape), np.nan)
                     warnings.warn(
                         f"Cannot load variable {param_name} from file "
-                        f"{self.filename}. Filling image with NaNs."
-                    )
+                        f"{self.filename}. Filling image with NaNs.")
                     return_img[param_name] = param_data
                     return_metadata[param_name] = {}
                     return_metadata[param_name]["long_name"] = lookup(
@@ -574,6 +573,7 @@ class ERAGrbImg(ImageBase):
 
 
 class ERAGrbDs(MultiTemporalImageBase):
+
     def __init__(
             self,
             root_path,
@@ -627,10 +627,8 @@ class ERAGrbDs(MultiTemporalImageBase):
             "array_1D": array_1D,
         }
 
-        fname_templ = IMG_FNAME_TEMPLATE.format(product="*",
-                                                type="*",
-                                                datetime="{datetime}",
-                                                ext="grb")
+        fname_templ = IMG_FNAME_TEMPLATE.format(
+            product="*", type="*", datetime="{datetime}", ext="grb")
 
         super(ERAGrbDs, self).__init__(
             root_path,

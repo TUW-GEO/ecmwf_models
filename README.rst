@@ -2,11 +2,10 @@
 ecmwf_models
 ============
 
-
 |ci| |cov| |pip| |doc|
 
 .. |ci| image:: https://github.com/TUW-GEO/ecmwf_models/actions/workflows/ci.yml/badge.svg?branch=master
-   :target: https://github.com/ecmwf_models/c3s_sm/actions
+   :target: https://github.com/TUW-GEO/ecmwf_models/actions
 
 .. |cov| image:: https://coveralls.io/repos/TUW-GEO/ecmwf_models/badge.png?branch=master
   :target: https://coveralls.io/r/TUW-GEO/ecmwf_models?branch=master
@@ -18,7 +17,7 @@ ecmwf_models
    :target: https://ecmwf-models.readthedocs.io/en/latest/
 
 
-Readers and converters for data from the `ECMWF reanalysis models
+Readers and converters for `ECMWF reanalysis (ERA) data
 <http://apps.ecmwf.int/datasets/>`_. Written in Python.
 
 Works great in combination with `pytesmo <https://github.com/TUW-GEO/pytesmo>`_.

@@ -5,25 +5,26 @@ import pandas as pd
 import xarray as xr
 from datedown.fname_creator import create_dt_fpath
 
+from ecmwf_models.globals import (IMG_FNAME_TEMPLATE,
+                                  IMG_FNAME_DATETIME_FORMAT, EXPVER, SUBDIRS)
 from ecmwf_models.globals import (
-    IMG_FNAME_TEMPLATE,
-    IMG_FNAME_DATETIME_FORMAT,
-    EXPVER, SUBDIRS
-)
-from ecmwf_models.globals import (
-    Cdo, cdo_available, CdoNotFoundError,
-    pygrib, pygrib_available, PygribNotFoundError,
+    Cdo,
+    cdo_available,
+    CdoNotFoundError,
+    pygrib,
+    pygrib_available,
+    PygribNotFoundError,
 )
 
 
 def save_ncs_from_nc(
-        input_nc,
-        output_path,
-        product_name,
-        grid=None,
-        keep_original=True,
-        remap_method="bil",
-        keep_prelim=True,
+    input_nc,
+    output_path,
+    product_name,
+    grid=None,
+    keep_original=True,
+    remap_method="bil",
+    keep_prelim=True,
 ):
     """
     Split the downloaded netcdf file into daily files and add to folder
@@ -48,8 +49,7 @@ def save_ncs_from_nc(
         product="{product}",
         type='AN',
         datetime=IMG_FNAME_DATETIME_FORMAT,
-        ext='nc'
-    )
+        ext='nc')
 
     nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
     if 'valid_time' in nc_in.variables:
@@ -86,8 +86,8 @@ def save_ncs_from_nc(
             continue
 
         if len(ext) > 0:
-            filename_templ = _filename_templ.format(
-                product=product_name + '-' + ext)
+            filename_templ = _filename_templ.format(product=product_name +
+                                                    '-' + ext)
         else:
             filename_templ = _filename_templ.format(product=product_name)
 
@@ -130,11 +130,11 @@ def save_ncs_from_nc(
 
 
 def save_gribs_from_grib(
-        input_grib,
-        output_path,
-        product_name,
-        keep_original=True,
-        keep_prelim=True,
+    input_grib,
+    output_path,
+    product_name,
+    keep_original=True,
+    keep_prelim=True,
 ):
     """
     Split the downloaded grib file into daily files and add to folder structure
@@ -163,8 +163,7 @@ def save_gribs_from_grib(
         product="{product}",
         type='AN',
         datetime=IMG_FNAME_DATETIME_FORMAT,
-        ext='grb'
-    )
+        ext='grb')
 
     grib_in.seek(0)
     prev_date = None
@@ -184,14 +183,13 @@ def save_gribs_from_grib(
             continue
 
         if len(ext) > 0:
-            filename_templ = _filename_templ.format(
-                product=product_name + '-' + ext)
+            filename_templ = _filename_templ.format(product=product_name +
+                                                    '-' + ext)
         else:
             filename_templ = _filename_templ.format(product=product_name)
 
         filepath = create_dt_fpath(
-            filedate, root=output_path, fname=filename_templ,
-            subdirs=SUBDIRS)
+            filedate, root=output_path, fname=filename_templ, subdirs=SUBDIRS)
 
         if not os.path.exists(os.path.dirname(filepath)):
             os.makedirs(os.path.dirname(filepath))
