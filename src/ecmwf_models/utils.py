@@ -25,232 +25,21 @@
 Utility functions for all data products in this package.
 """
 import os
-import logging
 from datetime import datetime
-import xarray as xr
 import pandas as pd
-from datedown.fname_creator import create_dt_fpath
 import numpy as np
 from netCDF4 import Dataset
 from collections import OrderedDict
 from parse import parse
 import yaml
+
+from ecmwf_models.extract import save_gribs_from_grib
 from repurpose.misc import find_first_at_depth
 
 from ecmwf_models.globals import (
-    CdoNotFoundError, DOTRC, EXPVER, CDS_API_URL, IMG_FNAME_TEMPLATE,
+    DOTRC, CDS_API_URL, IMG_FNAME_TEMPLATE,
     IMG_FNAME_DATETIME_FORMAT, SUPPORTED_PRODUCTS
 )
-
-try:
-    from cdo import Cdo
-
-    cdo_available = True
-except ImportError:
-    cdo_available = False
-
-try:
-    import pygrib
-
-    pygrib_available = True
-except ImportError:
-    pygrib_available = False
-
-def save_ncs_from_nc(
-        input_nc,
-        output_path,
-        product_name,
-        grid=None,
-        keep_original=True,
-        remap_method="bil",
-        keep_prelim=True,
-):
-    """
-    Split the downloaded netcdf file into daily files and add to folder
-    structure necessary for reshuffling.
-
-    Parameters
-    ----------
-    input_nc : str
-        Filepath of the downloaded .nc file
-    output_path : str
-        Where to save the resulting netcdf files
-    product_name : str
-        Name of the ECMWF model (only for filename generation)
-    keep_original: bool
-        keep the original downloaded data too, before it is sliced into
-        individual images.
-    keep_prelim: bool, optional (default: True)
-        True to keep preliminary data from ERA5T with a different file name, or
-        False drop these files and only keep the final records.
-    """
-    localsubdirs = ["%Y", "%j"]
-
-    _filename_templ = IMG_FNAME_TEMPLATE.format(
-        product="{product}",
-        type='AN',
-        datetime=IMG_FNAME_DATETIME_FORMAT,
-        ext='nc'
-    )
-
-    nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
-    if 'valid_time' in nc_in.variables:
-        nc_in = nc_in.rename_vars({"valid_time": 'time'})
-
-    if grid is not None:
-        if not cdo_available:
-            raise CdoNotFoundError()
-
-        cdo = Cdo()
-        gridpath = os.path.join(output_path, "grid.txt")
-        weightspath = os.path.join(output_path, "remap_weights.nc")
-        if not os.path.exists(gridpath):
-            with open(gridpath, "w") as f:
-                for k, v in grid.items():
-                    f.write(f"{k} = {v}\n")
-
-    for time in nc_in["time"].values:
-        subset = nc_in.sel({"time": time})
-
-        # Expver identifies preliminary data
-        if 'expver' in subset:
-            expver = str(subset['expver'].values)
-            subset = subset.drop_vars('expver')
-            try:
-                ext = EXPVER[expver]
-            except KeyError:
-                ext = ''
-        else:
-            ext = ''
-
-        if len(ext) > 0 and not keep_prelim:
-            logging.info(f"Dropping preliminary data {time}")
-            continue
-
-        if len(ext) > 0:
-            filename_templ = _filename_templ.format(
-                product=product_name + '-' + ext)
-        else:
-            filename_templ = _filename_templ.format(product=product_name)
-
-        if 'number' in subset.variables:
-            subset = subset.drop_vars('number')
-
-        timestamp = pd.Timestamp(time).to_pydatetime()
-        filepath = create_dt_fpath(
-            timestamp,
-            root=output_path,
-            fname=filename_templ,
-            subdirs=localsubdirs,
-        )
-
-        if not os.path.exists(os.path.dirname(filepath)):
-            os.makedirs(os.path.dirname(filepath))
-
-        if grid is not None:
-            if not os.path.exists(weightspath):
-                # create weights file
-                getattr(cdo, "gen" + remap_method)(
-                    gridpath, input=subset, output=weightspath)
-            subset = cdo.remap(
-                ",".join([gridpath, weightspath]),
-                input=subset,
-                returnXDataset=True,
-            )
-
-        # same compression for all variables
-        var_encode = {"zlib": True, "complevel": 6}
-        subset.to_netcdf(
-            filepath, encoding={var: var_encode for var in subset.variables})
-
-    nc_in.close()
-
-    if not keep_original:
-        os.remove(input_nc)
-    if grid is not None:
-        cdo.cleanTempDir()
-
-
-def save_gribs_from_grib(
-        input_grib,
-        output_path,
-        product_name,
-        keep_original=True,
-        keep_prelim=True,
-):
-    """
-    Split the downloaded grib file into daily files and add to folder structure
-    necessary for reshuffling.
-
-    Parameters
-    ----------
-    input_grib : str
-        Filepath of the downloaded .grb file
-    output_path : str
-        Where to save the resulting grib files
-    product_name : str
-        Name of the ECMWF model (only for filename generation)
-    keep_original: bool
-        keep the original downloaded data too, before it is sliced into
-        individual images.
-    keep_prelim: bool, optional (default: True)
-        True to keep preliminary data from ERA5T with a different file name, or
-        False drop these files and only keep the final records.
-    """
-    localsubdirs = ["%Y", "%j"]
-    grib_in = pygrib.open(input_grib)
-
-    _filename_templ = IMG_FNAME_TEMPLATE.format(
-        product="{product}",
-        type='AN',
-        datetime=IMG_FNAME_DATETIME_FORMAT,
-        ext='grb'
-    )
-
-    grib_in.seek(0)
-    prev_date = None
-
-    for grb in grib_in:
-        filedate = datetime(grb["year"], grb["month"], grb["day"], grb["hour"])
-
-        expver = grb['expver']
-
-        try:
-            ext = EXPVER[expver]
-        except KeyError:
-            ext = ''
-
-        if len(ext) > 0 and not keep_prelim:
-            logging.info(f"Dropping preliminary data {filedate}")
-            continue
-
-        if len(ext) > 0:
-            filename_templ = _filename_templ.format(
-                product=product_name + '-' + ext)
-        else:
-            filename_templ = _filename_templ.format(product=product_name)
-
-        filepath = create_dt_fpath(
-            filedate, root=output_path, fname=filename_templ,
-            subdirs=localsubdirs)
-
-        if not os.path.exists(os.path.dirname(filepath)):
-            os.makedirs(os.path.dirname(filepath))
-
-        if prev_date != filedate:  # to overwrite old files
-            mode = 'wb'
-            prev_date = filedate
-        else:
-            mode = "ab"
-
-        with open(filepath, mode) as grb_out:
-            grb_out.write(grb.tostring())
-
-    grib_in.close()
-
-    if not keep_original:
-        os.remove(input_grib)
-
 
 def parse_product(inpath: str) -> str:
     """
@@ -297,41 +86,6 @@ def parse_filetype(inpath: str) -> str:
         return 'grib'
     else:
         return 'netcdf'
-
-
-
-# def parse_filetype(inpath):
-#     """
-#     Tries to find out the file type by searching for
-#     grib or nc files two subdirectories into the passed input path.
-#     If function fails, grib is assumed.
-#
-#     Parameters
-#     ----------
-#     inpath: str
-#         Input path where ERA data was downloaded to
-#
-#     Returns
-#     -------
-#     filetype : str
-#         File type string.
-#     """
-#     onedown = os.path.join(inpath, os.listdir(inpath)[0])
-#     twodown = os.path.join(onedown, os.listdir(onedown)[0])
-#
-#     filelist = []
-#     for path, subdirs, files in os.walk(twodown):
-#         for name in files:
-#             filename, extension = os.path.splitext(name)
-#             filelist.append(extension)
-#
-#     if ".nc" in filelist and ".grb" not in filelist:
-#         return "netcdf"
-#     elif ".grb" in filelist and ".nc" not in filelist:
-#         return "grib"
-#     else:
-#         # if file type cannot be detected, guess grib
-#         return "grib"
 
 
 def load_var_table(name="era5", lut=False):
@@ -590,7 +344,7 @@ def get_first_last_image_date(path, start_from_last=True):
     ----------
     path: str
         Path to the directory containing the image files
-    start_from_last: str, optional (default: True')
+    start_from_last: bool, optional (default: True')
         Get date from last available file instead of the first available one.
 
     Returns
@@ -629,9 +383,9 @@ def update_image_summary_file(data_path: str,
         it will be overwritten.
     """
     first_image_date = get_first_last_image_date(data_path,
-                                                 start_from_last='first')
+                                                 start_from_last=False)
     last_image_date = get_first_last_image_date(data_path,
-                                                start_from_last='last')
+                                                start_from_last=True)
 
     props = img_infer_file_props(data_path, start_from_last=False)
     _ = props.pop("datetime")
@@ -659,25 +413,6 @@ def assert_product(product: str) -> str:
                          f"{SUPPORTED_PRODUCTS}")
     return product
 
-
-def read_summary_yml(path: str) -> dict:
-    """
-    Read image summary and return fields as dict.
-    """
-    path = os.path.join(path, 'overview.yml')
-
-    if not os.path.isfile(path):
-        raise FileNotFoundError(
-            "No overview.yml file found in the passed directory. "
-            "This file is required to use the same settings to extend an "
-            "existing record. NOTE: Use the `era5 download` or "
-            "`era5land download` programs first."
-        )
-
-    with open(path, 'r') as stream:
-        props = yaml.safe_load(stream)
-
-    return props
 
 
 if __name__ == '__main__':

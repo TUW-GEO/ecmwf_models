@@ -31,9 +31,14 @@ import xarray as xr
 import pytest
 import tempfile
 
-from ecmwf_models.era5.download import download_and_move, save_ncs_from_nc
-from ecmwf_models.utils import cdo_available, read_summary_yml
-from ecmwf_models.globals import CdoNotFoundError
+from c3s_sm.misc import read_summary_yml
+
+from ecmwf_models.era5.download import download_and_move
+from ecmwf_models.extract import save_ncs_from_nc
+from ecmwf_models.globals import (
+    cdo_available,
+    CdoNotFoundError
+)
 
 grid = {
     "gridtype": "lonlat",

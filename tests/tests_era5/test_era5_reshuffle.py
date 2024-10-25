@@ -30,10 +30,16 @@ import tempfile
 import numpy as np
 import numpy.testing as nptest
 import subprocess
+import shutil
+from pathlib import Path
+import xarray as xr
+import yaml
+from datetime import datetime
+
+from c3s_sm.misc import read_summary_yml
 
 from ecmwf_models.era5.reshuffle import img2ts
 from ecmwf_models import ERATs
-from ecmwf_models.utils import read_summary_yml
 
 inpath = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -42,31 +48,53 @@ inpath = os.path.join(
     "ERA5",
 )
 
-def test_cli_reshuffle():
-    path = os.path.join(inpath, 'netcdf')
-    with tempfile.TemporaryDirectory() as ts_path:
-        subprocess.call(["era5", "reshuffle", path, ts_path, "2010-01-01",
+def test_cli_reshuffle_and_update():
+    testdata_path = Path(os.path.join(inpath, 'netcdf'))
+    with tempfile.TemporaryDirectory() as tempdir:
+        tempdir = Path(tempdir)
+        img_path = tempdir / 'images'
+        shutil.copytree(testdata_path, img_path)
+
+        # we duplicate 1 file to check whether prioritizing final images over T images works
+        ds = xr.open_dataset(testdata_path / '2010' / '001' / "ERA5_AN_20100101_0000.nc")
+        ds['swvl1'].values = np.full(ds['swvl1'].values.shape, 99)
+        ds.to_netcdf(img_path / '2010' / '001' / "ERA5-T_AN_20100101_0000.nc")
+
+        ts_path = tempdir / 'ts'
+
+        subprocess.call(["era5", "reshuffle", img_path, ts_path, "2010-01-01",
                          "2010-01-01", "-v", "swvl1,swvl2", "-l",
                          "--bbox", "12.0", "46.0", "17.0", "50.0",
                          "--h_steps", "0"])
 
-        sum = read_summary_yml(ts_path)
-        change summary
+        ts_reader = ERATs(ts_path)
+        ts = ts_reader.read(15, 48)
+        assert 99 not in ts['swvl1'].values  # verify ERA5-T was NOT used!
+        swvl1_values_should = np.array([0.402825], dtype=np.float32)
+        nptest.assert_allclose(
+            ts["swvl1"].values, swvl1_values_should, rtol=1e-5)
 
-        write new summary
+        ts_reader.close()
 
-        call update with manipulated summary
+        # Manipulate settings to update with different time stamp for same day
+        props = read_summary_yml(ts_path)
+        props['img2ts_kwargs']['h_steps'] = [12]
+        props['img2ts_kwargs']['startdate'] = datetime(2009,12,31)
+        props['img2ts_kwargs']['enddate'] = datetime(2009,12,31)
 
-        subprocess.call(["era5", "update_ts", path, ts_path, "2010-01-01",
-                         "2010-01-01", "-v", "swvl1,swvl2", "-l",
-                         "--bbox", "12.0", "46.0", "17.0", "50.0",
-                         "--h_steps", "12"])
+        with open(ts_path / 'overview.yml', 'w') as f:
+            yaml.dump(props, f, default_flow_style=False, sort_keys=False)
 
-        ds = ERATs(ts_path, ioclass_kws={"read_bulk": True})
-        ts = ds.read(15, 48)
+        subprocess.call(["era5", "update_ts", ts_path])
+        ts_reader = ERATs(ts_path)
+        ts = ts_reader.read(15, 48)
         swvl1_values_should = np.array([0.402825, 0.390983], dtype=np.float32)
         nptest.assert_allclose(
             ts["swvl1"].values, swvl1_values_should, rtol=1e-5)
+
+        assert 'swvl2' in ts.columns
+
+        ts_reader.close()
 
 def test_ERA5_reshuffle_nc():
     # test reshuffling era5 netcdf images to time series
@@ -122,7 +150,3 @@ def test_ERA5_reshuffle_grb():
         swvl2_values_should = np.array([0.390514, 0.390980], dtype=np.float32)
         nptest.assert_allclose(
             ts["swvl2"].values, swvl2_values_should, rtol=1e-5)
-
-
-if __name__ == '__main__':
-    test_cli_reshuffle()

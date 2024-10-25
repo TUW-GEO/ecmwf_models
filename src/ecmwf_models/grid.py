@@ -4,19 +4,51 @@ Common grid definitions for ECMWF model reanalysis products (regular gridded)
 """
 
 import numpy as np
-from pygeogrids.grids import BasicGrid, CellGrid, gridfromdims
+from pygeogrids.grids import CellGrid, gridfromdims
 import os
-from typing import Tuple, Literal
+from typing import Tuple
 import xarray as xr
 
 def trafo_lon(lon):
+    """
+    0...360 -> 0...180...-180
+
+    Parameters
+    ----------
+    lon: np.array
+        Longitude array
+
+    Returns
+    -------
+    lon_transformed: np.array
+        Transformed longitude array
+    """
     lons_gt_180 = np.where(lon > 180.)
     lon[lons_gt_180] = lon[lons_gt_180] - 360.0
     return lon
 
 def safe_arange(start, stop, step):
+    """
+    Like numpy.arange, but floating point precision is kept.
+    Compare: `np.arange(0, 100, 0.01)[-1]` vs `safe_arange(0, 100, 0.01)[-1]`
+
+    Parameters
+    ----------
+    start: float
+        Start of interval
+    stop: float
+        End of interval (not included)
+    step: float
+        Stepsize
+
+    Returns
+    -------
+    arange: np.array
+        Range of values in interval at the given step size / sampling
+    """
     f_step = (1. / float(step))
-    vals = np.arange(float(start) * f_step, float(stop) * f_step , float(step) * f_step)
+    vals = np.arange(float(start) * f_step, float(stop) * f_step,
+                     float(step) * f_step)
     return vals / f_step
 
 def get_grid_resolution(lats: np.ndarray, lons: np.ndarray) -> (float, float):
@@ -124,24 +156,19 @@ def ERA_RegularImgGrid(
     CellGrid : CellGrid
         Regular, CellGrid with 5DEG*5DEG cells for the passed bounding box.
     """
-
-    # to get precise coordinates
+    # to get precise coordinates...
     lon = safe_arange(-180, 180, resolution)
-    lat = safe_arange(-90, 90+resolution, resolution)[::-1]
-
-    if bbox is not None:
-        lon = lon[np.where((lon >= bbox[0]) & (lon <= bbox[2]))]
-        lat = lat[np.where((lat >= bbox[1]) & (lat <= bbox[3]))]
+    lat = safe_arange(-90, 90 + resolution, resolution)[::-1]
 
     # ERA grid LLC point has Lon=0
     lon = np.roll(lon, int(len(lon) * 0.5))
-    glob_basic_grid = gridfromdims(lon, lat, origin='top')
+    grid = gridfromdims(lon, lat, origin='top')
 
-    glob_cell_grid = glob_basic_grid.to_cell_grid(cellsize=5.0)
+    grid = grid.to_cell_grid(cellsize=5.0)
 
-    return glob_cell_grid
+    if bbox is not None:
+        subgpis = grid.get_bbox_grid_points(latmin=bbox[1], latmax=bbox[3],
+                                            lonmin=bbox[0], lonmax=bbox[2])
+        grid = grid.subgrid_from_gpis(subgpis)
 
-
-
-if __name__ == '__main__':
-    a = ERA5_RegularImgLandGrid(0.25)
+    return grid

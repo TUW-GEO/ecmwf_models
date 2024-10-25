@@ -25,29 +25,26 @@ Base classes for reading downloaded ERA netcdf and grib images and stacks
 """
 import warnings
 import os
-from pygeobase.io_base import ImageBase, MultiTemporalImageBase
-from pygeobase.object_base import Image
-from pygeogrids.grids import BasicGrid, gridfromdims
-import numpy as np
-from datetime import timedelta, datetime  # noqa: F401
-
-from pygeogrids.netcdf import load_grid
-from pynetcf.time_series import GriddedNcOrthoMultiTs
-from ecmwf_models.grid import (
-    ERA_RegularImgGrid,
-    get_grid_resolution,
-    trafo_lon
-)
-from ecmwf_models.utils import lookup
-from ecmwf_models.globals import IMG_FNAME_TEMPLATE, SUPPORTED_PRODUCTS
 import glob
-
+from datetime import timedelta, datetime  # noqa: F401
+import numpy as np
 import xarray as xr
 
-try:
-    import pygrib
-except ImportError:
-    warnings.warn("pygrib has not been imported")
+from pygeobase.io_base import ImageBase, MultiTemporalImageBase
+from pygeobase.object_base import Image
+from pynetcf.time_series import GriddedNcOrthoMultiTs
+from pygeogrids.grids import BasicGrid, gridfromdims
+from pygeogrids.netcdf import load_grid
+
+from ecmwf_models.grid import trafo_lon
+from ecmwf_models.utils import lookup
+from ecmwf_models.globals import (
+    IMG_FNAME_TEMPLATE, IMG_FNAME_DATETIME_FORMAT,
+    SUPPORTED_PRODUCTS, SUBDIRS,
+)
+from ecmwf_models.globals import (
+    pygrib, pygrib_available, PygribNotFoundError
+)
 
 
 class ERANcImg(ImageBase):
@@ -92,7 +89,8 @@ class ERANcImg(ImageBase):
 
         if parameter is not None:
             # look up short names
-            self.parameter = lookup(product, np.atleast_1d(parameter))["short_name"].values
+            self.parameter = lookup(
+                product,  np.atleast_1d(parameter))["short_name"].values
         else:
             self.parameter = None
 
@@ -184,7 +182,6 @@ class ERANcImg(ImageBase):
             return_metadata[name] = variable.attrs
             return_img[name] = param_data
 
-
         dataset.close()
 
         if self.subgrid is None:
@@ -268,7 +265,6 @@ class ERANcDs(MultiTemporalImageBase):
     ):
 
         self.h_steps = h_steps
-        subpath_templ = ["%Y", "%j"]
 
         if parameter is not None:
             # look up short names
@@ -300,8 +296,8 @@ class ERANcDs(MultiTemporalImageBase):
                                                   type='*',
                                                   datetime='{datetime}',
                                                   ext='nc'),
-            datetime_format="%Y%m%d_%H%M",
-            subpath_templ=subpath_templ,
+            datetime_format=IMG_FNAME_DATETIME_FORMAT,
+            subpath_templ=SUBDIRS,
             exact_templ=False,
             ioclass_kws=ioclass_kws)
 
@@ -448,6 +444,8 @@ class ERAGrbImg(ImageBase):
         timestamp : datetime, optional (default: None)
             Specific date (time) to read the data for.
         """
+        if not pygrib_available:
+            raise PygribNotFoundError()
         grbs = pygrib.open(self.filename)
 
         return_img = {}
@@ -621,8 +619,6 @@ class ERAGrbDs(MultiTemporalImageBase):
         """
         self.h_steps = h_steps
 
-        subpath_templ = ["%Y", "%j"]
-
         ioclass_kws = {
             "product": product,
             "parameter": parameter,
@@ -640,8 +636,8 @@ class ERAGrbDs(MultiTemporalImageBase):
             root_path,
             ERAGrbImg,
             fname_templ=fname_templ,
-            datetime_format="%Y%m%d_%H%M",
-            subpath_templ=subpath_templ,
+            datetime_format=IMG_FNAME_DATETIME_FORMAT,
+            subpath_templ=SUBDIRS,
             exact_templ=False,
             ioclass_kws=ioclass_kws,
         )

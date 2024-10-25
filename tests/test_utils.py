@@ -3,18 +3,19 @@
 Testing the utility functions
 '''
 
+import os
+import tempfile
+import numpy as np
+from netCDF4 import Dataset
+
 from ecmwf_models.utils import (
     parse_filetype,
     parse_product,
     load_var_table,
     lookup,
     get_default_params,
-    make_era5_land_definition_file)
-import os
-from datetime import datetime
-import tempfile
-import numpy as np
-from netCDF4 import Dataset
+    make_era5_land_definition_file,
+)
 
 
 def test_parse_product():
@@ -33,21 +34,21 @@ def test_parse_filetype():
 
 def test_load_var_table():
     table = load_var_table('era5')
-    assert table.index.size == 265
+    assert table.index.size == 260
     assert table.loc[
-        100].dl_name == 'mean_surface_direct_short_wave_radiation_flux'
-    assert table.loc[100].short_name == 'msdrswrf'
+        100].dl_name == 'mean_surface_downward_short_wave_radiation_flux'
+    assert table.loc[100].short_name == 'msdwswrf'
 
     table = load_var_table('era5-land')
-    assert table.index.size == 49
-    assert table.loc[45].dl_name == 'volumetric_soil_water_layer_1'
-    assert table.loc[45].short_name == 'swvl1'
+    assert table.index.size == 50
+    assert table.loc[46].dl_name == 'volumetric_soil_water_layer_1'
+    assert table.loc[46].short_name == 'swvl1'
 
 
 def test_lookup():
     lut = lookup('era5', ['swvl1', 'stl1'])
-    assert lut.loc[254].dl_name == 'volumetric_soil_water_layer_1'
-    assert lut.loc[171].dl_name == 'soil_temperature_level_1'
+    assert lut.loc[249].dl_name == 'volumetric_soil_water_layer_1'
+    assert lut.loc[166].dl_name == 'soil_temperature_level_1'
 
 
 def test_get_default_params():

@@ -2,18 +2,6 @@
 """
 Module to download ERA5 from terminal in netcdf and grib format.
 """
-import pandas as pd
-
-from ecmwf_models.utils import (
-    lookup,
-    update_image_summary_file,
-    save_ncs_from_nc, save_gribs_from_grib,
-    default_variables, split_array, check_api_ready,
-    read_summary_yml
-)
-from repurpose.process import parallel_process
-from repurpose.misc import delete_empty_directories
-
 import warnings
 import os
 import logging
@@ -21,7 +9,18 @@ from datetime import datetime, time, timedelta
 import shutil
 import cdsapi
 import numpy as np
-import traceback
+import pandas as pd
+
+from c3s_sm.misc import read_summary_yml
+from repurpose.process import parallel_process
+from repurpose.misc import delete_empty_directories
+
+from ecmwf_models.utils import (
+    lookup,
+    update_image_summary_file,
+    default_variables, split_array, check_api_ready,
+)
+from ecmwf_models.extract import save_ncs_from_nc, save_gribs_from_grib
 
 
 def split_chunk(timestamps,
@@ -507,13 +506,3 @@ def download_record_extension(path, dry_run=False, cds_token=None):
         path, startdate=startdate, enddate=enddate,
         cds_token=cds_token, dry_run=dry_run,
         **props['download_settings'])
-
-
-if __name__ == '__main__':
-    download_record_extension('/tmp/era5/nc')
-    # download_and_move(
-    #     '/tmp/era5/nc', startdate='2024-07-01',
-    #     enddate='2024-07-10', product='era5', keep_original=False,
-    #     variables=['swvl1'], h_steps=[0,23], grb=False, dry_run=False,
-    #     keep_prelim=False
-    # )
