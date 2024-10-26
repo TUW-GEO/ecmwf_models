@@ -24,6 +24,7 @@
 Utility functions for all data products in this package.
 """
 import os
+import warnings
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -378,10 +379,14 @@ def update_image_summary_file(data_path: str,
         If not specified, then `data_path` is used. If a file already exists,
         it will be overwritten.
     """
-    first_image_date = get_first_last_image_date(
-        data_path, start_from_last=False)
-    last_image_date = get_first_last_image_date(
-        data_path, start_from_last=True)
+    try:
+        first_image_date = get_first_last_image_date(
+            data_path, start_from_last=False)
+        last_image_date = get_first_last_image_date(
+            data_path, start_from_last=True)
+    except ValueError:
+        warnings.warn(f"Could not infer date from filenames in {data_path}")
+        return 
 
     props = img_infer_file_props(data_path, start_from_last=False)
     _ = props.pop("datetime")

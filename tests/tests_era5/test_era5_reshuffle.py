@@ -63,7 +63,7 @@ def test_cli_reshuffle_and_update():
         ts_path = tempdir / 'ts'
 
         subprocess.call(["era5", "reshuffle", img_path, ts_path, "2010-01-01",
-                         "2010-01-01", "-v", "swvl1,swvl2", "-l",
+                         "2010-01-01", "-v", "swvl1,swvl2", "-l", "True"
                          "--bbox", "12.0", "46.0", "17.0", "50.0",
                          "--h_steps", "0"])
 

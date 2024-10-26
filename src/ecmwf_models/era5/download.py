@@ -21,6 +21,7 @@ from ecmwf_models.utils import (
     default_variables,
     split_array,
     check_api_ready,
+    get_first_last_image_date
 )
 from ecmwf_models.extract import save_ncs_from_nc, save_gribs_from_grib
 
@@ -387,7 +388,7 @@ def download_and_move(
                 i += 1
                 continue
 
-        if status_code == 0:
+        if status_code == 0 and os.path.exists(dl_file):
             if grb:
                 save_gribs_from_grib(
                     dl_file,
@@ -490,8 +491,9 @@ def download_record_extension(path, dry_run=False, cds_token=None):
     """
     props = read_summary_yml(path)
 
-    startdate = pd.to_datetime(props['period_to']).to_pydatetime() \
-                + timedelta(days=1)  # next day
+    last_img = get_first_last_image_date(path)
+
+    startdate = pd.to_datetime(last_img).to_pydatetime() + timedelta(days=1)
 
     enddate = pd.to_datetime(datetime.now().date()).to_pydatetime() \
               - timedelta(days=1)  # yesterday

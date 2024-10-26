@@ -45,16 +45,16 @@ from ecmwf_models.era5.reshuffle import img2ts, extend_ts
     "--keep_original",
     type=click.BOOL,
     default=False,
-    help="Also keep the original image stacks as downloaded from CDS, "
-    "instead of deleting them after extracting individual images. "
-    "Default is False.")
+    help="To keep the original image stacks as downloaded from CDS, "
+    "instead of deleting them after extracting individual images, pass "
+    "`--keep_original True`")
 @click.option(
     "-grb",
     "--as_grib",
     type=click.BOOL,
     default=False,
-    help="Download data in grib format instead of netcdf. "
-    "Default is False.")
+    help="To download data in grib format instead of netcdf pass "
+    "`--as_grib True`.")
 @click.option(
     "--h_steps",
     type=str,
@@ -65,6 +65,16 @@ from ecmwf_models.era5.reshuffle import img2ts, extend_ts
     "two images for each day, at 0:00 and 12:00 respectively. "
     "By default, we download 6-hourly images starting at 0:00 UTC, "
     "(i.e. `--h_steps 0,6,12,18`")
+@click.option(
+    "--keep_prelim",
+    type=click.BOOL,
+    default=True,
+    help="The last 1-2 month of data are usually 'preliminary' (labelled as "
+    "'ERA5-T' and 'ERA5-Land-T') and might be changed if an issue is "
+    "detected. When this option is deactivated (`--keep_prelim False`), "
+    "only the final data will be kept, while the ERA5-T data is discarded "
+    "after download. By default, we also keep preliminary files, but they "
+    "get a different file name as the final data.")
 @click.option(
     "--max_request_size",
     type=int,
@@ -84,7 +94,7 @@ from ecmwf_models.era5.reshuffle import img2ts, extend_ts
     "Alternatively, you can also set an environment variable "
     "`CDSAPI_KEY` with your token.")
 def cli_download_era5(path, start, end, variables, keep_original, as_grib,
-                      h_steps, max_request_size, cds_token):
+                      h_steps, keep_prelim, max_request_size, cds_token):
     """
     Download ERA5 image data within the chosen period. NOTE: Before using this
     program, create a CDS account and set up a `.cdsapirc` file as described
@@ -115,6 +125,7 @@ def cli_download_era5(path, start, end, variables, keep_original, as_grib,
         keep_original=keep_original,
         stepsize='month',
         n_max_request=max_request_size,
+        keep_prelim=keep_prelim,
         cds_token=cds_token,
     )
 
@@ -159,16 +170,16 @@ def cli_download_era5(path, start, end, variables, keep_original, as_grib,
     "--keep_original",
     type=click.BOOL,
     default=False,
-    help="Also keep the original image stacks as downloaded from CDS, "
-    "instead of deleting them after extracting individual images. "
-    "Default is False.")
+    help="To keep the original image stacks as downloaded from CDS, "
+    "instead of deleting them after extracting individual images, pass "
+    "`--keep_original True`")
 @click.option(
     "-grb",
     "--as_grib",
     type=click.BOOL,
     default=False,
-    help="Download data in grib format instead of netcdf. "
-    "Default is False.")
+    help="To download data in grib format instead of netcdf pass "
+    "`--as_grib True`.")
 @click.option(
     "--h_steps",
     type=click.STRING,
@@ -179,6 +190,16 @@ def cli_download_era5(path, start, end, variables, keep_original, as_grib,
     "two images for each day, at 0:00 and 12:00 respectively. "
     "By default, we download 6-hourly images starting at 0:00 UTC, "
     "(i.e. `--h_steps 0,6,12,18`")
+@click.option(
+    "--keep_prelim",
+    type=click.BOOL,
+    default=True,
+    help="The last 1-2 month of data are usually 'preliminary' (labelled as "
+    "'ERA5-T' and 'ERA5-Land-T') and might be changed if an issue is "
+    "detected. When this option is deactivated (`--keep_prelim False`), "
+    "only the final data will be kept, while the ERA5-T data is discarded "
+    "after download. By default, we also keep preliminary files, but they "
+    "get a different file name as the final data.")
 @click.option(
     "--max_request_size",
     type=int,
@@ -198,7 +219,7 @@ def cli_download_era5(path, start, end, variables, keep_original, as_grib,
     "Alternatively, you can also set an environment variable "
     "`CDSAPI_KEY` with your token.")
 def cli_download_era5land(path, start, end, variables, keep_original, as_grib,
-                          h_steps, max_request_size, cds_token):
+                          h_steps, keep_prelim, max_request_size, cds_token):
     """
     Download ERA5-Land image data within a chosen period.
     NOTE: Before using this program, create a CDS account and set up a
@@ -230,6 +251,7 @@ def cli_download_era5land(path, start, end, variables, keep_original, as_grib,
         keep_original=keep_original,
         stepsize='month',
         n_max_request=max_request_size,
+        keep_prelim=keep_prelim,
         cds_token=cds_token)
 
     return status_code
@@ -301,11 +323,11 @@ def cli_update_img(path, cds_token=None):
 @click.option(
     '--land_points',
     '-l',
-    is_flag=True,
+    type=click.BOOL,
     show_default=True,
     default=False,
-    help="Store only time series for points that are over land. "
-    "Default is False.")
+    help="To store only time series for points that are over land, pass "
+         "`--land_points True`. ")
 @click.option(
     '--bbox',
     nargs=4,
@@ -430,6 +452,7 @@ def era5():
 
 
 era5.add_command(cli_download_era5)
+era5.add_command(cli_update_img)
 era5.add_command(cli_reshuffle)
 era5.add_command(cli_extend_ts)
 
@@ -441,5 +464,6 @@ def era5land():
 
 
 era5land.add_command(cli_download_era5land)
+era5land.add_command(cli_update_img)
 era5land.add_command(cli_reshuffle)
 era5land.add_command(cli_extend_ts)

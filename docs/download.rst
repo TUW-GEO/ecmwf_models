@@ -38,4 +38,12 @@ We recommend downloading data in netcdf format, however, using the ``--as_grib``
 option, you can also download data in grib format.
 
 For all other available options, type ``era5 download --help``,
-or ``era5land download --help`` respectively.
+or ``era5land download --help`` respectively
+
+Updating an existing record
+---------------------------
+After some time, new ERA data will become available. You can then use the
+program ``era5 update_img`` with a path to the existing record, to download
+new images with the same settings that became available since the last time
+the record was downloaded. You might even set up a cron job to check for new
+data in regular intervals to keep your copy up-to-date.
