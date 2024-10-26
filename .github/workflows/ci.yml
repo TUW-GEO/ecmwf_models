@@ -52,6 +52,7 @@ jobs:
       - name: Install dependencies and package
         shell: bash -l {0}
         run: |
+          conda install -c conda-forge cdo
           # On macos pykdtree was built with OpenMP (C-level parallelization library) support
           if [ ${{ matrix.os }} == "macos-latest" ] 
           then
