@@ -242,15 +242,15 @@ def download_and_move(
         A grid on which to remap the data using CDO. This must be a dictionary
         using CDO's grid description format, e.g.::
 
-            grid = {
-                "gridtype": "lonlat",
-                "xsize": 720,
-                "ysize": 360,
-                "xfirst": -179.75,
-                "yfirst": 89.75,
-                "xinc": 0.5,
-                "yinc": -0.5,
-            }
+        grid = {
+            "gridtype": "lonlat",
+            "xsize": 720,
+            "ysize": 360,
+            "xfirst": -179.75,
+            "yfirst": 89.75,
+            "xinc": 0.5,
+            "yinc": -0.5,
+        }
 
         Default is to use no regridding.
         To use this option, it is necessary that CDO is installed.
