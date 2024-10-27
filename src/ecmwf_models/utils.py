@@ -413,10 +413,3 @@ def assert_product(product: str) -> str:
         raise ValueError(f"Got product {product} but expected one of "
                          f"{SUPPORTED_PRODUCTS}")
     return product
-
-
-if __name__ == '__main__':
-    save_gribs_from_grib(
-        "/tmp/era5/grb/temp_downloaded/20240730_20240731.grb",
-        output_path='/tmp/era5/grb',
-        product_name='ERA5')

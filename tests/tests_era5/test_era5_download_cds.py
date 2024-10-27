@@ -9,7 +9,7 @@ from datetime import datetime
 import pytest
 import subprocess
 
-from ecmwf_models.era5.reader import ERA5NcImg
+from ecmwf_models.era5.img import ERA5NcImg
 from ecmwf_models.utils import check_api_ready
 from ecmwf_models.era5.download import download_and_move
 

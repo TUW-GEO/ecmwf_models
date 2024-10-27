@@ -2,7 +2,7 @@
 
 import os
 import numpy.testing as nptest
-from ecmwf_models.era5.reader import (
+from ecmwf_models.era5.img import (
     ERA5NcDs, ERA5NcImg, ERA5GrbImg, ERA5GrbDs)
 import numpy as np
 from datetime import datetime

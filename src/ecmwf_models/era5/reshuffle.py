@@ -12,7 +12,7 @@ from datetime import time, datetime, timedelta
 from repurpose.img2ts import Img2Ts
 from c3s_sm.misc import update_ts_summary_file, read_summary_yml
 
-from ecmwf_models.era5.reader import ERA5NcDs, ERA5GrbDs
+from ecmwf_models.era5.img import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.grid import ERA_RegularImgGrid, ERA5_RegularImgLandGrid
 from ecmwf_models.utils import parse_filetype, parse_product, get_first_last_image_date
 

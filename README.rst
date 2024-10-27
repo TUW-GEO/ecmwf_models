@@ -55,7 +55,7 @@ shell command (see ``era5 download --help`` for all options) ...
 
 .. code-block:: shell
 
-    era5land reshuffle /tmp/era5/img /tmp/era5/ts 2024-04-01 2024-04-05 --land_points
+    era5land reshuffle /tmp/era5/img /tmp/era5/ts 2024-04-01 2024-04-05 --land_points True
 
 Finally, in python, read the time series data for a location as a pandas
 DataFrame.
