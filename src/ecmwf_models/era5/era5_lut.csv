@@ -5,15 +5,10 @@ dl_name,long_name,short_name,default
 10m_u_component_of_wind,10 metre U wind component,u10,0
 10m_v_component_of_neutral_wind,Neutral wind at 10 m v-component,v10n,0
 10m_v_component_of_wind,10 metre V wind component,v10,0
-10m_wind_direction,10 metre wind direction,dwi,0
 10m_wind_gust_since_previous_post_processing,10 metre wind gust since previous post-processing,fg10,0
-10m_wind_speed,10 metre wind speed,wind,0
 2m_dewpoint_temperature,2 metre dewpoint temperature,d2m,0
 2m_temperature,2 metre temperature,t2m,0
 air_density_over_the_oceans,Air density over the oceans,p140209,0
-altimeter_corrected_wave_height,Altimeter corrected wave height,acwh,0
-altimeter_range_relative_correction,Altimeter range relative correction,arrc,0
-altimeter_wave_height,Altimeter wave height,awh,0
 angle_of_sub_gridscale_orography,Angle of sub-gridscale orography,anor,0
 anisotropy_of_sub_gridscale_orography,Anisotropy of sub-gridscale orography,isor,0
 benjamin_feir_index,Benjamin-Feir index,bfi,0
@@ -39,6 +34,7 @@ forecast_logarithm_of_surface_roughness_for_heat,Forecast logarithm of surface r
 forecast_surface_roughness,Forecast surface roughness,fsr,0
 free_convective_velocity_over_the_oceans,Free convective velocity over the oceans,p140208,0
 friction_velocity,Friction velocity,zust,0
+geopotential,Geopotential,z,0
 gravity_wave_dissipation,Gravity wave dissipation,gwd,0
 high_cloud_cover,High cloud cover,hcc,0
 high_vegetation_cover,High vegetation cover,cvh,0
@@ -147,7 +143,6 @@ normalized_energy_flux_into_waves,Normalized energy flux into waves,phiaw,0
 normalized_stress_into_ocean,Normalized stress into ocean,tauoc,0
 northward_gravity_wave_surface_stress,Northward gravity wave surface stress,mgws,0
 northward_turbulent_surface_stress,Northward turbulent surface stress,nsss,0
-orography,Geopotential,z,0
 peak_wave_period,Peak wave period,pp1d,0
 period_corresponding_to_maximum_individual_wave_height,Period corresponding to maximum individual wave height,tmax,0
 potential_evaporation,Potential evaporation,pev,1

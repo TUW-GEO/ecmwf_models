@@ -2,7 +2,7 @@
 
 import os
 import numpy.testing as nptest
-from ecmwf_models.era5.interface import (
+from ecmwf_models.era5.reader import (
     ERA5NcDs, ERA5NcImg, ERA5GrbImg, ERA5GrbDs)
 import numpy as np
 from datetime import datetime
@@ -14,7 +14,7 @@ def test_ERA5_nc_image_landpoints():
         os.path.dirname(os.path.abspath(__file__)), '..',
         "ecmwf_models-test-data", "ERA5", "netcdf", "2010", "001",
         'ERA5_AN_20100101_0000.nc')
-    subgrid = ERA5_RegularImgLandGrid(0.25, 0.25)
+    subgrid = ERA5_RegularImgLandGrid(0.25)
     dset = ERA5NcImg(
         fname,
         parameter=['swvl1', 'swvl2'],
@@ -328,3 +328,6 @@ def test_ERA5_grb_ds():
         nptest.assert_allclose(data.lat[-1], -90.0)
         nptest.assert_allclose(data.lon[0], 0.0)
         nptest.assert_allclose(data.lon[720], 180.0)  # middle of image
+
+if __name__ == '__main__':
+    test_ERA5_grb_image()

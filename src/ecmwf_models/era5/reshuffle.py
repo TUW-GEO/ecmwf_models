@@ -1,28 +1,74 @@
 # -*- coding: utf-8 -*-
-
 """
-Module for a command line interface to convert the ERA Interim data into a
-time series format using the repurpose package
+Image to time series conversion tools.
 """
+import warnings
 
 import os
-import sys
-import argparse
+import pandas as pd
 import numpy as np
+from datetime import time, datetime, timedelta
 
 from repurpose.img2ts import Img2Ts
-from ecmwf_models.era5.interface import ERA5NcDs, ERA5GrbDs
+from c3s_sm.misc import update_ts_summary_file, read_summary_yml
+
+from ecmwf_models.era5.reader import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.grid import ERA_RegularImgGrid, ERA5_RegularImgLandGrid
-from ecmwf_models.utils import mkdate, parse_filetype, parse_product, str2bool
-from datetime import time, datetime
+from ecmwf_models.utils import parse_filetype, parse_product, get_first_last_image_date
 
 
-def reshuffle(
+def extend_ts(ts_path, **img2ts_kwargs):
+    """
+    Append any new data from the image path to the time series data.
+    This function is only applied to time series file that were created
+    using the img2ts function.
+    This will use the start from the previously written metadata,
+    and process only parameters that are already present in the time series
+    files.
+
+    Parameters
+    ----------
+    ts_path: str
+        Directory containing time series files to extend. It is also
+        expected that there is a `overview.yml` file in this directory.
+    img2ts_kwargs:
+        All kwargs are optional, if they are not given, we use them from the
+        previously created `overview.yml` file. If they are passed here,
+        they will override the values from the yml file.
+    """
+    if not os.path.isfile(os.path.join(ts_path, 'overview.yml')):
+        raise FileNotFoundError(
+            "No overview.yml file found in the passed directory. "
+            "This file is required to use the same settings to extend an "
+            "existing record. NOTE: Use the `era5 download` or "
+            "`era5land download` programs first.")
+
+    ts_props = read_summary_yml(ts_path)
+
+    for k, v in ts_props['img2ts_kwargs'].items():
+        if k not in img2ts_kwargs:
+            if k == 'startdate':
+                old_enddate = pd.to_datetime(
+                    ts_props["img2ts_kwargs"]["enddate"]).to_pydatetime()
+                startdate = old_enddate + timedelta(days=1)
+                img2ts_kwargs['startdate'] = startdate
+            elif k in ['enddate', 'outputpath']:  # fields from yml to ignore
+                continue
+            else:
+                img2ts_kwargs[k] = v
+
+    if 'enddate' not in img2ts_kwargs:
+        img2ts_kwargs['enddate'] = None  # All available images
+
+    img2ts(outputpath=ts_path, **img2ts_kwargs)
+
+
+def img2ts(
         input_root,
         outputpath,
         startdate,
-        enddate,
-        variables,
+        enddate=None,
+        variables=None,
         product=None,
         bbox=None,
         h_steps=(0, 6, 12, 18),
@@ -32,6 +78,8 @@ def reshuffle(
     """
     Reshuffle method applied to ERA images for conversion into netcdf time
     series format.
+    Note: ERA5 and ERA5-Land files are preferred over their T-counterpart,
+    in case that multiple files for a time stamp are present!
 
     Parameters
     ----------
@@ -39,11 +87,14 @@ def reshuffle(
         Input path where ERA image data was downloaded to.
     outputpath : str
         Output path, where the reshuffled netcdf time series are stored.
-    startdate : datetime
+    startdate : str
         Start date, from which images are read and time series are generated.
-    enddate : datetime
+        Format YYYY-mm-dd
+    enddate : str, optional (default: None)
         End date, from which images are read and time series are generated.
-    variables: tuple or list or str
+        Format YYYY-mm-dd. If None is passed, then the last available image
+        date is used.
+    variables: tuple or str
         Variables to read from the passed images and convert into time
         series format.
     product : str, optional (default: None)
@@ -60,42 +111,46 @@ def reshuffle(
         Reshuffle only land points. Uses the ERA5 land mask to create a land
         grid.
         The land grid is fixed to 0.25*0.25 or 0.1*0.1 deg for now.
-    imgbuffer: int, optional (default: 200)
+    imgbuffer: int, optional (default: 50)
         How many images to read at once before writing time series.
         This number affects how many images are stored in memory and should
         be chosen according to the available amount of memory and the size of
         a single image.
     """
+    startdate = pd.to_datetime(startdate).to_pydatetime().date()
 
-    if h_steps is None:
-        h_steps = (0, 6, 12, 18)
+    if enddate is None:
+        enddate = get_first_last_image_date(input_root)
+
+    enddate = pd.to_datetime(enddate).to_pydatetime().date()
+
+    if startdate > enddate:
+        warnings.warn(
+            f"Start date {startdate} is greater than end date {enddate}. Abort."
+        )
+        return
 
     filetype = parse_filetype(input_root)
-    product = parse_product(input_root) if not product else product
+    product: str = parse_product(input_root) if product is None else product
 
     if land_points:
         if product == "era5":
-            grid = ERA5_RegularImgLandGrid(
-                res_lat=0.25, res_lon=0.25, bbox=bbox)
+            grid = ERA5_RegularImgLandGrid(resolution=0.25, bbox=bbox)
         elif product == "era5-land":
-            grid = ERA5_RegularImgLandGrid(res_lat=0.1, res_lon=0.1, bbox=bbox)
+            grid = ERA5_RegularImgLandGrid(resolution=0.1, bbox=bbox)
         else:
             raise NotImplementedError(
                 product, "Land grid not implemented for product.")
     else:
-        if product == "era5":
-            grid = ERA_RegularImgGrid(res_lat=0.25, res_lon=0.25, bbox=bbox)
-        elif product == "era5-land":
-            grid = ERA_RegularImgGrid(res_lat=0.1, res_lon=0.1, bbox=bbox)
+        if product.lower() in ['era5-land', 'era5-land-t']:
+            grid = ERA_RegularImgGrid(resolution=0.1, bbox=bbox)
+        elif product.lower() in ['era5', 'era5-t']:
+            grid = ERA_RegularImgGrid(resolution=0.25, bbox=bbox)
         else:
             raise NotImplementedError(product,
                                       "Grid not implemented for product.")
 
     if filetype == "grib":
-        if land_points:
-            raise NotImplementedError(
-                "Reshuffling land points only implemented for netcdf files")
-
         input_dataset = ERA5GrbDs(
             root_path=input_root,
             parameter=variables,
@@ -124,17 +179,37 @@ def reshuffle(
     global_attr = {f"product": f"{product.upper()} (from {filetype})"}
 
     # get time series attributes from first day of data.
-    first_date_time = datetime.combine(startdate.date(), time(h_steps[0], 0))
+    first_date_time = datetime.combine(startdate, time(h_steps[0], 0))
 
     # get time series attributes from first day of data.
     data = input_dataset.read(first_date_time)
     ts_attributes = data.metadata
 
+    props = {
+        'product': product,
+        'filetype': filetype,
+        'last_update': datetime.now()
+    }
+
+    kwargs = {
+        'input_root': input_root,
+        'outputpath': outputpath,
+        'variables': None if variables is None else list(variables),
+        'land_points': land_points,
+        'startdate': startdate,
+        'enddate': enddate,
+        'h_steps': h_steps,
+        'bbox': None if bbox is None else list(bbox),
+        'imgbuffer': imgbuffer
+    }
+
+    props["img2ts_kwargs"] = kwargs
+
     reshuffler = Img2Ts(
         input_dataset=input_dataset,
         outputpath=outputpath,
-        startdate=startdate,
-        enddate=enddate,
+        startdate=str(startdate),
+        enddate=str(enddate),
         input_grid=grid,
         imgbuffer=imgbuffer,
         cellsize_lat=5.0,
@@ -144,109 +219,10 @@ def reshuffle(
         zlib=True,
         unlim_chunksize=1000,
         ts_attributes=ts_attributes,
+        backend='multiprocessing',
+        n_proc=1,
     )
+
     reshuffler.calc()
 
-
-def parse_args(args):
-    """
-    Parse command line parameters for conversion from image to time series.
-
-    Parameters
-    ----------
-    args: list
-        command line parameters as list of strings
-
-    Returns
-    ----------
-    args : argparse.Namespace
-        Parsed command line parameters
-    """
-
-    parser = argparse.ArgumentParser(
-        description="Convert downloaded ERA5/ERA5-Land image data into time "
-        "series format.")
-    parser.add_argument(
-        "dataset_root",
-        help="Root of local filesystem where the image data is stored.",
-    )
-    parser.add_argument(
-        "timeseries_root",
-        help="Root of local filesystem where the time series should "
-        "be stored.",
-    )
-    parser.add_argument(
-        "start", type=mkdate, help=("Startdate in format YYYY-MM-DD"))
-    parser.add_argument(
-        "end", type=mkdate, help=("Enddate in format YYYY-MM-DD"))
-    parser.add_argument(
-        "variables",
-        metavar="variables",
-        nargs="+",
-        help=("Short name of variables as stored in the images, "
-              "which are reshuffled. "
-              "See documentation on image download for resp. ERA products, "
-              "for more information on variable names of the product. "),
-    )
-    parser.add_argument(
-        "--land_points",
-        type=str2bool,
-        default="False",
-        help=("Store only time series for points that are over land. "
-              "Default is False."),
-    )
-    parser.add_argument(
-        "--bbox",
-        type=float,
-        default=None,
-        nargs=4,
-        help=("min_lon min_lat max_lon max_lat. "
-              "Bounding Box (lower left and upper right corner) "
-              "of area to reshuffle (WGS84). By default all data is loaded."),
-    )
-    parser.add_argument(
-        "--h_steps",
-        type=int,
-        default=None,
-        nargs="+",
-        help=(
-            "Time steps (full hours) of images that will be reshuffled "
-            "(must be in the images). "
-            "By default 6H images (starting at 0:00 UTC) will be reshuffled: "
-            "0 6 12 18"),
-    )
-    parser.add_argument(
-        "--imgbuffer",
-        type=int,
-        default=50,
-        help=(
-            "How many images to read at once. Bigger numbers make the "
-            "conversion faster but consume more memory. Choose this according "
-            "to your system and the size of a single image. Default is 50."),
-    )
-    args = parser.parse_args(args)
-
-    print("Converting ERA5/ERA5-Land data from {} to {} into {}.".format(
-        args.start.isoformat(), args.end.isoformat(), args.timeseries_root))
-
-    return args
-
-
-def main(args):
-    args = parse_args(args)
-
-    reshuffle(
-        input_root=args.dataset_root,
-        outputpath=args.timeseries_root,
-        startdate=args.start,
-        enddate=args.end,
-        variables=args.variables,
-        bbox=args.bbox,
-        h_steps=args.h_steps,
-        land_points=args.land_points,
-        imgbuffer=args.imgbuffer,
-    )
-
-
-def run():
-    main(sys.argv[1:])
+    update_ts_summary_file(outputpath, props)
