@@ -11,6 +11,7 @@ import subprocess
 
 from ecmwf_models.era5.reader import ERA5NcImg
 from ecmwf_models.utils import check_api_ready
+from ecmwf_models.era5.download import download_and_move
 
 try:
     check_api_ready()
@@ -39,6 +40,9 @@ class DownloadTest(unittest.TestCase):
 
             subprocess.call(['era5', 'download'] + args)
 
+            # download_and_move(dl_path, startdate, enddate, variables=['swvl1'],
+            #                   h_steps=[0])
+
             out_path = os.path.join(dl_path, '2023', '001')
             assert(os.path.exists(out_path))
             imgs = os.listdir(out_path)
@@ -47,3 +51,7 @@ class DownloadTest(unittest.TestCase):
             ds = ERA5NcImg(os.path.join(out_path, imgs[0]), parameter='swvl1')
             img = ds.read(datetime(2023, 1, 1))
             assert img.data['swvl1'].shape == (721, 1440)
+
+
+if __name__ == '__main__':
+    DownloadTest().test_cli_download()

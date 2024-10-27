@@ -386,7 +386,7 @@ def update_image_summary_file(data_path: str,
             data_path, start_from_last=True)
     except ValueError:
         warnings.warn(f"Could not infer date from filenames in {data_path}")
-        return 
+        return
 
     props = img_infer_file_props(data_path, start_from_last=False)
     _ = props.pop("datetime")
