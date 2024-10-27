@@ -1,3 +1,5 @@
+.. _variables_era5land:
+
 ERA5-Land Variables
 -------------------
 

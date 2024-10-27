@@ -1,5 +1,5 @@
 Conversion to time series format
-================================
+--------------------------------
 
 For a lot of applications it is favorable to convert the image based format into
 a format which is optimized for fast time series retrieval. This is what we
@@ -39,3 +39,24 @@ For all other option see the output up ``era5 reshuffle --help`` and
 
 Conversion to time series is performed by the `repurpose package
 <https://github.com/TUW-GEO/repurpose>`_ in the background.
+
+Append new image data to existing time series
+---------------------------------------------
+Similar to the ``update_img`` program, we also provide programs to
+simplify updating an existing time series record with newly downloaded
+images via the ``era5 update_ts`` and ``era5land update_ts`` programs.
+This will use the settings file created during the initial time series
+conversion (with ``reshuffle``) and look for new image data in the same path
+that is not yet available in the given time series record.
+
+This option is ideally used together with the ``update_img`` program in, e.g.
+a cron job, to first download new images, and then append them to their time
+series counterpart.
+
+.. code-block::
+
+    era5 update_ts /existing/ts/record
+
+Alternatively, you can also use the ``reshuffle`` command, with a target path
+that already contains time series. This will also append new data (but make sure
+you use the same settings as before).

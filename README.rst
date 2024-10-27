@@ -74,6 +74,9 @@ DataFrame.
     2024-04-05 00:00:00  0.350266  0.346558
     2024-04-05 12:00:00  0.343994  0.344498
 
+More programs are available to keep an exisiting image and time series record
+up-to-date. Type ``era5 --help`` and ``era5land --help`` to see all available
+programs.
 
 CDS API Setup
 =============

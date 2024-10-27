@@ -1,3 +1,5 @@
+.. _variables_era5:
+
 ERA5 Variables
 --------------
 

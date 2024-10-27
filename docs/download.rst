@@ -1,5 +1,5 @@
 Downloading ERA5 and ERA5-Land data
-===================================
+-----------------------------------
 
 ERA5 (and ERA5-Land) data can be downloaded manually from the `Copernicus Data Store (CDS)
 <https://cds.climate.copernicus.eu/#!/home>`_ or automatically via the CDS api,
@@ -25,9 +25,9 @@ resolution of the images is 6 hours by default, but can be changed using the
         --variables swvl1,swvl2,swvl3,swvl4 --h_steps 0,6,18,24
 
 The names of the variables to download can be its long names, the short names
-(as in the example) or the parameter IDs. We use the file
-``ecmwf_models/era5/era5_lut.csv`` and ``ecmwf_models/era5/era5-land_lut.csv``
-to look up the right name for the CDS API.
+(as in the example). See the :ref:`ERA5 variable table <variables_era5>`
+and :ref:`ERA5-Land variable table <variables_era5land>` to look up the right
+name for the CDS API.
 
 By default, the command expects that you have set up your ``.cdsapirc`` file
 to identify with the data store as described above. Alternatively you can pass
