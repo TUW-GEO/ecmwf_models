@@ -17,8 +17,9 @@ ecmwf_models
    :target: https://ecmwf-models.readthedocs.io/en/latest/
 
 
-Readers and converters for `ECMWF reanalysis (ERA) data
-<http://apps.ecmwf.int/datasets/>`_. Written in Python.
+Readers and converters for ECMWF reanalysis (`ERA5 <https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels>`_
+and `ERA5-Land <https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land>`_) data.
+Written in Python.
 
 Works great in combination with `pytesmo <https://github.com/TUW-GEO/pytesmo>`_.
 
@@ -33,8 +34,8 @@ Install required C-libraries via conda. For installation we recommend
 
     conda install -c conda-forge pygrib netcdf4 pyresample pykdtree
 
-Afterwards the following command will install all remaining dependencies as
-well as the ``ecmwf_models`` package itself.
+Afterwards the following command will install all remaining python dependencies
+as well as the ``ecmwf_models`` package itself.
 
 .. code::
 
