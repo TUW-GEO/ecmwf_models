@@ -52,6 +52,8 @@ jobs:
       - name: Install dependencies and package
         shell: bash -l {0}
         run: |
+          conda install -c conda-forge pygrib netcdf4 pyresample pykdtree
+          
           # On macos pykdtree was built with OpenMP (C-level parallelization library) support
           if [ ${{ matrix.os }} == "macos-latest" ] 
           then
@@ -61,11 +63,6 @@ jobs:
           if [ ${{ matrix.os }} == "windows-latest" ] 
           then
             conda install -c conda-forge pygrib
-          fi
-          # CDO we can test on ubuntu
-          if [ ${{ matrix.os }} == "ubuntu-latest" ] 
-          then
-            conda install -c conda-forge cdo
           fi
           
           pip install -e .[testing]
