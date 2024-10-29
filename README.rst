@@ -128,6 +128,8 @@ variable or the ``--cds_token`` option.
     $ docker run -v /data/era5/img:/container/path ecmwf_models:latest bash -c \
        'era5land update_img /container/path --cds_token xxxx-xxx-xxx-xx-xxxx'
 
+You can use this together with a task scheduler to regularly pull new data
+
 Citation
 ========
 

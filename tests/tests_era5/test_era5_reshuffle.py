@@ -62,12 +62,12 @@ def test_cli_reshuffle_and_update():
 
         ts_path = tempdir / 'ts'
 
-        subprocess.call(["era5", "reshuffle", img_path, ts_path, "2010-01-01",
-                         "2010-01-01", "-v", "swvl1,swvl2", "-l", "True",
-                         "--bbox", "12.0", "46.0", "17.0", "50.0",
+        subprocess.call(["era5", "reshuffle", str(img_path), str(ts_path),
+                         "--end", "2010-01-01", "-v", "swvl1,swvl2", "-l",
+                         "True", "--bbox", "12.0", "46.0", "17.0", "50.0",
                          "--h_steps", "0"])
 
-        ts_reader = ERATs(ts_path)
+        ts_reader = ERATs(str(ts_path))
         ts = ts_reader.read(15, 48)
         assert 99 not in ts['swvl1'].values  # verify ERA5-T was NOT used!
         swvl1_values_should = np.array([0.402825], dtype=np.float32)
@@ -77,16 +77,16 @@ def test_cli_reshuffle_and_update():
         ts_reader.close()
 
         # Manipulate settings to update with different time stamp for same day
-        props = read_summary_yml(ts_path)
+        props = read_summary_yml(str(ts_path))
         props['img2ts_kwargs']['h_steps'] = [12]
-        props['img2ts_kwargs']['startdate'] = datetime(2009,12,31)
-        props['img2ts_kwargs']['enddate'] = datetime(2009,12,31)
+        props['img2ts_kwargs']['startdate'] = datetime(2009, 12, 31)
+        props['img2ts_kwargs']['enddate'] = datetime(2009, 12, 31)
 
         with open(ts_path / 'overview.yml', 'w') as f:
             yaml.dump(props, f, default_flow_style=False, sort_keys=False)
 
-        subprocess.call(["era5", "update_ts", ts_path])
-        ts_reader = ERATs(ts_path)
+        subprocess.call(["era5", "update_ts", str(ts_path)])
+        ts_reader = ERATs(str(ts_path))
         ts = ts_reader.read(15, 48)
         swvl1_values_should = np.array([0.402825, 0.390983], dtype=np.float32)
         nptest.assert_allclose(
