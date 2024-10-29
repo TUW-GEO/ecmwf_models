@@ -309,8 +309,20 @@ def cli_update_img(path, cds_token=None):
     "data into a time series format.")
 @click.argument("IMG_PATH", type=click.Path(readable=True))
 @click.argument("TS_PATH", type=click.Path(writable=True))
-@click.argument("START", type=click.STRING)
-@click.argument("END", type=click.STRING)
+@click.option(
+    '--start',
+    '-s',
+    type=click.STRING,
+    default=None,
+    help="First date of the period to reshuffle data for. By default, the "
+         "first available image is used. Format: YYYY-MM-DD")
+@click.option(
+    '--end',
+    '-e',
+    type=click.STRING,
+    default=None,
+    help="Last date of the period to reshuffle data for. By default, the last"
+         "available image is used. Format: YYYY-MM-DD")
 @click.option(
     '--variables',
     '-v',
@@ -367,12 +379,6 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
           annual folders are found.
     > TS_PATH: string (required)
           Root of local filesystem where the time series should be stored.
-    > START: string (required)
-          Date of the first image to include in the conversion.
-          Format: YYYY-MM-DD
-    > END: string (required)
-          Date of the last image to include in the conversion.
-          Format: YYYY-MM-DD
     """
 
     h_steps = [int(h.strip()) for h in h_steps.split(',')]
@@ -380,7 +386,9 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
     if variables is not None:
         variables = [str(v.strip()) for v in variables.split(',')]
 
-    print(f"Converting ERA5/ERA5-Land images in period {start} to {end} into "
+    print(f"Converting ERA5/ERA5-Land images in period from "
+          f"{'first available image' if start is None else start} to "
+          f"{'last available image' if end is None else end} into "
           f"time series to {ts_path}.")
 
     img2ts(

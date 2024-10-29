@@ -66,7 +66,7 @@ def extend_ts(ts_path, **img2ts_kwargs):
 def img2ts(
         input_root,
         outputpath,
-        startdate,
+        startdate=None,
         enddate=None,
         variables=None,
         product=None,
@@ -117,11 +117,14 @@ def img2ts(
         be chosen according to the available amount of memory and the size of
         a single image.
     """
-    startdate = pd.to_datetime(startdate).to_pydatetime().date()
+    if startdate is None:
+        startdate = get_first_last_image_date(input_root,
+                                              start_from_last=False)
 
     if enddate is None:
-        enddate = get_first_last_image_date(input_root)
+        enddate = get_first_last_image_date(input_root, start_from_last=True)
 
+    startdate = pd.to_datetime(startdate).to_pydatetime().date()
     enddate = pd.to_datetime(enddate).to_pydatetime().date()
 
     if startdate > enddate:

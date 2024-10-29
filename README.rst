@@ -96,10 +96,37 @@ At the moment this package supports
 - **ERA5**
 - **ERA5-Land**
 
-reanalysis data in **grib** and **netcdf** format (download, reading, time series creation) with a default spatial
-sampling of 0.25 degrees (ERA5), and 0.1 degrees (ERA5-Land).
-It should be easy to extend the package to support other ECMWF reanalysis products.
-This will be done as need arises.
+reanalysis data in **grib** and **netcdf** format (download, reading, time
+series creation) with a default spatial sampling of 0.25 degrees (ERA5),
+and 0.1 degrees (ERA5-Land).
+It should be easy to extend the package to support other ECMWF reanalysis
+products. This will be done as need arises.
+
+Docker image
+============
+
+We provide a docker image for this package. This contains all
+pre-installed dependencies and can simply be pulled via
+
+.. code-block:: shell
+
+    $ docker pull ghcr.io/tuw-geo/ecmwf_models:latest
+
+Alternatively, to build the image locally using the Dockerfile, call
+
+.. code-block:: shell
+
+    $ docker build ecmwf_models:latest . 2>&1 | tee docker_build.log
+
+Afterwards, you can execute the ``era5`` and ``era5land`` commands directly in
+the container (after mounting some volumes to write data to).
+The easiest way to set the API credentials in this case is via the environment
+variable or the ``--cds_token`` option.
+
+.. code-block:: shell
+
+    $ docker run -v /data/era5/img:/container/path ecmwf_models:latest bash -c \
+       'era5land update_img /container/path --cds_token xxxx-xxx-xxx-xx-xxxx'
 
 Citation
 ========

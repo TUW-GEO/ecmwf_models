@@ -45,3 +45,4 @@ MANIFEST
 src/ecmwf_models/bin/*
 */local_scripts/*
 .artifacts
+docker_build.log
