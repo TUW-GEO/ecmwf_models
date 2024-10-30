@@ -4,6 +4,10 @@ Changelog
 
 Unreleased changes in master branch
 ===================================
+-
+
+Version 0.10.0
+==============
 - ERA-Interim support removed
 - Package refactored (globals and utils modules added)
 - Refactored command line interface (separate ``era5`` and ``era5land`` commands)
