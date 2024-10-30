@@ -44,8 +44,8 @@ as well as the ``ecmwf_models`` package itself.
 Quickstart
 ==========
 
-Download image data from CDS using the ``era5 download`` and ``era5land download``
-shell command (see ``era5 download --help`` for all options) ...
+Download image data from CDS (`set up API <https://cds.climate.copernicus.eu/how-to-api>`_ first) using the ``era5 download`` and ``era5land download``
+console command (see ``era5 download --help`` for all options) ...
 
 .. code-block:: shell
 
@@ -55,7 +55,7 @@ shell command (see ``era5 download --help`` for all options) ...
 
 .. code-block:: shell
 
-    era5land reshuffle /tmp/era5/img /tmp/era5/ts 2024-04-01 2024-04-05 --land_points True
+    era5land reshuffle /tmp/era5/img /tmp/era5/ts -s 2024-04-01 -e 2024-04-05 --land_points True
 
 Finally, in python, read the time series data for a location as a pandas
 DataFrame.
