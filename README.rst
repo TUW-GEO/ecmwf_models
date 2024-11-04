@@ -112,23 +112,24 @@ pre-installed dependencies and can simply be pulled via
 
     $ docker pull ghcr.io/tuw-geo/ecmwf_models:latest
 
-Alternatively, to build the image locally using the Dockerfile, call
+Alternatively, to build the image locally using the provided Dockerfile, call
+from the package root
 
 .. code-block:: shell
 
-    $ docker build ecmwf_models:latest . 2>&1 | tee docker_build.log
+    $ docker buildx build -t ecmwf_models:latest . 2>&1 | tee docker_build.log
 
 Afterwards, you can execute the ``era5`` and ``era5land`` commands directly in
 the container (after mounting some volumes to write data to).
-The easiest way to set the API credentials in this case is via the environment
-variable or the ``--cds_token`` option.
+The easiest way to set the API credentials in this case is via the
+``CDSAPI_KEY`` container variable or the ``--cds_token`` option as below.
 
 .. code-block:: shell
 
     $ docker run -v /data/era5/img:/container/path ecmwf_models:latest bash -c \
        'era5land update_img /container/path --cds_token xxxx-xxx-xxx-xx-xxxx'
 
-You can use this together with a task scheduler to regularly pull new data
+You can use this together with a task scheduler to regularly pull new data.
 
 Citation
 ========
