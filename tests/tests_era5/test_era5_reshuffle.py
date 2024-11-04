@@ -38,7 +38,7 @@ from datetime import datetime
 
 from c3s_sm.misc import read_summary_yml
 
-from ecmwf_models.era5.reshuffle import img2ts
+from ecmwf_models.era5.reshuffle import Reshuffler
 from ecmwf_models import ERATs
 
 inpath = os.path.join(
@@ -107,9 +107,11 @@ def test_ERA5_reshuffle_nc():
     bbox = (12, 46, 17, 50)
 
     with tempfile.TemporaryDirectory() as ts_path:
-        img2ts(os.path.join(inpath, 'netcdf'), ts_path, startdate, enddate,
-               variables=parameters, h_steps=h_steps, land_points=landpoints,
-               bbox=bbox)
+        reshuffler = Reshuffler(os.path.join(inpath, 'netcdf'), ts_path,
+                                variables=parameters, h_steps=h_steps,
+                                land_points=landpoints)
+        reshuffler.reshuffle(startdate, enddate, bbox=bbox)
+
         assert (len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5)
         # less files because only land points and bbox
         ds = ERATs(ts_path, ioclass_kws={"read_bulk": True})
@@ -126,7 +128,6 @@ def test_ERA5_reshuffle_nc():
 def test_ERA5_reshuffle_grb():
     # test reshuffling era5 netcdf images to time series
 
-
     startdate = "2010-01-01"
     enddate = "2010-01-01"
     parameters = ["swvl1", "swvl2"]
@@ -136,9 +137,10 @@ def test_ERA5_reshuffle_grb():
 
     with tempfile.TemporaryDirectory() as ts_path:
 
-        img2ts(os.path.join(inpath, 'grib'), ts_path, startdate, enddate,
-               variables=parameters,
-               h_steps=h_steps, land_points=landpoints, bbox=bbox)
+        reshuffler = Reshuffler(os.path.join(inpath, 'grib'), ts_path,
+                                variables=parameters, h_steps=h_steps,
+                                land_points=landpoints)
+        reshuffler.reshuffle(startdate, enddate, bbox=bbox)
 
         assert len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5
         ds = ERATs(ts_path, ioclass_kws={"read_bulk": True})

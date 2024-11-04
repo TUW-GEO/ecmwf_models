@@ -11,6 +11,22 @@ from ecmwf_models.grid import (
 import numpy as np
 
 
+def test_global_subset():
+    grid1 = ERA_RegularImgGrid(0.25)
+    grid2 = ERA_RegularImgGrid(0.25, (-180, -90, 180, 90))
+    np.testing.assert_array_equal(grid1.activegpis, grid2.activegpis)
+    assert grid1 == grid2
+
+    grid1 = ERA5_RegularImgLandGrid(0.25)
+    grid2 = ERA5_RegularImgLandGrid(0.25, (-180, -90, 180, 90))
+    np.testing.assert_array_equal(grid1.activegpis, grid2.activegpis)
+    assert grid1 == grid2
+
+    grid1 = ERA5_RegularImgLandGrid(0.25)
+    grid2 = ERA5_RegularImgLandGrid(0.25, (-10, 60, 30, 90))
+    assert grid1 != grid2
+
+
 def test_ERA_regular_grid():
     reg_grid = ERA_RegularImgGrid(0.3)
     assert np.unique(reg_grid.activearrlat).size == 601

@@ -171,8 +171,14 @@ def ERA_RegularImgGrid(
     grid = grid.to_cell_grid(cellsize=5.0)
 
     if bbox is not None:
+        # could be simpler if pygeogrids kept the gpi order...
         subgpis = grid.get_bbox_grid_points(
             latmin=bbox[1], latmax=bbox[3], lonmin=bbox[0], lonmax=bbox[2])
-        grid = grid.subgrid_from_gpis(subgpis)
+        sel = np.where(np.isin(grid.activegpis, subgpis))
+        subgpis = grid.activegpis[sel]
+        sublats, sublons = grid.activearrlat[sel], grid.activearrlon[sel]
+        shape = (np.unique(sublats).size, np.unique(sublons).size)
+        grid = CellGrid(sublons, sublats, grid.gpi2cell(subgpis), subgpis,
+                        shape=shape)
 
     return grid

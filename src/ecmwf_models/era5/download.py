@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from c3s_sm.misc import read_summary_yml
+
 from repurpose.process import parallel_process
 from repurpose.misc import delete_empty_directories
 
@@ -96,6 +97,7 @@ def download_era5(
     variables,
     target,
     grb=False,
+    bbox=None,
     product="era5",
     dry_run=False,
     cds_kwds={},
@@ -123,6 +125,10 @@ def download_era5(
         File name, where the data is stored.
     grb : bool, optional (default: False)
         Download data in grib format instead of netcdf
+    bbox: Tuple[int,int,int,int], optional (default: None)
+        Bounding box of the area to download
+        (min_lon, min_lat, max_lon, max_lat) - wgs84.
+        None will download global images.
     product : str
         ERA5 data product to download, either era5 or era5-land
     dry_run: bool, optional (default: False)
@@ -149,6 +155,9 @@ def download_era5(
         "day": [str(d).zfill(2) for d in days],
         "time": [time(h, 0).strftime("%H:%M") for h in h_steps],
     }
+
+    if bbox is not None:   # maxlat, minlon, minlat, maxlon
+        request["area"] = [bbox[3], bbox[0], bbox[1], bbox[2]]
 
     request.update(cds_kwds)
     if product == "era5":
@@ -197,6 +206,7 @@ def download_and_move(
     keep_original=False,
     h_steps=(0, 6, 12, 18),
     grb=False,
+    bbox=None,
     dry_run=False,
     grid=None,
     remap_method="bil",
@@ -237,6 +247,10 @@ def download_and_move(
         Download data as grib files instead of netcdf.
         Note that downloading in grib format, does not allow on-the-fly
         resampling (`grid` argument)
+    bbox: Tuple[int,int,int,int], optional (default: None)
+        Bounding box of the area to download
+        (min_lon, min_lat, max_lon, max_lat) - wgs84.
+        None will download global images.
     dry_run: bool
         Do not download anything, this is just used for testing the functions
     grid : dict, optional (default: None)
@@ -366,6 +380,7 @@ def download_and_move(
                     h_steps=h_steps,
                     variables=variables,
                     grb=grb,
+                    bbox=bbox,
                     product=product,
                     target=dl_file,
                     dry_run=dry_run,
@@ -440,6 +455,7 @@ def download_and_move(
         'keep_original': keep_original,
         'h_steps': h_steps,
         'grb': grb,
+        'bbox': bbox,
         'grid': grid,
         'remap_method': remap_method,
         'cds_kwds': cds_kwds,

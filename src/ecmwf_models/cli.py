@@ -1,10 +1,11 @@
 import click
 from datetime import datetime
 
-from ecmwf_models.era5.download import download_and_move, download_record_extension
+from ecmwf_models.era5.download import (download_and_move,
+                                        download_record_extension)
 from ecmwf_models.utils import (default_variables)
 
-from ecmwf_models.era5.reshuffle import img2ts, extend_ts
+from ecmwf_models.era5.reshuffle import Reshuffler, extend_ts
 
 
 @click.command(
@@ -66,6 +67,14 @@ from ecmwf_models.era5.reshuffle import img2ts, extend_ts
     "By default, we download 6-hourly images starting at 0:00 UTC, "
     "(i.e. `--h_steps 0,6,12,18`")
 @click.option(
+    '--bbox',
+    nargs=4,
+    type=click.FLOAT,
+    default=None,
+    help="4 NUMBERS | min_lon min_lat max_lon max_lat. "
+    "Set Bounding Box (lower left and upper right corner) "
+    "of area to download (WGS84). Default is global.")
+@click.option(
     "--keep_prelim",
     type=click.BOOL,
     default=True,
@@ -94,7 +103,7 @@ from ecmwf_models.era5.reshuffle import img2ts, extend_ts
     "Alternatively, you can also set an environment variable "
     "`CDSAPI_KEY` with your token.")
 def cli_download_era5(path, start, end, variables, keep_original, as_grib,
-                      h_steps, keep_prelim, max_request_size, cds_token):
+                      h_steps, bbox, keep_prelim, max_request_size, cds_token):
     """
     Download ERA5 image data within the chosen period. NOTE: Before using this
     program, create a CDS account and set up a `.cdsapirc` file as described
@@ -122,6 +131,7 @@ def cli_download_era5(path, start, end, variables, keep_original, as_grib,
         variables=variables,
         h_steps=h_steps,
         grb=as_grib,
+        bbox=bbox,
         keep_original=keep_original,
         stepsize='month',
         n_max_request=max_request_size,
@@ -161,7 +171,8 @@ def cli_download_era5(path, start, end, variables, keep_original, as_grib,
     '--variables',
     '-v',
     type=click.STRING,
-    default=','.join(default_variables('era5-land', 'short_name')),
+    default=','.join(default_variables('era5-land',
+                                       'short_name')),
     help="Name of variables to download. To download multiple variables pass "
     "comma-separated names (e.g. `-v swvl1,stl1`). "
     "For all available variables see the docs. ")
@@ -391,18 +402,14 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
           f"{'last available image' if end is None else end} into "
           f"time series to {ts_path}.")
 
-    img2ts(
-        input_root=img_path,
-        outputpath=ts_path,
-        startdate=start,
-        enddate=end,
-        variables=variables,
-        bbox=bbox,
-        h_steps=h_steps,
-        land_points=land_points,
-        imgbuffer=imgbuffer,
-        product=None,  # Infer product automatically from files
-    )
+    reshuffler = Reshuffler(img_path, ts_path,
+                            variables=variables,
+                            h_steps=h_steps,
+                            land_points=land_points,
+                            product=None  # Infer prod automatically from files
+                            )
+    reshuffler.reshuffle(startdate=start, enddate=end, bbox=bbox,
+                         imgbuffer=imgbuffer)
 
 
 @click.command(
@@ -433,9 +440,9 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
 def cli_extend_ts(ts_path, imgpath, imgbuffer):
     """
     Append new image data to an existing time series archive. The archive must
-    be created first using the `reshuffle` program. We will use the same settings
-    as in the initial run (see `overview.yml` in TS_PATH) for consistent
-    extensions.
+    be created first using the `reshuffle` program. We will use the same
+    settings as in the initial run (see `overview.yml` in TS_PATH) for
+    consistent extensions.
 
     \b
     Required Parameters
