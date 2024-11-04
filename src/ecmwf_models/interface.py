@@ -61,9 +61,11 @@ class ERANcImg(ImageBase):
         'era5' or 'era5-land'
     parameter: list or str, optional (default: ['swvl1', 'swvl2'])
         Name of parameters to read from the image file.
-    subgrid: ERA_RegularImgGrid or ERA_RegularImgLandGrid, optional (default: None)
+    subgrid: ERA_RegularImgGrid or ERA_RegularImgLandGrid or None, optional
         Read only data for points of this grid.
         If None is passed, we read all points from the file.
+        The main purpose of this parameter is when reshuffling to time series,
+        to include only e.g. points over land.
     mask_seapoints : bool, optional (default: False)
         Read the land-sea mask to mask points over water and set them to nan.
         This option needs the 'lsm' parameter to be in the file!
@@ -241,6 +243,8 @@ class ERANcDs(MultiTemporalImageBase):
     subgrid: ERA_RegularImgGrid or ERA_RegularImgLandGrid, optional
         Read only data for points of this grid.
         If None is passed, we read all points from the file.
+        The main purpose of this parameter is when reshuffling to time series,
+        to include only e.g. points over land.
     mask_seapoints: bool, optional (default: False)
         All points that are not over land are replaced with NaN values.
         This requires that the land sea mask (lsm) parameter is included
