@@ -354,6 +354,7 @@ def get_first_last_image_date(path, start_from_last=True):
         props = img_infer_file_props(
             path, fntempl=IMG_FNAME_TEMPLATE, start_from_last=start_from_last)
         dt = datetime.strptime(props['datetime'], IMG_FNAME_DATETIME_FORMAT)
+        dt = datetime(dt.year, dt.month, dt.day)
     except ValueError:
         raise ValueError('Could not infer date from filenames. '
                          'Check filename template.')

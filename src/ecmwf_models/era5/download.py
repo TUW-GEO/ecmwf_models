@@ -147,7 +147,7 @@ def download_era5(
         return
 
     request = {
-        "format": "grib" if grb else "netcdf",
+        "data_format": "grib" if grb else "netcdf",
         "download_format": "unarchived",
         "variable": variables,
         "year": [str(y) for y in years],
@@ -155,6 +155,8 @@ def download_era5(
         "day": [str(d).zfill(2) for d in days],
         "time": [time(h, 0).strftime("%H:%M") for h in h_steps],
     }
+    # name changed at some point?
+    request['format'] = request['data_format']
 
     if bbox is not None:   # maxlat, minlon, minlat, maxlon
         request["area"] = [bbox[3], bbox[0], bbox[1], bbox[2]]
@@ -433,7 +435,9 @@ def download_and_move(
             'curr_end': [p[1] for p in req_periods]
         },
         logger_name='cdsapi',
-        loglevel='DEBUG')
+        loglevel='DEBUG',
+        n_proc=1,
+        backend='multiprocessing')
 
     # remove temporary files
     if not keep_original:
@@ -511,8 +515,11 @@ def download_record_extension(path, dry_run=False, cds_token=None):
 
     startdate = pd.to_datetime(last_img).to_pydatetime() + timedelta(days=1)
 
-    enddate = pd.to_datetime(datetime.now().date()).to_pydatetime() \
-              - timedelta(days=1)  # yesterday
+    enddate = (pd.to_datetime(datetime.now().date()).to_pydatetime()
+               - timedelta(days=1))  # yesterday
+
+    logging.info(f"Downloading record extension from {startdate} to {enddate}")
+    logging.info(f"Additional settings {props['download_settings']}")
 
     return download_and_move(
         path,
