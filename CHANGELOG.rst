@@ -6,6 +6,12 @@ Unreleased changes in master branch
 ===================================
 -
 
+Version 0.10.1
+==============
+- Option to download spatial subsets added
+- Reshuffling when some of the images in a period are missing (larger than imgbuffer) no longer leads to error (`#40 <https://github.com/TUW-GEO/ecmwf_models/issues/40>`_)
+- Repurpose to log warnings and errors only (`#40 <https://github.com/TUW-GEO/ecmwf_models/issues/40>`_)
+
 Version 0.10.0
 ==============
 - ERA-Interim support removed
