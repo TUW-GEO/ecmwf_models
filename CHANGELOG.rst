@@ -6,6 +6,10 @@ Unreleased changes in master branch
 ===================================
 -
 
+Version 0.10.2
+==============
+- Fixed a bug where reshuffle failed when global images were used without a custom bounding box specification
+
 Version 0.10.1
 ==============
 - Option to download spatial subsets added
