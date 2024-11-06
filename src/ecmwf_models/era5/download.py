@@ -155,8 +155,6 @@ def download_era5(
         "day": [str(d).zfill(2) for d in days],
         "time": [time(h, 0).strftime("%H:%M") for h in h_steps],
     }
-    # name changed at some point?
-    request['format'] = request['data_format']
 
     if bbox is not None:   # maxlat, minlon, minlat, maxlon
         request["area"] = [bbox[3], bbox[0], bbox[1], bbox[2]]
