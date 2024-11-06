@@ -179,8 +179,10 @@ class Reshuffler:
             # If a subset was downloaded, otherwise repurpose would resample
             input_dataset = self.get_img_reader(None, self.h_steps)
             _img = input_dataset.read(first_date_time)
-            bbox = [float(_img.lon.min()), float(_img.lat.min()),
-                    float(_img.lon.max()), float(_img.lat.max())]
+            bbox = [round(float(_img.lon.min()), 3),
+                    round(float(_img.lat.min()), 3),
+                    round(float(_img.lon.max()), 3),
+                    round(float(_img.lat.max()), 3)]
 
         grid = self.load_grid(bbox)
         input_dataset = self.get_img_reader(grid, self.h_steps)

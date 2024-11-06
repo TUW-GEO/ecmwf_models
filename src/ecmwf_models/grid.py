@@ -115,7 +115,9 @@ def ERA5_RegularImgLandGrid(
                 "land_definition_files",
                 f"landmask_{resolution}_{resolution}.nc",
             ))["land"]
+
         ds = ds.assign_coords({'longitude': trafo_lon(ds['longitude'].values)})
+
         if bbox is not None:
             ds = ds.sel(latitude=slice(bbox[3], bbox[1]))
             ds = ds.isel(
@@ -144,6 +146,7 @@ def ERA_RegularImgGrid(
     """
     Create regular cell grid for bounding box with the selected
     resolution.
+    GPI 0 is at Lon: 0, Lat: 90
 
     Parameters
     ----------
@@ -161,11 +164,11 @@ def ERA_RegularImgGrid(
         Regular, CellGrid with 5DEG*5DEG cells for the passed bounding box.
     """
     # to get precise coordinates...
-    lon = safe_arange(-180, 180, resolution)
+    lon = safe_arange(0.0, 360, resolution)
     lat = safe_arange(-90, 90 + resolution, resolution)[::-1]
 
     # ERA grid LLC point has Lon=0
-    lon = np.roll(lon, int(len(lon) * 0.5))
+    lon = trafo_lon(lon)
     grid = gridfromdims(lon, lat, origin='top')
 
     grid = grid.to_cell_grid(cellsize=5.0)
