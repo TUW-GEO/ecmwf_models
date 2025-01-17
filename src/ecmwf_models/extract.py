@@ -40,7 +40,8 @@ def unzip_nc(
     with tempfile.TemporaryDirectory() as tmpdir:
         with zipfile.ZipFile(input_zip, "r") as zip_ref:
             zip_ref.extractall(tmpdir)
-        ncfiles = [f for f in os.listdir(tmpdir) if f.endswith(".nc")]
+        ncfiles = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)
+                   if f.endswith(".nc")]
         if len(ncfiles) == 1:
             shutil.move(ncfiles[0], output_nc)
         else:
@@ -98,6 +99,8 @@ def save_ncs_from_nc(
         ext='nc')
 
     nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
+    if 'valid_time' in nc_in.dims:
+        nc_in = nc_in.rename_dims({"valid_time": 'time'})
     if 'valid_time' in nc_in.variables:
         nc_in = nc_in.rename_vars({"valid_time": 'time'})
 
@@ -118,7 +121,7 @@ def save_ncs_from_nc(
 
         # Expver identifies preliminary data
         if 'expver' in subset:
-            expver = str(subset['expver'].values[i])
+            expver = str(np.atleast_1d(subset['expver'].values)[i])
             subset = subset.drop_vars('expver')
             try:
                 ext = EXPVER[expver]

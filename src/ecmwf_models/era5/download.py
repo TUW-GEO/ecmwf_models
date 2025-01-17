@@ -368,7 +368,7 @@ def download_and_move(
         fname = "{start}_{end}.{ext}".format(
             start=curr_start.strftime("%Y%m%d"),
             end=curr_end.strftime("%Y%m%d"),
-            ext="zip")
+            ext="zip" if grb is False else "grb")
 
         dl_file = os.path.join(downloaded_data_path, fname)
 
