@@ -24,7 +24,11 @@ from ecmwf_models.utils import (
     check_api_ready,
     get_first_last_image_date
 )
-from ecmwf_models.extract import save_ncs_from_nc, save_gribs_from_grib
+from ecmwf_models.extract import (
+    save_ncs_from_nc,
+    save_gribs_from_grib,
+    unzip_nc,
+)
 
 
 def split_chunk(timestamps,
@@ -148,7 +152,7 @@ def download_era5(
 
     request = {
         "data_format": "grib" if grb else "netcdf",
-        "download_format": "unarchived",
+        "download_format": "zip",
         "variable": variables,
         "year": [str(y) for y in years],
         "month": [str(m).zfill(2) for m in months],
@@ -364,7 +368,7 @@ def download_and_move(
         fname = "{start}_{end}.{ext}".format(
             start=curr_start.strftime("%Y%m%d"),
             end=curr_end.strftime("%Y%m%d"),
-            ext="grb" if grb else "nc")
+            ext="zip")
 
         dl_file = os.path.join(downloaded_data_path, fname)
 
@@ -412,6 +416,11 @@ def download_and_move(
                     keep_original=keep_original,
                     keep_prelim=keep_prelim)
             else:
+                # Extract and merge nc files from zip
+                dl_file_new = dl_file.replace('.zip', '.nc')
+                unzip_nc(dl_file, dl_file_new)
+                dl_file = dl_file_new
+
                 save_ncs_from_nc(
                     dl_file,
                     target_path,
@@ -525,4 +534,5 @@ def download_record_extension(path, dry_run=False, cds_token=None):
         enddate=enddate,
         cds_token=cds_token,
         dry_run=dry_run,
-        **props['download_settings'])
+        **props['download_settings']
+    )

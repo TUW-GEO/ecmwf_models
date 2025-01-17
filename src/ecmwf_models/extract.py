@@ -1,9 +1,13 @@
+import tempfile
 from datetime import datetime
 import logging
 import os
 import pandas as pd
 import xarray as xr
 from datedown.fname_creator import create_dt_fpath
+import zipfile
+import shutil
+import numpy as np
 
 from ecmwf_models.globals import (IMG_FNAME_TEMPLATE,
                                   IMG_FNAME_DATETIME_FORMAT, EXPVER, SUBDIRS)
@@ -15,6 +19,48 @@ from ecmwf_models.globals import (
     pygrib_available,
     PygribNotFoundError,
 )
+
+
+def unzip_nc(
+        input_zip,
+        output_nc,
+):
+    """
+    Unzip and merge all netcdf files downloaded from CDS. If the zip file
+    contains only 1 netcdf file, it only be extracted.
+
+    Parameters
+    ----------
+    input_zip: str
+        Path to the downloaded zip file containing one or more (datastream)
+        netcdf files.
+    output_nc: str
+        Path to the netcdf file to write
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with zipfile.ZipFile(input_zip, "r") as zip_ref:
+            zip_ref.extractall(tmpdir)
+        ncfiles = [f for f in os.listdir(tmpdir) if f.endswith(".nc")]
+        if len(ncfiles) == 1:
+            shutil.move(ncfiles[0], output_nc)
+        else:
+            # Sometimes CDS returns multiple netcdf files, merge them
+            ds = [xr.open_dataset(os.path.join(tmpdir, f)) for f in ncfiles]
+            expvers = []
+            for d in ds:
+                if 'expver' in d.coords:
+                    expvers.append(d.coords['expver'].values.astype(int))
+            if len(expvers) > 0:
+                expvers = np.array(expvers).max(axis=0)
+                for d in ds:
+                    d.coords['expver'] = np.array([f"{e:04}" for e in expvers])
+
+            ds = xr.combine_by_coords(ds, combine_attrs="override",
+                                      compat='override')
+            ds.to_netcdf(output_nc, encoding={
+                v: {'zlib': True, 'complevel': 6} for v in ds.data_vars})
+
+    os.remove(input_zip)
 
 
 def save_ncs_from_nc(
@@ -67,12 +113,12 @@ def save_ncs_from_nc(
                 for k, v in grid.items():
                     f.write(f"{k} = {v}\n")
 
-    for time in nc_in["time"].values:
+    for i, time in enumerate(nc_in["time"].values):
         subset = nc_in.sel({"time": time})
 
         # Expver identifies preliminary data
         if 'expver' in subset:
-            expver = str(subset['expver'].values)
+            expver = str(subset['expver'].values[i])
             subset = subset.drop_vars('expver')
             try:
                 ext = EXPVER[expver]

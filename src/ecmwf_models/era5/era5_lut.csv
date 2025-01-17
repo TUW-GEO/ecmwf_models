@@ -23,7 +23,7 @@ convective_inhibition,Convective inhibition,cin,0
 convective_precipitation,Convective precipitation,cp,0
 convective_rain_rate,Convective rain rate,crr,0
 convective_snowfall,Convective snowfall,csf,0
-convective_snowfall_rate_water_equivalent,Convective snowfall rate water equivalent,csfr,1
+convective_snowfall_rate_water_equivalent,Convective snowfall rate water equivalent,csfr,0
 downward_uv_radiation_at_the_surface,Downward UV radiation at the surface,uvb,0
 duct_base_height,Duct base height,dctb,0
 eastward_gravity_wave_surface_stress,Eastward gravity wave surface stress,lgws,0
@@ -63,7 +63,7 @@ large_scale_precipitation,Large-scale precipitation,lsp,0
 large_scale_precipitation_fraction,Large-scale precipitation fraction,lspf,0
 large_scale_rain_rate,Large scale rain rate,lsrr,0
 large_scale_snowfall,Large-scale snowfall,lsf,0
-large_scale_snowfall_rate_water_equivalent,Large scale snowfall rate water equivalent,lssfr,1
+large_scale_snowfall_rate_water_equivalent,Large scale snowfall rate water equivalent,lssfr,0
 leaf_area_index_high_vegetation,"Leaf area index, high vegetation",lai_hv,0
 leaf_area_index_low_vegetation,"Leaf area index, low vegetation",lai_lv,0
 low_cloud_cover,Low cloud cover,lcc,0
