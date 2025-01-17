@@ -4,7 +4,8 @@ Changelog
 
 Unreleased changes in master branch
 ===================================
--
+- Fixed a bug where CDS returned a zip file when downloading data from multiple
+  streams while the package expected a netcdf file.
 
 Version 0.10.2
 ==============
