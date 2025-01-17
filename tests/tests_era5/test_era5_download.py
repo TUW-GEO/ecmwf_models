@@ -30,6 +30,7 @@ import numpy as np
 import xarray as xr
 import pytest
 import tempfile
+import zipfile
 
 from c3s_sm.misc import read_summary_yml
 
@@ -60,7 +61,9 @@ def test_download_with_cdo_not_installed():
                 "ecmwf_models-test-data", "download",
                 "era5_example_downloaded_raw.nc")
             save_ncs_from_nc(
-                infile, out_path, 'ERA5', grid=grid, keep_original=True)
+                infile, out_path, 'ERA5', grid=grid,
+                keep_original=True)
+
 
 def test_dry_download_nc_era5():
     with tempfile.TemporaryDirectory() as dl_path:
@@ -72,8 +75,14 @@ def test_dry_download_nc_era5():
             os.path.dirname(os.path.abspath(__file__)), '..',
             "ecmwf_models-test-data", "download",
             "era5_example_downloaded_raw.nc")
-        trgt = os.path.join(dl_path, 'temp_downloaded', '20100101_20100101.nc')
-        shutil.copyfile(thefile, trgt)
+
+        assert os.path.exists(thefile)
+
+        trgt = os.path.join(dl_path, "temp_downloaded",
+                            "20100101_20100101.zip")
+        with zipfile.ZipFile(trgt, 'w') as zip:
+            # Add the file to the ZIP archive
+            zip.write(thefile, arcname="20100101_20100101.nc")
 
         assert os.path.isfile(trgt)
 
@@ -176,9 +185,16 @@ def test_download_nc_era5_regridding():
             os.path.dirname(os.path.abspath(__file__)), '..',
             "ecmwf_models-test-data", "download",
             "era5_example_downloaded_raw.nc")
-        shutil.copyfile(
-            thefile,
-            os.path.join(dl_path, 'temp_downloaded', '20100101_20100101.nc'))
+
+        assert os.path.exists(thefile)
+
+        trgt = os.path.join(dl_path, "temp_downloaded",
+                            "20100101_20100101.zip")
+        with zipfile.ZipFile(trgt, 'w') as zip:
+            # Add the file to the ZIP archive
+            zip.write(thefile, arcname="20100101_20100101.nc")
+
+        assert os.path.isfile(trgt)
 
         startdate = enddate = datetime(2010, 1, 1)
 
