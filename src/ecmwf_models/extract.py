@@ -121,7 +121,11 @@ def save_ncs_from_nc(
 
         # Expver identifies preliminary data
         if 'expver' in subset:
-            expver = str(np.atleast_1d(subset['expver'].values)[i])
+            ex = np.atleast_1d(subset['expver'].values)
+            if len(ex) == 1:
+                expver = str(ex[0])
+            else:
+                expver = str(ex[i])
             subset = subset.drop_vars('expver')
             try:
                 ext = EXPVER[expver]
