@@ -65,7 +65,7 @@ jobs:
         run: |
           if [ ${{ matrix.os }} == "windows-latest" ]
           then
-            conda install -c conda-forge -c defaults pygrib # netcdf4 pyresample pykdtree
+            conda install -c conda-forge -c defaults pygrib netcdf4 pyresample pykdtree
           fi
           pip install -e .[testing]
       - name: Run all tests
