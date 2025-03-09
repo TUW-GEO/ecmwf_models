@@ -27,22 +27,27 @@ Works great in combination with `pytesmo <https://github.com/TUW-GEO/pytesmo>`_.
 Installation
 ============
 
-Install required C-libraries via conda. For installation we recommend
-`Miniconda <http://conda.pydata.org/miniconda.html>`_:
+This package has been tested on Linux, Windows and macOS for
+python ``3.10``, ``3.11``, and ``3.12``.
+Ideally you should use one of the supported python versions (the package might
+should still work for older python versions).
 
-.. code::
-
-    conda install -c conda-forge pygrib netcdf4 pyresample pykdtree
-
-Afterwards the following command will install all remaining python dependencies
-as well as the ``ecmwf_models`` package itself.
+Use ``pip`` to install all required python dependencies
+as well as the ``ecmwf_models`` package from `pypi <https://pypi.org/project/ecmwf-models/>`_.
 
 .. code::
 
     pip install ecmwf_models
 
-Quickstart
-==========
+On Windows systems, it might be necessary to install required C-libraries via conda.
+For installation we recommend `Miniconda <http://conda.pydata.org/miniconda.html>`_:
+
+.. code::
+
+    conda install -c conda-forge pygrib netcdf4 pyresample pykdtree
+
+Quick Start
+===========
 
 Download image data from CDS (`set up API <https://cds.climate.copernicus.eu/how-to-api>`_ first) using the ``era5 download`` and ``era5land download``
 console command (see ``era5 download --help`` for all options) ...

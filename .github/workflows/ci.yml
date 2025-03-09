@@ -21,8 +21,19 @@ jobs:
   build:
     strategy:
       matrix:
-        python-version: ['3.9', '3.12']
-        os: [ "ubuntu-latest" , "windows-latest", "macos-latest"]
+        include:
+          - os: "ubuntu-latest"
+            python-version: '3.10'  # first supported
+          - os: "windows-latest"
+            python-version: '3.10'  # first supported
+          - os: "macos-latest"
+            python-version: '3.10'  # first supported
+          - os: "ubuntu-latest"
+            python-version: '3.12'  # latest supported
+          - os: "windows-latest"
+            python-version: '3.12'  # latest supported
+          - os: "macos-latest"
+            python-version: '3.12'  # latest supported
     name: Py${{ matrix.python-version }}@${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -52,7 +63,10 @@ jobs:
       - name: Install dependencies and package
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge pygrib netcdf4 pyresample pykdtree
+          if [ ${{ matrix.os }} == "windows-latest" ]
+          then
+            conda install -c conda-forge -c defaults pygrib # netcdf4 pyresample pykdtree
+          fi
           pip install -e .[testing]
       - name: Run all tests
         env:
