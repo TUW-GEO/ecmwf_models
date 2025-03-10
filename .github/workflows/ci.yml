@@ -63,10 +63,7 @@ jobs:
       - name: Install dependencies and package
         shell: bash -l {0}
         run: |
-          if [ ${{ matrix.os }} == "windows-latest" ]
-          then
-            conda install -c conda-forge -c defaults pygrib netcdf4 pyresample pykdtree
-          fi
+          conda install -c conda-forge -c defaults pygrib netcdf4 pyresample pykdtree
           pip install -e .[testing]
       - name: Run all tests
         env:

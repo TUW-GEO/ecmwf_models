@@ -30,7 +30,7 @@ Installation
 This package has been tested on Linux, Windows and macOS for
 python ``3.10``, ``3.11``, and ``3.12``.
 Ideally you should use one of the supported python versions (the package might
-should still work for older python versions).
+still work for older python versions).
 
 Use ``pip`` to install all required python dependencies
 as well as the ``ecmwf_models`` package from `pypi <https://pypi.org/project/ecmwf-models/>`_.
