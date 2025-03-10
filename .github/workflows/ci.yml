@@ -63,7 +63,7 @@ jobs:
       - name: Install dependencies and package
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge -c defaults pygrib netcdf4 pyresample pykdtree
+          conda install -c conda-forge pygrib netcdf4 pyresample pykdtree
           pip install -e .[testing]
       - name: Run all tests
         env:
