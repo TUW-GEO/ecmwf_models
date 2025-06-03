@@ -86,7 +86,6 @@ jobs:
             # build dist on linux
             python -m build --outdir artifacts/dist
           fi
-          pip install wheel
           python setup.py bdist_wheel --dist-dir artifacts/dist
           ls artifacts/dist
           twine check artifacts/dist/*
