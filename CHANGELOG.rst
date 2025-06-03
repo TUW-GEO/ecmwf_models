@@ -9,6 +9,7 @@ Unreleased changes in master branch
 Version 0.10.4
 ==============
 - Pyscaffold updated
+- datedown removed
 
 Version 0.10.3
 ==============
