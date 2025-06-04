@@ -16,6 +16,7 @@ WORKDIR /app
 COPY . /app
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
+ARG PIP_USE_PEP517=1
 
 RUN micromamba install -y -n base -c conda-forge python=3.12 pygrib netcdf4 pyresample pykdtree
 RUN pip install /app/.
