@@ -4,7 +4,6 @@ import logging
 import os
 import pandas as pd
 import xarray as xr
-from datedown.fname_creator import create_dt_fpath
 import zipfile
 import shutil
 import numpy as np
@@ -19,6 +18,40 @@ from ecmwf_models.globals import (
     pygrib_available,
     PygribNotFoundError,
 )
+
+
+def create_dt_fpath(dt, root, fname, subdirs=[]):
+    """
+    Create filepaths from root + fname and a list of subdirectories.
+    fname and subdirs will be put through dt.strftime.
+
+    Parameters
+    ----------
+    dt: datetime.datetime
+        date as basis for the URL
+    root: string
+        root of the filenpath
+    fname: string
+        filename to use
+    subdirs: list, optional
+        list of strings.
+        Each element represents a subdirectory.
+        For example the list ['%Y', '%m'] would lead to a URL of
+        ``root/YYYY/MM/fname`` or for a dt of datetime(2000,12,31)
+        ``root/2000/12/fname``
+
+    Returns
+    -------
+    fpath: string
+        Full filename including path
+    """
+    dt_subdirs = []
+    for subdir in subdirs:
+        dt_subdirs.append(dt.strftime(subdir))
+    dt_fname = dt.strftime(fname)
+    flist = [root] + dt_subdirs + [dt_fname]
+    fpath = os.path.join(*flist)
+    return fpath
 
 
 def unzip_nc(

@@ -1,8 +1,100 @@
 [build-system]
 # AVOID CHANGING REQUIRES: IT WILL BE UPDATED BY PYSCAFFOLD!
-requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5", "wheel"]
+requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5", "wheel", "packaging", "build", "twine"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-# See configuration details in https://github.com/pypa/setuptools_scm
 version_scheme = "no-guess-dev"
+
+[project]
+name = "ecmwf_models"
+description = "Downloading, reading and TS conversion of ECMWF reanalysis data"
+readme = "README.rst"
+requires-python = ">=3.6"
+license = { text = "mit" }
+authors = [
+  { name = "TU Wien", email = "support@qa4sm.eu" }
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+keywords = []
+dependencies = [
+  'importlib-metadata; python_version<"3.8"',
+  "numpy>=2",
+  "pandas",
+  "netcdf4",
+  "click",
+  "parse",
+  "pygrib",
+  "xarray",
+  "c3s_sm>=0.3.1",
+  "cdsapi>=0.7.3",
+  "repurpose>=0.13",
+  "pygeogrids"
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/TUW-GEO/ecmwf_models/"
+Documentation = "https://ecmwf-models.readthedocs.io/en/latest/"
+
+[project.optional-dependencies]
+testing = [
+  "pytest-cov",
+  "coverage",
+  "pytest"
+]
+building = [
+    "setuptools>=46.1.0",
+    "setuptools_scm[toml]>=5",
+    "wheel",
+    "packaging",
+    "build",
+    "twine"
+]
+docs = [
+  "sphinx>=3.2.1,<7",
+  "sphinx_rtd_theme",
+  "mock",
+  "pillow",
+  "recommonmark",
+  "readthedocs-sphinx-ext",
+  "myst_parser",
+  "nbsphinx"
+]
+
+[project.scripts]
+era5 = "ecmwf_models.cli:era5"
+era5land = "ecmwf_models.cli:era5land"
+
+[tool.setuptools]
+packages = { find = { where = ["src"], exclude = ["tests"] } }
+include-package-data = true
+zip-safe = false
+package-dir = { "" = "src" }
+
+[tool.pytest.ini_options]
+addopts = "--cov ecmwf_models --cov-report term-missing --verbose"
+norecursedirs = ["dist", "build", ".tox"]
+testpaths = ["tests"]
+
+[tool.flake8]
+exclude = [
+  ".tox",
+  "build",
+  "dist",
+  ".eggs",
+  "docs/conf.py"
+]
+
+[tool.yapf]
+based_on_style = "yapf"
+indent_width = 4
+column_limit = 79
+
+[tool.pyscaffold]
+version = "4.6"
+package = "ecmwf_models"
+extensions = ["no_skeleton"]
