@@ -86,6 +86,7 @@ def get_grid_resolution(lats: np.ndarray, lons: np.ndarray) -> (float, float):
 def ERA5_RegularImgLandGrid(
     resolution: float = 0.25,
     bbox: Tuple[float, float, float, float] = None,
+    cellsize: float = 5.,
 ) -> CellGrid:
     """
     Uses the 0.25 DEG ERA5 land mask to create a land grid of the same size,
@@ -99,6 +100,8 @@ def ERA5_RegularImgLandGrid(
         WGS84 (min_lon, min_lat, max_lon, max_lat)
         Values must be between -180 to 180 and -90 to 90
         bbox to cut the global grid to
+    cellsize: float, optional (default: 5.)
+        Chunk size of the grid
 
     Returns
     -------
@@ -131,7 +134,7 @@ def ERA5_RegularImgLandGrid(
             "Land definition for this grid resolution not yet available. "
             "Please create and add it.")
 
-    full_grid = ERA_RegularImgGrid(resolution, bbox=bbox)
+    full_grid = ERA_RegularImgGrid(resolution, bbox=bbox, cellsize=cellsize)
 
     land_gpis = full_grid.get_grid_points()[0][land_mask.flatten()]
     land_grid = full_grid.subgrid_from_gpis(land_gpis)
@@ -142,6 +145,7 @@ def ERA5_RegularImgLandGrid(
 def ERA_RegularImgGrid(
     resolution: float = 0.25,
     bbox: Tuple[float, float, float, float] = None,
+    cellsize: float = 5.,
 ) -> CellGrid:
     """
     Create regular cell grid for bounding box with the selected
@@ -157,6 +161,8 @@ def ERA_RegularImgGrid(
         (min_lon, min_lat, max_lon, max_lat)
         wgs84 (Lon -180 to 180)
         bbox to cut the global grid to.
+    cellsize: float, optional (default: 5.)
+        Cell chunking of the grid
 
     Returns
     ----------
@@ -171,7 +177,7 @@ def ERA_RegularImgGrid(
     lon = trafo_lon(lon)
     grid = gridfromdims(lon, lat, origin='top')
 
-    grid = grid.to_cell_grid(cellsize=5.0)
+    grid = grid.to_cell_grid(cellsize=cellsize)
 
     if bbox is not None:
         # could be simpler if pygeogrids kept the gpi order...

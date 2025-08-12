@@ -369,6 +369,13 @@ def cli_update_img(path, cds_token=None):
     "0:00 and 12:00 UTC and ignore all other available time stamps."
     "By default, we include data for every 6th hour each day.")
 @click.option(
+    "--cellsize",
+    type=click.FLOAT,
+    default=5.0,
+    help="Chunking for the output time series. By default, we create 5x5 "
+         "degree time series files."
+)
+@click.option(
     '--imgbuffer',
     '-b',
     type=click.INT,
@@ -377,7 +384,7 @@ def cli_update_img(path, cds_token=None):
     "conversion to time series. A larger buffer means faster "
     "processing but requires more memory.")
 def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
-                  h_steps, imgbuffer):
+                  h_steps, cellsize, imgbuffer):
     """
     Convert previously downloaded ERA5 or ERA5-Land image data into a
     time series format.
@@ -409,7 +416,7 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
                             product=None  # Infer prod automatically from files
                             )
     reshuffler.reshuffle(startdate=start, enddate=end, bbox=bbox,
-                         imgbuffer=imgbuffer)
+                         cellsize=cellsize, imgbuffer=imgbuffer)
 
 
 @click.command(

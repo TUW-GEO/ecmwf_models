@@ -68,24 +68,28 @@ class Reshuffler:
 
         return first_date, last_date
 
-    def load_grid(self, bbox: Tuple = None) -> CellGrid:
+    def load_grid(self, bbox: Tuple = None, cellsize=5.) -> CellGrid:
         """
         Generate ERA5 and ERA5-Land grid in the given bounding box.
         Ensures that GPIs are consistent with global grid.
         """
         if self.land_points:
             if self.product == "era5":
-                grid = ERA5_RegularImgLandGrid(resolution=0.25, bbox=bbox)
+                grid = ERA5_RegularImgLandGrid(resolution=0.25, bbox=bbox,
+                                               cellsize=cellsize)
             elif self.product == "era5-land":
-                grid = ERA5_RegularImgLandGrid(resolution=0.1, bbox=bbox)
+                grid = ERA5_RegularImgLandGrid(resolution=0.1, bbox=bbox,
+                                               cellsize=cellsize)
             else:
                 raise NotImplementedError(
                     self.product, "Land grid not implemented for product.")
         else:
             if self.product.lower() in ['era5-land', 'era5-land-t']:
-                grid = ERA_RegularImgGrid(resolution=0.1, bbox=bbox)
+                grid = ERA_RegularImgGrid(resolution=0.1, bbox=bbox,
+                                          cellsize=cellsize)
             elif self.product.lower() in ['era5', 'era5-t']:
-                grid = ERA_RegularImgGrid(resolution=0.25, bbox=bbox)
+                grid = ERA_RegularImgGrid(resolution=0.25, bbox=bbox,
+                                          cellsize=cellsize)
             else:
                 raise NotImplementedError(self.product,
                                           "Grid not implemented for product.")
@@ -123,7 +127,8 @@ class Reshuffler:
 
         return input_dataset
 
-    def reshuffle(self, startdate=None, enddate=None, bbox=None, imgbuffer=50):
+    def reshuffle(self, startdate=None, enddate=None, bbox=None,
+                  cellsize=5.0, imgbuffer=50):
         """
         Reshuffle method applied to ERA images for conversion into netcdf time
         series format.
@@ -149,6 +154,8 @@ class Reshuffler:
         bbox: tuple optional (default: None)
             (min_lon, min_lat, max_lon, max_lat) - wgs84.
             To load only a subset of the global grid / file.
+        cellsize: float, optional (default: 5.0)
+            Cell chunking of the time series in degrees.
         imgbuffer: int, optional (default: 50)
             How many images to read at once before writing time series.
             This number affects how many images are stored in memory and should
@@ -184,7 +191,7 @@ class Reshuffler:
                     round(float(_img.lon.max()), 3),
                     round(float(_img.lat.max()), 3)]
 
-        grid = self.load_grid(bbox)
+        grid = self.load_grid(bbox, cellsize=cellsize)
         input_dataset = self.get_img_reader(grid, self.h_steps)
 
         global_attr = {
@@ -211,7 +218,8 @@ class Reshuffler:
             'enddate': enddate,
             'h_steps': list(self.h_steps),
             'bbox': None if bbox is None else list(bbox),
-            'imgbuffer': imgbuffer
+            'imgbuffer': imgbuffer,
+            'cellsize': cellsize,
         }
 
         props["img2ts_kwargs"] = kwargs
