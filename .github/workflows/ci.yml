@@ -92,7 +92,7 @@ jobs:
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
-          pip install coveralls && coveralls --service=github-actions
+          pip install coveralls && coveralls --service=github-actions --no-fail
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
@@ -112,7 +112,7 @@ jobs:
       - name: Finalize Coveralls Parallel Build
         run: |
           pip3 install --upgrade coveralls
-          coveralls --finish
+          coveralls --finish --no-fail
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_SERVICE_NAME: github-actions
