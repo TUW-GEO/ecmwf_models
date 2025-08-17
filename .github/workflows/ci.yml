@@ -90,9 +90,10 @@ jobs:
           ls artifacts/dist
           twine check artifacts/dist/*
       - name: Upload Coverage
+        continue-on-error: true
         shell: bash -l {0}
         run: |
-          pip install coveralls && coveralls --service=github-actions --no-fail
+          pip install coveralls && coveralls --service=github-actions
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
@@ -110,9 +111,10 @@ jobs:
     container: python:3-slim
     steps:
       - name: Finalize Coveralls Parallel Build
+        continue-on-error: true
         run: |
           pip3 install --upgrade coveralls
-          coveralls --finish --no-fail
+          coveralls --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_SERVICE_NAME: github-actions
