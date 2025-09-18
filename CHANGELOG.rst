@@ -4,6 +4,10 @@ Changelog
 
 Unreleased changes in master branch
 ===================================
+-
+
+Version 0.11.0
+==============
 - Add chunk size selection to reshuffle program
 
 Version 0.10.4
