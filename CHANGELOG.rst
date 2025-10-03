@@ -4,7 +4,7 @@ Changelog
 
 Unreleased changes in master branch
 ===================================
--
+- Fixing download on Windows (`PR #47 <https://github.com/TUW-GEO/ecmwf_models/pull/47>`_)
 
 Version 0.11.0
 ==============
