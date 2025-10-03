@@ -55,8 +55,8 @@ def create_dt_fpath(dt, root, fname, subdirs=[]):
 
 
 def unzip_nc(
-        input_zip,
-        output_nc,
+    input_zip,
+    output_nc,
 ):
     """
     Unzip and merge all netcdf files downloaded from CDS. If the zip file
@@ -73,8 +73,11 @@ def unzip_nc(
     with tempfile.TemporaryDirectory() as tmpdir:
         with zipfile.ZipFile(input_zip, "r") as zip_ref:
             zip_ref.extractall(tmpdir)
-        ncfiles = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)
-                   if f.endswith(".nc")]
+        ncfiles = [
+            os.path.join(tmpdir, f)
+            for f in os.listdir(tmpdir)
+            if f.endswith(".nc")
+        ]
         if len(ncfiles) == 1:
             shutil.move(ncfiles[0], output_nc)
         else:
@@ -87,12 +90,19 @@ def unzip_nc(
             if len(expvers) > 0:
                 expvers = np.array(expvers).max(axis=0)
                 for d in ds:
-                    d.coords['expver'] = np.array([f"{e:04}" for e in expvers])
+                    d.coords['expver'] = np.array(
+                        [f"{e: 04}" for e in expvers])
 
-            ds = xr.combine_by_coords(ds, combine_attrs="override",
-                                      compat='override')
-            ds.to_netcdf(output_nc, encoding={
-                v: {'zlib': True, 'complevel': 6} for v in ds.data_vars})
+            ds = xr.combine_by_coords(
+                ds, combine_attrs="override", compat='override')
+            ds.to_netcdf(
+                output_nc,
+                encoding={
+                    v: {
+                        'zlib': True,
+                        'complevel': 6
+                    } for v in ds.data_vars
+                })
 
     os.remove(input_zip)
 
@@ -131,83 +141,84 @@ def save_ncs_from_nc(
         datetime=IMG_FNAME_DATETIME_FORMAT,
         ext='nc')
 
-    nc_in = xr.open_dataset(input_nc, mask_and_scale=True)
-    if 'valid_time' in nc_in.dims:
-        nc_in = nc_in.rename_dims({"valid_time": 'time'})
-    if 'valid_time' in nc_in.variables:
-        nc_in = nc_in.rename_vars({"valid_time": 'time'})
-
-    if grid is not None:
-        if not cdo_available:
-            raise CdoNotFoundError()
-        cdo = Cdo()
-
-        gridpath = os.path.join(output_path, "grid.txt")
-        weightspath = os.path.join(output_path, "remap_weights.nc")
-        if not os.path.exists(gridpath):
-            with open(gridpath, "w") as f:
-                for k, v in grid.items():
-                    f.write(f"{k} = {v}\n")
-
-    for i, time in enumerate(nc_in["time"].values):
-        subset = nc_in.sel({"time": time})
-
-        # Expver identifies preliminary data
-        if 'expver' in subset:
-            ex = np.atleast_1d(subset['expver'].values)
-            if len(ex) == 1:
-                expver = str(ex[0])
-            else:
-                expver = str(ex[i])
-            subset = subset.drop_vars('expver')
-            try:
-                ext = EXPVER[expver]
-            except KeyError:
-                ext = ''
-        else:
-            ext = ''
-
-        if len(ext) > 0 and not keep_prelim:
-            logging.info(f"Dropping preliminary data {time}")
-            continue
-
-        if len(ext) > 0:
-            filename_templ = _filename_templ.format(product=product_name +
-                                                    '-' + ext)
-        else:
-            filename_templ = _filename_templ.format(product=product_name)
-
-        if 'number' in subset.variables:
-            subset = subset.drop_vars('number')
-
-        timestamp = pd.Timestamp(time).to_pydatetime()
-        filepath = create_dt_fpath(
-            timestamp,
-            root=output_path,
-            fname=filename_templ,
-            subdirs=SUBDIRS,
-        )
-
-        if not os.path.exists(os.path.dirname(filepath)):
-            os.makedirs(os.path.dirname(filepath))
+    with xr.open_dataset(input_nc, mask_and_scale=True) as nc_in:
+        if 'valid_time' in nc_in.dims:
+            nc_in = nc_in.rename_dims({"valid_time": 'time'})
+        if 'valid_time' in nc_in.variables:
+            nc_in = nc_in.rename_vars({"valid_time": 'time'})
 
         if grid is not None:
-            if not os.path.exists(weightspath):
-                # create weights file
-                getattr(cdo, "gen" + remap_method)(
-                    gridpath, input=subset, output=weightspath)
-            subset = cdo.remap(
-                ",".join([gridpath, weightspath]),
-                input=subset,
-                returnXDataset=True,
+            if not cdo_available:
+                raise CdoNotFoundError()
+            cdo = Cdo()
+
+            gridpath = os.path.join(output_path, "grid.txt")
+            weightspath = os.path.join(output_path, "remap_weights.nc")
+            if not os.path.exists(gridpath):
+                with open(gridpath, "w") as f:
+                    for k, v in grid.items():
+                        f.write(f"{k} = {v}\n")
+
+        for i, time in enumerate(nc_in["time"].values):
+            subset = nc_in.sel({"time": time})
+
+            # Expver identifies preliminary data
+            if 'expver' in subset:
+                ex = np.atleast_1d(subset['expver'].values)
+                if len(ex) == 1:
+                    expver = str(ex[0])
+                else:
+                    expver = str(ex[i])
+                subset = subset.drop_vars('expver')
+                try:
+                    ext = EXPVER[expver]
+                except KeyError:
+                    ext = ''
+            else:
+                ext = ''
+
+            if len(ext) > 0 and not keep_prelim:
+                logging.info(f"Dropping preliminary data {time}")
+                continue
+
+            if len(ext) > 0:
+                filename_templ = _filename_templ.format(product=product_name +
+                                                        '-' + ext)
+            else:
+                filename_templ = _filename_templ.format(product=product_name)
+
+            if 'number' in subset.variables:
+                subset = subset.drop_vars('number')
+
+            timestamp = pd.Timestamp(time).to_pydatetime()
+            filepath = create_dt_fpath(
+                timestamp,
+                root=output_path,
+                fname=filename_templ,
+                subdirs=SUBDIRS,
             )
 
-        # same compression for all variables
-        var_encode = {"zlib": True, "complevel": 6}
-        subset.to_netcdf(
-            filepath, encoding={var: var_encode for var in subset.variables})
+            if not os.path.exists(os.path.dirname(filepath)):
+                os.makedirs(os.path.dirname(filepath))
 
-    nc_in.close()
+            if grid is not None:
+                if not os.path.exists(weightspath):
+                    # create weights file
+                    getattr(cdo, "gen" + remap_method)(
+                        gridpath, input=subset, output=weightspath)
+                subset = cdo.remap(
+                    ",".join([gridpath, weightspath]),
+                    input=subset,
+                    returnXDataset=True,
+                )
+
+            # same compression for all variables
+            var_encode = {"zlib": True, "complevel": 6}
+            # explicitly use netcdf4 engine
+            subset.to_netcdf(
+                filepath,
+                encoding={var: var_encode for var in subset.variables},
+                engine="netcdf4")
 
     if not keep_original:
         os.remove(input_nc)
