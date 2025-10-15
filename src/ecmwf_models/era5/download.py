@@ -184,20 +184,34 @@ class CDSStatusTracker:
     statuscode_ok = 0
     statuscode_error = -1
     statuscode_unavailable = 10
+    statuscode_terms_not_accepted = 11
 
     def __init__(self, logger=logging.getLogger()):
         self.download_statuscode = self.statuscode_ok
         self.logger = logger
 
     def handle_error_function(self, *args, **kwargs):
-        message_prefix = args[0]
-        message_body = args[1]
+        if len(args) == 1:
+            error_str = str(args[0])
+            if '\n' in error_str:
+                message_prefix, message_body = error_str.split('\n', 1)
+            else:
+                message_prefix = error_str
+                message_body = ''
+        else:
+            message_prefix = args[0]
+            message_body = args[1]
+
         if self.download_statuscode != self.statuscode_unavailable:
             if (message_prefix.startswith("Reason:") and
                     message_body == "Request returned no data"):
                 self.download_statuscode = self.statuscode_unavailable
+            elif ("Not all the required licences have been accepted" in
+                  message_body):
+                self.download_statuscode = self.statuscode_terms_not_accepted
             else:
                 self.download_statuscode = self.statuscode_error
+
         self.logger.error(*args, **kwargs)
 
 
@@ -334,7 +348,7 @@ def download_and_move(
         check_api_ready()
 
         os.makedirs(target_path, exist_ok=True)
-        cds_status_tracker = CDSStatusTracker()
+        cds_status_tracker = CDSStatusTracker(logger=logger)
         c = cdsapi.Client(
             error_callback=cds_status_tracker.handle_error_function)
 
@@ -393,10 +407,15 @@ def download_and_move(
                 status_code = 0
                 break
 
-            except Exception:  # noqa: E722
-                # If no data is available we don't need to retry
-                if (cds_status_tracker.download_statuscode ==
-                        CDSStatusTracker.statuscode_unavailable):
+            except Exception as e:  # noqa: E722
+                c.error(e)
+
+                # If no data is available or terms were not accepted we don't
+                # need to retry
+                if (cds_status_tracker.download_statuscode in [
+                        CDSStatusTracker.statuscode_unavailable,
+                        CDSStatusTracker.statuscode_terms_not_accepted
+                ]):
                     status_code = -10
                     break
 
