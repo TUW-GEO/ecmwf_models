@@ -4,6 +4,10 @@ Changelog
 
 Unreleased changes in master branch
 ===================================
+-
+
+Version 0.11.1
+==============
 - Fixing download on Windows (`PR #47 <https://github.com/TUW-GEO/ecmwf_models/pull/47>`_)
 - When the dataset terms are not accepted for download we print out an error now (`PR #48 <https://github.com/TUW-GEO/ecmwf_models/pull/48>`_)
 
