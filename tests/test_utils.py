@@ -7,6 +7,8 @@ import os
 import tempfile
 import numpy as np
 from netCDF4 import Dataset
+import pytest
+from ecmwf_models.utils import is_sorted
 
 from ecmwf_models.utils import (
     parse_filetype,
@@ -78,3 +80,17 @@ def test_create_land_definition_file():
     desired = ds_desired.variables['land'][:]
 
     assert np.allclose(actual, desired, equal_nan=True)
+
+
+@pytest.mark.parametrize("arr,expected", [
+    ([1, 2, 3, 4, 5], True),           # ascending
+    ([5, 4, 3, 2, 1], True),           # descending
+    ([1, 3, 2, 4], False),             # unsorted
+    ([42], True),                      # single element
+    ([3, 3, 3], True),                 # all equal
+    ([1, 2, 2, 3], True),              # duplicates ascending
+    ([4, 3, 3, 1], True),              # duplicates descending
+    ([-5, -3, 0, 2], True),            # negatives
+])
+def test_is_sorted(arr, expected):
+    assert is_sorted(np.array(arr)) == expected

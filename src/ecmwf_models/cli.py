@@ -383,8 +383,14 @@ def cli_update_img(path, cds_token=None):
     help="Number of images to read into memory at once before "
     "conversion to time series. A larger buffer means faster "
     "processing but requires more memory.")
+@click.option(
+    '--nproc',
+    '-n',
+    type=click.INT,
+    default=1,
+    help="Number of parallel processes to start to read and write the data.")
 def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
-                  h_steps, cellsize, imgbuffer):
+                  h_steps, cellsize, imgbuffer, nproc):
     """
     Convert previously downloaded ERA5 or ERA5-Land image data into a
     time series format.
@@ -416,7 +422,7 @@ def cli_reshuffle(img_path, ts_path, start, end, variables, land_points, bbox,
                             product=None  # Infer prod automatically from files
                             )
     reshuffler.reshuffle(startdate=start, enddate=end, bbox=bbox,
-                         cellsize=cellsize, imgbuffer=imgbuffer)
+                         cellsize=cellsize, imgbuffer=imgbuffer, n_proc=nproc)
 
 
 @click.command(
