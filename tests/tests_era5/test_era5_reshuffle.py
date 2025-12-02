@@ -97,10 +97,10 @@ def test_cli_reshuffle_and_update():
         assert 'swvl2' in ts.columns
 
         ds = xr.open_dataset(ts_path / "1431.nc")
-
         assert is_sorted(ds['lat'].values)
         assert is_sorted(ds['locations'].values)
         assert is_sorted(ds['time'].values)
+        ds.close()
 
         ts_reader.close()
 
@@ -139,6 +139,12 @@ def test_ERA5_reshuffle_nc():
         nptest.assert_allclose(
             ts["swvl2"].values, swvl2_values_should, rtol=1e-5)
 
+        ds = xr.open_dataset(Path(ts_path) / "1431.nc")
+        assert is_sorted(ds['lat'].values)
+        assert is_sorted(ds['locations'].values)
+        assert is_sorted(ds['time'].values)
+        ds.close()
+
 
 def test_ERA5_reshuffle_grb():
     # test reshuffling era5 netcdf images to time series
@@ -172,6 +178,7 @@ def test_ERA5_reshuffle_grb():
         assert is_sorted(ds['lat'].values)
         assert is_sorted(ds['locations'].values)
         assert is_sorted(ds['time'].values)
+        ds.close()
 
 
 if __name__ == '__main__':
