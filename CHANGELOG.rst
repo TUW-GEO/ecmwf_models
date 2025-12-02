@@ -6,6 +6,14 @@ Unreleased changes in master branch
 ===================================
 -
 
+Version 0.11.2
+==============
+- Fixed a bug in repurpose (`here <https://github.com/TUW-GEO/repurpose/pull/45>`_) where the time series point order
+  was lost which lead to problems when new data was appended to an existing time series stack.
+  (`PR #49 <https://github.com/TUW-GEO/ecmwf_models/pull/49>`_)
+- Added option convert images to time series in parallel
+  (`PR #49 <https://github.com/TUW-GEO/ecmwf_models/pull/49>`_)
+
 Version 0.11.1
 ==============
 - Fixing download on Windows (`PR #47 <https://github.com/TUW-GEO/ecmwf_models/pull/47>`_)

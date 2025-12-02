@@ -38,6 +38,7 @@ from datetime import datetime
 
 from c3s_sm.misc import read_summary_yml
 
+from ecmwf_models.utils import is_sorted
 from ecmwf_models.era5.reshuffle import Reshuffler
 from ecmwf_models import ERATs
 
@@ -47,6 +48,7 @@ inpath = os.path.join(
     "ecmwf_models-test-data",
     "ERA5",
 )
+
 
 def test_cli_reshuffle_and_update():
     testdata_path = Path(os.path.join(inpath, 'netcdf'))
@@ -94,7 +96,14 @@ def test_cli_reshuffle_and_update():
 
         assert 'swvl2' in ts.columns
 
+        ds = xr.open_dataset(ts_path / "1431.nc")
+        assert is_sorted(ds['lat'].values)
+        assert is_sorted(ds['locations'].values)
+        assert is_sorted(ds['time'].values)
+        ds.close()
+
         ts_reader.close()
+
 
 def test_ERA5_reshuffle_nc():
     # test reshuffling era5 netcdf images to time series
@@ -112,6 +121,12 @@ def test_ERA5_reshuffle_nc():
                                 land_points=landpoints)
         reshuffler.reshuffle(startdate, enddate, bbox=bbox)
 
+        f = glob.glob(os.path.join(ts_path, '[0-9][0-9][0-9][0-9].nc'))[0]
+        ds = xr.open_dataset(f)
+        assert is_sorted(ds['lat'].values)
+        assert is_sorted(ds['locations'].values)
+        assert is_sorted(ds['time'].values)
+
         assert (len(glob.glob(os.path.join(ts_path, "*.nc"))) == 5)
         # less files because only land points and bbox
         ds = ERATs(ts_path, ioclass_kws={"read_bulk": True})
@@ -123,6 +138,12 @@ def test_ERA5_reshuffle_nc():
         swvl2_values_should = np.array([0.390512, 0.390981], dtype=np.float32)
         nptest.assert_allclose(
             ts["swvl2"].values, swvl2_values_should, rtol=1e-5)
+
+        ds = xr.open_dataset(Path(ts_path) / "1431.nc")
+        assert is_sorted(ds['lat'].values)
+        assert is_sorted(ds['locations'].values)
+        assert is_sorted(ds['time'].values)
+        ds.close()
 
 
 def test_ERA5_reshuffle_grb():
@@ -152,3 +173,13 @@ def test_ERA5_reshuffle_grb():
         swvl2_values_should = np.array([0.390514, 0.390980], dtype=np.float32)
         nptest.assert_allclose(
             ts["swvl2"].values, swvl2_values_should, rtol=1e-5)
+
+        ds = xr.open_dataset(Path(ts_path) / "1431.nc")
+        assert is_sorted(ds['lat'].values)
+        assert is_sorted(ds['locations'].values)
+        assert is_sorted(ds['time'].values)
+        ds.close()
+
+
+if __name__ == '__main__':
+    test_ERA5_reshuffle_nc()

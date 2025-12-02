@@ -414,3 +414,8 @@ def assert_product(product: str) -> str:
         raise ValueError(f"Got product {product} but expected one of "
                          f"{SUPPORTED_PRODUCTS}")
     return product
+
+
+def is_sorted(arr):
+    """Check if array is sorted in ascending or descending order"""
+    return bool(np.all(arr[:-1] <= arr[1:]) or np.all(arr[:-1] >= arr[1:]))

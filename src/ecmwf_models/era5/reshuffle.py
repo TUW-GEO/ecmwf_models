@@ -15,6 +15,8 @@ import inspect
 from repurpose.img2ts import Img2Ts
 from c3s_sm.misc import update_ts_summary_file, read_summary_yml
 
+from repurpose.process import ImageBaseConnection
+
 from ecmwf_models.era5.img import ERA5NcDs, ERA5GrbDs
 from ecmwf_models.grid import ERA_RegularImgGrid, ERA5_RegularImgLandGrid
 from ecmwf_models.utils import (parse_filetype, parse_product,
@@ -128,7 +130,7 @@ class Reshuffler:
         return input_dataset
 
     def reshuffle(self, startdate=None, enddate=None, bbox=None,
-                  cellsize=5.0, imgbuffer=50):
+                  cellsize=5.0, imgbuffer=50, n_proc=1):
         """
         Reshuffle method applied to ERA images for conversion into netcdf time
         series format.
@@ -161,6 +163,8 @@ class Reshuffler:
             This number affects how many images are stored in memory and should
             be chosen according to the available amount of memory and the size
             of a single image.
+        n_proc: int, optional
+            Number of parallel processes
         """
 
         if (startdate is None) or (enddate is None):
@@ -227,7 +231,7 @@ class Reshuffler:
         os.makedirs(self.outputpath, exist_ok=True)
 
         reshuffler = Img2Ts(
-            input_dataset=input_dataset,
+            input_dataset=ImageBaseConnection(input_dataset),
             outputpath=self.outputpath,
             startdate=str(startdate),
             enddate=str(enddate),
@@ -238,8 +242,8 @@ class Reshuffler:
             zlib=True,
             unlim_chunksize=1000,
             ts_attributes=ts_attributes,
-            backend='multiprocessing',
-            n_proc=1,
+            backend='loky',
+            n_proc=n_proc,
         )
 
         reshuffler.calc()

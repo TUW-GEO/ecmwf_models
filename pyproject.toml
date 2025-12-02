@@ -31,7 +31,7 @@ dependencies = [
   "xarray",
   "c3s_sm>=0.3.1",
   "cdsapi>=0.7.3",
-  "repurpose>=0.13",
+  "repurpose>=0.13.3",
   "pygeogrids"
 ]
 dynamic = ["version"]
