@@ -33,7 +33,7 @@ jobs:
           - os: "windows-latest"
             python-version: '3.13'  # latest supported
           - os: "macos-latest"
-            python-version: '3.13'  # latest supported
+            python-version: '3.12'  # latest supported
     name: Py${{ matrix.python-version }}@${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
