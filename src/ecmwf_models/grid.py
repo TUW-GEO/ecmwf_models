@@ -119,7 +119,7 @@ def ERA5_RegularImgLandGrid(
                 f"landmask_{resolution}_{resolution}.nc",
             ))["land"]
 
-        ds = ds.assign_coords({'longitude': trafo_lon(ds['longitude'].values)})
+        ds = ds.assign_coords({'longitude': trafo_lon(ds['longitude'].values.copy())})
 
         if bbox is not None:
             ds = ds.sel(latitude=slice(bbox[3], bbox[1]))
