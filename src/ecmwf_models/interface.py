@@ -138,7 +138,7 @@ class ERANcImg(ImageBase):
         return_metadata = {}
 
         grid = gridfromdims(
-            trafo_lon(dataset['longitude'].values),
+            trafo_lon(dataset['longitude'].values.copy()),
             dataset['latitude'].values,
             origin='top')
 
